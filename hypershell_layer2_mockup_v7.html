@@ -1,0 +1,3035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hypershell Layer 2 · User Decision & Profile</title>
+<style>
+  /* ===== Metabase OSS visual baseline ===== */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #F9FBFC;
+    color: #2E353B;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 24px;
+  }
+
+  /* ===== Color tokens (Metabase brand) ===== */
+  :root {
+    --mb-brand: #509EE3;
+    --mb-brand-light: #E5F0F8;
+    --mb-success: #84BB4C;
+    --mb-warning: #F9CF48;
+    --mb-error: #ED6E6E;
+    --mb-text-dark: #2E353B;
+    --mb-text-medium: #696E7B;
+    --mb-text-light: #949AAB;
+    --mb-bg-light: #F9FBFC;
+    --mb-bg-white: #FFFFFF;
+    --mb-border: #EDF0F1;
+    --mb-border-strong: #D7DBE0;
+    --mb-accent1: #88BF4D;
+    --mb-accent2: #A989C5;
+    --mb-accent3: #EF8C8C;
+    --mb-accent4: #F9D45C;
+    --mb-accent5: #F2A86F;
+    --mb-accent6: #98D9D9;
+    --mb-accent7: #7172AD;
+  }
+
+  /* ===== Dashboard header ===== */
+  .dashboard-header {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    padding: 18px 24px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .dashboard-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--mb-text-dark);
+  }
+  .dashboard-meta {
+    font-size: 12px;
+    color: var(--mb-text-light);
+    margin-top: 2px;
+  }
+  .header-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .icon-btn {
+    width: 32px; height: 32px;
+    border-radius: 4px;
+    border: 1px solid var(--mb-border);
+    background: white;
+    color: var(--mb-text-medium);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .icon-btn:hover { background: var(--mb-bg-light); }
+
+  /* ===== Global filters bar ===== */
+  .filter-bar {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .filter-pill {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border-strong);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: var(--mb-text-dark);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .filter-pill.active {
+    border-color: var(--mb-brand);
+    background: var(--mb-brand-light);
+    color: var(--mb-brand);
+  }
+  .filter-pill .label { color: var(--mb-text-medium); font-size: 12px; }
+  .filter-pill .value { font-weight: 600; }
+  .filter-pill .caret { color: var(--mb-text-light); font-size: 10px; }
+
+  /* ===== Tabs ===== */
+  .tab-bar {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px 6px 0 0;
+    border-bottom: none;
+    display: flex;
+    overflow-x: auto;
+    padding: 0 8px;
+  }
+  .tab {
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--mb-text-medium);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .tab:hover { color: var(--mb-text-dark); }
+  .tab.active {
+    color: var(--mb-brand);
+    border-bottom-color: var(--mb-brand);
+    font-weight: 600;
+  }
+  .tab.disabled {
+    color: var(--mb-text-light);
+    cursor: not-allowed;
+    font-style: italic;
+  }
+
+  /* ===== Tab content area ===== */
+  .tab-content {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 0 0 6px 6px;
+    padding: 20px;
+    display: none;
+  }
+  .tab-content.active { display: block; }
+
+  /* ===== Grid system ===== */
+  .grid {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-2-1 { grid-template-columns: 2fr 1fr; }
+  .grid-1-2 { grid-template-columns: 1fr 2fr; }
+
+  /* ===== Card (Metabase question card) ===== */
+  .card {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    padding: 16px;
+    position: relative;
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--mb-text-dark);
+    line-height: 1.3;
+  }
+  .card-subtitle {
+    font-size: 11px;
+    color: var(--mb-text-light);
+    margin-top: 2px;
+  }
+  .card-menu {
+    color: var(--mb-text-light);
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  /* ===== Number card (KPI) ===== */
+  .number-value {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--mb-text-dark);
+    line-height: 1.1;
+    margin-top: 4px;
+  }
+  .number-trend {
+    font-size: 12px;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .trend-up { color: var(--mb-success); }
+  .trend-down { color: var(--mb-error); }
+  .trend-neutral { color: var(--mb-text-light); }
+  .trend-arrow { font-size: 10px; }
+  .trend-context { color: var(--mb-text-light); margin-left: 4px; }
+
+  /* ===== Bar chart (CSS-rendered) ===== */
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    height: 200px;
+    padding: 16px 8px 24px 8px;
+    border-bottom: 1px solid var(--mb-border);
+    position: relative;
+  }
+  .bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+  .bar {
+    width: 100%;
+    background: var(--mb-brand);
+    border-radius: 2px 2px 0 0;
+    position: relative;
+    transition: opacity 0.2s;
+  }
+  .bar:hover { opacity: 0.8; }
+  .bar-label {
+    font-size: 11px;
+    color: var(--mb-text-medium);
+    white-space: nowrap;
+    margin-top: 6px;
+  }
+  .bar-value {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: var(--mb-text-dark);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .bar-stacked {
+    width: 100%;
+    display: flex;
+    flex-direction: column-reverse;
+    border-radius: 2px 2px 0 0;
+    overflow: hidden;
+  }
+  .bar-segment {
+    width: 100%;
+  }
+
+  /* ===== Y-axis labels ===== */
+  .chart-container {
+    position: relative;
+  }
+  .y-axis {
+    position: absolute;
+    left: 0; top: 0; bottom: 24px;
+    width: 40px;
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: space-between;
+    padding-bottom: 0;
+  }
+  .y-tick {
+    font-size: 10px;
+    color: var(--mb-text-light);
+    text-align: right;
+    padding-right: 6px;
+  }
+  .chart-with-axis {
+    padding-left: 40px;
+  }
+
+  /* ===== Table (Metabase pivot/table) ===== */
+  .mb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .mb-table thead tr {
+    background: var(--mb-bg-light);
+    border-bottom: 1px solid var(--mb-border);
+  }
+  .mb-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--mb-text-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .mb-table th:hover { color: var(--mb-text-dark); }
+  .mb-table th.numeric { text-align: right; }
+  .mb-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--mb-border);
+    color: var(--mb-text-dark);
+  }
+  .mb-table td.numeric {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .mb-table tbody tr:hover {
+    background: var(--mb-bg-light);
+    cursor: pointer;
+  }
+  .mb-table tbody tr:last-child td { border-bottom: none; }
+  .channel-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .channel-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .cell-secondary { color: var(--mb-text-medium); font-size: 12px; }
+  .cell-success { color: var(--mb-success); font-weight: 600; }
+  .cell-warning { color: var(--mb-warning); font-weight: 600; }
+
+  /* ===== Funnel chart ===== */
+  .funnel {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 0;
+  }
+  .funnel-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .funnel-label {
+    width: 130px;
+    font-size: 12px;
+    color: var(--mb-text-medium);
+    text-align: right;
+  }
+  .funnel-bar-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .funnel-bar {
+    height: 28px;
+    background: var(--mb-brand);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .funnel-pct {
+    font-size: 11px;
+    color: var(--mb-text-light);
+    width: 60px;
+  }
+  .funnel-drop {
+    font-size: 11px;
+    color: var(--mb-error);
+    width: 70px;
+  }
+
+  /* ===== Pie / Donut (CSS) ===== */
+  .donut-wrap {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 12px;
+  }
+  .donut {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .donut-legend {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+  }
+  .legend-label { flex: 1; color: var(--mb-text-dark); }
+  .legend-value { color: var(--mb-text-medium); font-variant-numeric: tabular-nums; }
+
+  /* ===== Stacked horizontal bar (channel role) ===== */
+  .stacked-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .stacked-label {
+    width: 130px;
+    font-size: 12px;
+    color: var(--mb-text-dark);
+  }
+  .stacked-bar {
+    flex: 1;
+    height: 22px;
+    display: flex;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .stacked-seg {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* ===== Path table (sequence) ===== */
+  .path-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .path-step {
+    background: var(--mb-bg-light);
+    border: 1px solid var(--mb-border);
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 11px;
+    color: var(--mb-text-dark);
+  }
+  .path-arrow {
+    color: var(--mb-text-light);
+    font-size: 10px;
+  }
+
+  /* ===== Empty / disabled state for tab 7 ===== */
+  .empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--mb-text-light);
+  }
+  .empty-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+  .empty-title {
+    font-size: 16px;
+    color: var(--mb-text-medium);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .empty-desc {
+    font-size: 13px;
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* ===== Section header inside tab ===== */
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--mb-text-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin: 8px 0 12px 0;
+  }
+
+  /* ===== Drill hint ===== */
+  .drill-hint {
+    font-size: 11px;
+    color: var(--mb-brand);
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  /* ===== Specific channel colors ===== */
+  .ch-paid-search { background: var(--mb-brand); }
+  .ch-paid-social { background: var(--mb-accent2); }
+  .ch-organic { background: var(--mb-accent1); }
+  .ch-direct { background: var(--mb-accent7); }
+  .ch-referral { background: var(--mb-accent5); }
+  .ch-email { background: var(--mb-accent4); }
+  .ch-other { background: var(--mb-text-light); }
+
+  /* ===== Tab-level filter bar (per-tab local filters) ===== */
+  .tab-filter-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 12px;
+    background: #FAFCFD;
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .tab-filter-bar .filter-scope-label {
+    font-size: 11px;
+    color: var(--mb-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  .filter-pill-sm {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border-strong);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: var(--mb-text-dark);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+  }
+  .filter-pill-sm.active {
+    border-color: var(--mb-brand);
+    background: var(--mb-brand-light);
+    color: var(--mb-brand);
+  }
+  .filter-pill-sm .label {
+    color: var(--mb-text-medium);
+    font-size: 11px;
+  }
+  .filter-pill-sm .value { font-weight: 600; }
+  .filter-pill-sm .caret {
+    color: var(--mb-text-light);
+    font-size: 9px;
+  }
+
+  /* Segmented toggle (for new vs returning, etc.) */
+  .seg-toggle {
+    display: inline-flex;
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border-strong);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .seg-toggle button {
+    border: none;
+    background: transparent;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: var(--mb-text-medium);
+    cursor: pointer;
+    font-family: inherit;
+    border-right: 1px solid var(--mb-border);
+  }
+  .seg-toggle button:last-child { border-right: none; }
+  .seg-toggle button.active {
+    background: var(--mb-brand);
+    color: white;
+    font-weight: 600;
+  }
+
+  /* ===== Drill-through indicator (standardized per-card footer) ===== */
+  .drill-bar {
+    margin-top: 12px;
+    padding: 8px 10px;
+    background: #F4F8FC;
+    border: 1px dashed #C8DDF0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--mb-brand);
+  }
+  .drill-bar .drill-icon {
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .drill-bar .drill-label {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--mb-text-light);
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+  .drill-bar .drill-action {
+    color: var(--mb-text-medium);
+    flex: 1;
+  }
+  .drill-bar .drill-target {
+    color: var(--mb-brand);
+    font-weight: 600;
+  }
+  .drill-bar.multi {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .drill-bar.multi .drill-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  /* ===== Channel role tag ===== */
+  .role-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+  .role-acquisition {
+    background: #E8F5E9;
+    color: #2E7D32;
+    border: 1px solid #A5D6A7;
+  }
+  .role-conversion {
+    background: #FFF3E0;
+    color: #E65100;
+    border: 1px solid #FFCC80;
+  }
+  .role-full-funnel {
+    background: #E3F2FD;
+    color: #1565C0;
+    border: 1px solid #90CAF9;
+  }
+  .role-insufficient {
+    background: #F5F5F5;
+    color: #757575;
+    border: 1px solid #E0E0E0;
+    font-style: italic;
+  }
+
+  /* ===== Side-by-side metric pair (for first-click vs last-click) ===== */
+  .metric-pair {
+    display: flex;
+    gap: 0;
+    margin-top: 4px;
+  }
+  .metric-pair .metric-half {
+    flex: 1;
+    padding: 6px 10px;
+  }
+  .metric-pair .metric-half:first-child {
+    border-right: 1px solid var(--mb-border);
+  }
+  .metric-half-label {
+    font-size: 10px;
+    color: var(--mb-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+  .metric-half-value {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--mb-text-dark);
+    line-height: 1.1;
+    margin-top: 2px;
+  }
+  .metric-half.first-click .metric-half-label { color: var(--mb-success); }
+  .metric-half.last-click .metric-half-label { color: var(--mb-accent5); }
+
+  /* ===== Diverging bar chart (for role positioning) ===== */
+  .diverging-chart {
+    padding: 16px 0;
+  }
+  .diverging-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    height: 28px;
+  }
+  .diverging-label {
+    width: 140px;
+    font-size: 12px;
+    color: var(--mb-text-dark);
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .diverging-track {
+    flex: 1;
+    display: flex;
+    height: 100%;
+    position: relative;
+  }
+  .diverging-track::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -4px; bottom: -4px;
+    width: 1px;
+    background: var(--mb-border-strong);
+  }
+  .diverging-half {
+    flex: 1;
+    display: flex;
+    height: 100%;
+  }
+  .diverging-half.left {
+    justify-content: flex-end;
+  }
+  .diverging-half.right {
+    justify-content: flex-start;
+  }
+  .diverging-bar {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 2px;
+  }
+  .diverging-bar.acquisition { background: var(--mb-accent1); }
+  .diverging-bar.conversion { background: var(--mb-accent5); }
+  .diverging-value {
+    font-size: 11px;
+    color: var(--mb-text-medium);
+    width: 50px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .diverging-axis {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--mb-border);
+    font-size: 10px;
+    color: var(--mb-text-light);
+  }
+  .diverging-axis .axis-label {
+    flex: 1;
+  }
+  .diverging-axis .axis-label.left { text-align: right; padding-right: 8px; }
+  .diverging-axis .axis-label.right { text-align: left; padding-left: 8px; }
+  .diverging-axis .axis-spacer { width: 140px; }
+  .diverging-axis .axis-end { width: 50px; }
+
+  /* ===== Subject change banner (Module 7) ===== */
+  .subject-banner {
+    background: linear-gradient(90deg, #FFF8E5 0%, #FFFCEF 100%);
+    border: 1px solid #F4D88A;
+    border-radius: 6px;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #6B5D2E;
+    line-height: 1.5;
+  }
+  .subject-banner .banner-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .subject-banner strong {
+    font-weight: 700;
+    color: #4D4422;
+  }
+
+  /* ===== RFM segment tags ===== */
+  .seg-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    white-space: nowrap;
+  }
+  .seg-new        { background: var(--mb-brand); }
+  .seg-active     { background: var(--mb-accent1); }
+  .seg-promising  { background: var(--mb-accent6); color: #2E353B; }
+  .seg-attention  { background: var(--mb-accent4); color: #6B5D2E; }
+  .seg-almostlost { background: var(--mb-accent5); }
+  .seg-atrisk     { background: var(--mb-accent3); }
+  .seg-dormant    { background: var(--mb-text-light); }
+
+  /* ===== RFM 3-group cohort label ===== */
+  .group-cohort {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .group-champion { background: rgba(136, 191, 77, 0.18); color: #5a8a2e; }
+  .group-loyal    { background: rgba(249, 207, 72, 0.25); color: #8a6d1a; }
+  .group-former   { background: rgba(237, 110, 110, 0.18); color: #b04545; }
+
+  /* ===== RFM 3-group stacked bar ===== */
+  .rfm-stacked {
+    display: flex;
+    height: 32px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .rfm-stacked-segment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .rfm-stacked-segment.champion { background: var(--mb-accent1); }
+  .rfm-stacked-segment.loyal    { background: var(--mb-accent4); color: #6B5D2E; }
+  .rfm-stacked-segment.former   { background: var(--mb-accent3); }
+  .rfm-stacked-legend {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--mb-text-medium);
+  }
+  .rfm-multiplier-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 12px;
+    color: var(--mb-text-dark);
+  }
+  .rfm-multiplier-row + .rfm-multiplier-row {
+    border-top: 1px dashed var(--mb-border);
+  }
+  .rfm-multiplier-row .label-with-tag {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .rfm-multiplier-row .multiplier {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .multiplier.high { color: var(--mb-success); }
+  .multiplier.mid  { color: var(--mb-text-dark); }
+  .multiplier.low  { color: var(--mb-text-medium); }
+
+  /* ===== Line chart (SVG-based, for 7C trends) ===== */
+  .line-chart-wrap {
+    position: relative;
+    margin-top: 8px;
+  }
+  .line-chart-svg {
+    width: 100%;
+    height: 160px;
+    overflow: visible;
+  }
+  .line-chart-svg .grid-line {
+    stroke: var(--mb-border);
+    stroke-width: 1;
+    stroke-dasharray: 2 3;
+  }
+  .line-chart-svg .axis-line {
+    stroke: var(--mb-border-strong);
+    stroke-width: 1;
+  }
+  .line-chart-svg .line-path {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+  .line-chart-svg .line-path.primary { stroke: var(--mb-brand); }
+  .line-chart-svg .line-path.champion { stroke: var(--mb-accent1); }
+  .line-chart-svg .line-path.loyal    { stroke: var(--mb-accent4); }
+  .line-chart-svg .line-path.former   { stroke: var(--mb-accent3); }
+  .line-chart-svg .line-area {
+    fill: var(--mb-brand-light);
+    opacity: 0.5;
+  }
+  .line-chart-svg .line-dot {
+    fill: var(--mb-brand);
+    stroke: white;
+    stroke-width: 1.5;
+  }
+  .line-chart-svg .y-tick-label,
+  .line-chart-svg .x-tick-label {
+    font-size: 10px;
+    fill: var(--mb-text-light);
+    font-family: 'Lato', sans-serif;
+  }
+  .line-chart-svg .bar-flow {
+    fill: var(--mb-accent1);
+    opacity: 0.7;
+  }
+  .line-chart-svg .bar-churn {
+    fill: var(--mb-accent3);
+    opacity: 0.7;
+  }
+  .line-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--mb-text-medium);
+    flex-wrap: wrap;
+  }
+  .line-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .line-legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+  .line-legend-swatch.line-primary  { background: var(--mb-brand); }
+  .line-legend-swatch.line-champion { background: var(--mb-accent1); }
+  .line-legend-swatch.line-loyal    { background: var(--mb-accent4); }
+  .line-legend-swatch.line-former   { background: var(--mb-accent3); }
+  .line-legend-swatch.bar-flow      { background: var(--mb-accent1); opacity: 0.7; }
+  .line-legend-swatch.bar-churn     { background: var(--mb-accent3); opacity: 0.7; }
+
+  /* Trend value badge in card header */
+  .trend-badge {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--mb-text-medium);
+    margin-top: 2px;
+  }
+  .trend-badge .current-val {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--mb-text-dark);
+  }
+  .trend-badge .delta-up   { color: var(--mb-success); font-weight: 600; }
+  .trend-badge .delta-down { color: var(--mb-error); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- ===== Dashboard header ===== -->
+<div class="dashboard-header">
+  <div>
+    <div class="dashboard-title">Hypershell · Layer 2 — User Decision & Profile</div>
+    <div class="dashboard-meta">Auto-refresh hourly · Last updated 2026-05-08 14:32</div>
+  </div>
+  <div class="header-actions">
+    <div class="icon-btn">↻</div>
+    <div class="icon-btn">⤓</div>
+    <div class="icon-btn">⋯</div>
+  </div>
+</div>
+
+<!-- ===== Global filters ===== -->
+<div class="filter-bar">
+  <div class="filter-pill active">
+    <span class="label">Date Range</span>
+    <span class="value">Past 90 days</span>
+    <span class="caret">▼</span>
+  </div>
+  <div class="filter-pill">
+    <span class="label">Country</span>
+    <span class="value">All</span>
+    <span class="caret">▼</span>
+  </div>
+  <div class="filter-pill">
+    <span class="label">Device</span>
+    <span class="value">All</span>
+    <span class="caret">▼</span>
+  </div>
+</div>
+
+<!-- ===== Tab bar ===== -->
+<div class="tab-bar">
+  <div class="tab active" data-tab="m1">1 · Channel Quality (First/Last Click)</div>
+  <div class="tab" data-tab="m2">2 · User Path Reconstruction</div>
+  <div class="tab" data-tab="m3">3 · Time Lag</div>
+  <div class="tab" data-tab="m4">4 · Education Flow</div>
+  <div class="tab" data-tab="m5">5 · New vs Returning</div>
+  <div class="tab" data-tab="m6">6 · High-intent Leads</div>
+  <div class="tab" data-tab="m7">7 · Customer Value (RFM)</div>
+</div>
+
+<!-- =========================================== -->
+<!-- ===== Module 1: Channel Quality (First/Last Click) ====== -->
+<!-- =========================================== -->
+<div class="tab-content active" id="m1">
+
+  <!-- Tab-level local filters -->
+  <div class="tab-filter-bar">
+    <span class="filter-scope-label">Tab Filters</span>
+    <div class="filter-pill-sm active">
+      <span class="label">Channel</span>
+      <span class="value">All 7</span>
+      <span class="caret">▼</span>
+    </div>
+    <div class="filter-pill-sm">
+      <span class="label">View</span>
+      <span class="value">Both views</span>
+      <span class="caret">▼</span>
+    </div>
+  </div>
+
+  <!-- KPI row -->
+  <div class="grid grid-4">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">First-click Visitors</div>
+          <div class="card-subtitle">Past 90 days</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">42,318</div>
+      <div class="number-trend trend-up">
+        <span class="trend-arrow">▲</span>
+        <span>+8.4%</span>
+        <span class="trend-context">vs prior period</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Avg Conversion Rate</div>
+          <div class="card-subtitle">First-click attributed</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">2.14%</div>
+      <div class="number-trend trend-up">
+        <span class="trend-arrow">▲</span>
+        <span>+0.21pp</span>
+        <span class="trend-context">vs prior period</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Avg Session Duration</div>
+          <div class="card-subtitle">Quality signal for non-converters</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">3:42</div>
+      <div class="number-trend trend-neutral">
+        <span class="trend-context">Site avg: 2:18</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Avg Bounce Rate</div>
+          <div class="card-subtitle">Single-page sessions across channels</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">48.2%</div>
+      <div class="number-trend trend-down">
+        <span class="trend-arrow">▼</span>
+        <span>-2.1pp</span>
+        <span class="trend-context">vs prior period</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main comparison table -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Channel Quality · First-click vs Last-click Comparison</div>
+        <div class="card-subtitle">Each channel evaluated under both attribution views · Role tag derived from First/Last share difference</div>
+      </div>
+      <div class="card-menu">⋯</div>
+    </div>
+    <table class="mb-table">
+      <thead>
+        <tr>
+          <th rowspan="2" style="vertical-align: bottom;">Channel</th>
+          <th colspan="3" style="text-align: center; border-bottom: 1px solid var(--mb-border); border-left: 1px solid var(--mb-border); background: #F1F8E9;">First-click View (Acquisition)</th>
+          <th colspan="3" style="text-align: center; border-bottom: 1px solid var(--mb-border); border-left: 1px solid var(--mb-border); background: #FFF3E0;">Last-click View (Conversion)</th>
+          <th rowspan="2" class="numeric" style="vertical-align: bottom; border-left: 1px solid var(--mb-border);">Dwell Time</th>
+          <th rowspan="2" class="numeric" style="vertical-align: bottom;">Bounce Rate</th>
+          <th rowspan="2" style="vertical-align: bottom; border-left: 1px solid var(--mb-border);">Channel Role</th>
+        </tr>
+        <tr>
+          <th class="numeric" style="background: #F1F8E9; border-left: 1px solid var(--mb-border);">Visitors</th>
+          <th class="numeric" style="background: #F1F8E9;">Conv Rate</th>
+          <th class="numeric" style="background: #F1F8E9;">AOV</th>
+          <th class="numeric" style="background: #FFF3E0; border-left: 1px solid var(--mb-border);">Conversions</th>
+          <th class="numeric" style="background: #FFF3E0;">Share</th>
+          <th class="numeric" style="background: #FFF3E0;">AOV</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="channel-tag"><span class="channel-dot ch-paid-social"></span>Paid Social</span></td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">14,820</td>
+          <td class="numeric"><span class="cell-success">2.36%</span></td>
+          <td class="numeric">$1,920</td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">142</td>
+          <td class="numeric">14.2%</td>
+          <td class="numeric">$1,876</td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">4:12</td>
+          <td class="numeric">38.4%</td>
+          <td style="border-left: 1px solid var(--mb-border);"><span class="role-tag role-acquisition">Acquisition</span></td>
+        </tr>
+        <tr>
+          <td><span class="channel-tag"><span class="channel-dot ch-paid-search"></span>Paid Search</span></td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">8,142</td>
+          <td class="numeric"><span class="cell-success">2.39%</span></td>
+          <td class="numeric">$1,785</td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">285</td>
+          <td class="numeric"><span class="cell-success">28.5%</span></td>
+          <td class="numeric">$1,820</td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">3:24</td>
+          <td class="numeric">42.6%</td>
+          <td style="border-left: 1px solid var(--mb-border);"><span class="role-tag role-conversion">Conversion</span></td>
+        </tr>
+        <tr>
+          <td><span class="channel-tag"><span class="channel-dot ch-organic"></span>Organic Search</span></td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">9,256</td>
+          <td class="numeric">1.78%</td>
+          <td class="numeric">$1,890</td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">156</td>
+          <td class="numeric">15.6%</td>
+          <td class="numeric">$1,915</td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">5:08</td>
+          <td class="numeric">35.8%</td>
+          <td style="border-left: 1px solid var(--mb-border);"><span class="role-tag role-full-funnel">Full-funnel</span></td>
+        </tr>
+        <tr>
+          <td><span class="channel-tag"><span class="channel-dot ch-direct"></span>Direct</span></td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">5,418</td>
+          <td class="numeric">2.40%</td>
+          <td class="numeric">$1,915</td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">320</td>
+          <td class="numeric"><span class="cell-success">32.0%</span></td>
+          <td class="numeric">$1,945</td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">3:48</td>
+          <td class="numeric">46.2%</td>
+          <td style="border-left: 1px solid var(--mb-border);"><span class="role-tag role-conversion">Conversion</span></td>
+        </tr>
+        <tr>
+          <td><span class="channel-tag"><span class="channel-dot ch-referral"></span>Referral</span></td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">2,841</td>
+          <td class="numeric">2.29%</td>
+          <td class="numeric">$1,802</td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">28</td>
+          <td class="numeric">2.8%</td>
+          <td class="numeric">$1,790</td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">2:54</td>
+          <td class="numeric"><span class="cell-warning">61.5%</span></td>
+          <td style="border-left: 1px solid var(--mb-border);"><span class="role-tag role-full-funnel">Full-funnel</span></td>
+        </tr>
+        <tr>
+          <td><span class="channel-tag"><span class="channel-dot ch-email"></span>Email</span></td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">1,205</td>
+          <td class="numeric"><span class="cell-success">2.49%</span></td>
+          <td class="numeric">$2,145</td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">62</td>
+          <td class="numeric">6.2%</td>
+          <td class="numeric">$2,180</td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">2:36</td>
+          <td class="numeric">52.4%</td>
+          <td style="border-left: 1px solid var(--mb-border);"><span class="role-tag role-full-funnel">Full-funnel</span></td>
+        </tr>
+        <tr>
+          <td><span class="channel-tag"><span class="channel-dot ch-other"></span>Other</span></td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">636</td>
+          <td class="numeric"><span class="cell-warning">0.79%</span></td>
+          <td class="numeric">$1,612</td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">7</td>
+          <td class="numeric">0.7%</td>
+          <td class="numeric">$1,580</td>
+          <td class="numeric" style="border-left: 1px solid var(--mb-border);">1:48</td>
+          <td class="numeric"><span class="cell-warning">74.8%</span></td>
+          <td style="border-left: 1px solid var(--mb-border);"><span class="role-tag role-insufficient">Sample &lt;30</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="drill-bar multi">
+      <div class="drill-row">
+        <span class="drill-icon">↗</span>
+        <span class="drill-label">Drill</span>
+        <span class="drill-action">Click any channel row →</span>
+        <span class="drill-target">Layer 3 Ad Performance (channel pre-filtered)</span>
+      </div>
+      <div class="drill-row">
+        <span class="drill-icon">↗</span>
+        <span class="drill-label">Drill</span>
+        <span class="drill-action">Click "Conversion" or "Acquisition" tag →</span>
+        <span class="drill-target">Module 2 path role distribution (cross-validate role tag)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Diverging chart for role positioning -->
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Channel Role Positioning</div>
+          <div class="card-subtitle">First-click share minus Last-click share · Negative = conversion-driven, Positive = acquisition-driven</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="diverging-chart">
+        <div class="diverging-row">
+          <div class="diverging-label">Paid Social</div>
+          <div class="diverging-track">
+            <div class="diverging-half left">
+              <div class="diverging-bar acquisition" style="width: 78%;">+20.8pp</div>
+            </div>
+            <div class="diverging-half right"></div>
+          </div>
+          <div class="diverging-value">+20.8pp</div>
+        </div>
+        <div class="diverging-row">
+          <div class="diverging-label">Referral</div>
+          <div class="diverging-track">
+            <div class="diverging-half left">
+              <div class="diverging-bar acquisition" style="width: 14%; background: var(--mb-text-light);">+3.7pp</div>
+            </div>
+            <div class="diverging-half right"></div>
+          </div>
+          <div class="diverging-value">+3.7pp</div>
+        </div>
+        <div class="diverging-row">
+          <div class="diverging-label">Organic Search</div>
+          <div class="diverging-track">
+            <div class="diverging-half left">
+              <div class="diverging-bar acquisition" style="width: 4%; background: var(--mb-text-light);">+0.9pp</div>
+            </div>
+            <div class="diverging-half right"></div>
+          </div>
+          <div class="diverging-value">+0.9pp</div>
+        </div>
+        <div class="diverging-row">
+          <div class="diverging-label">Email</div>
+          <div class="diverging-track">
+            <div class="diverging-half left"></div>
+            <div class="diverging-half right">
+              <div class="diverging-bar conversion" style="width: 12%; background: var(--mb-text-light);">-3.2pp</div>
+            </div>
+          </div>
+          <div class="diverging-value">-3.2pp</div>
+        </div>
+        <div class="diverging-row">
+          <div class="diverging-label">Paid Search</div>
+          <div class="diverging-track">
+            <div class="diverging-half left"></div>
+            <div class="diverging-half right">
+              <div class="diverging-bar conversion" style="width: 34%;">-9.0pp</div>
+            </div>
+          </div>
+          <div class="diverging-value">-9.0pp</div>
+        </div>
+        <div class="diverging-row">
+          <div class="diverging-label">Direct</div>
+          <div class="diverging-track">
+            <div class="diverging-half left"></div>
+            <div class="diverging-half right">
+              <div class="diverging-bar conversion" style="width: 72%;">-19.0pp</div>
+            </div>
+          </div>
+          <div class="diverging-value">-19.0pp</div>
+        </div>
+        <div class="diverging-axis">
+          <div class="axis-spacer"></div>
+          <div class="axis-label left">← Conversion-driven (≤-7pp)</div>
+          <div class="axis-label right">Acquisition-driven (≥+7pp) →</div>
+          <div class="axis-end"></div>
+        </div>
+        <div style="font-size: 10px; color: var(--mb-text-light); margin-top: 6px; font-style: italic;">Bars in gray fall within ±7pp threshold → Full-funnel · Other channel excluded (sample &lt; 30)</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Conversion Rate · First-click vs Last-click</div>
+          <div class="card-subtitle">Per-channel comparison of conversion efficiency under each attribution view</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div style="padding: 8px 0;">
+        <div class="stacked-row">
+          <div class="stacked-label">Email</div>
+          <div class="stacked-bar" style="background: var(--mb-bg-light);">
+            <div class="stacked-seg" style="width: 68%; background: var(--mb-accent1);">F: 4.08%</div>
+            <div style="width: 4%;"></div>
+            <div class="stacked-seg" style="width: 28%; background: var(--mb-accent5);">L: 5.15%</div>
+          </div>
+        </div>
+        <div class="stacked-row">
+          <div class="stacked-label">Paid Search</div>
+          <div class="stacked-bar" style="background: var(--mb-bg-light);">
+            <div class="stacked-seg" style="width: 52%; background: var(--mb-accent1);">F: 3.12%</div>
+            <div style="width: 4%;"></div>
+            <div class="stacked-seg" style="width: 44%; background: var(--mb-accent5);">L: 3.50%</div>
+          </div>
+        </div>
+        <div class="stacked-row">
+          <div class="stacked-label">Paid Social</div>
+          <div class="stacked-bar" style="background: var(--mb-bg-light);">
+            <div class="stacked-seg" style="width: 64%; background: var(--mb-accent1);">F: 2.84%</div>
+            <div style="width: 4%;"></div>
+            <div class="stacked-seg" style="width: 32%; background: var(--mb-accent5);">L: 0.96%</div>
+          </div>
+        </div>
+        <div class="stacked-row">
+          <div class="stacked-label">Direct</div>
+          <div class="stacked-bar" style="background: var(--mb-bg-light);">
+            <div class="stacked-seg" style="width: 38%; background: var(--mb-accent1);">F: 2.21%</div>
+            <div style="width: 4%;"></div>
+            <div class="stacked-seg" style="width: 58%; background: var(--mb-accent5);">L: 5.91%</div>
+          </div>
+        </div>
+        <div class="stacked-row">
+          <div class="stacked-label">Referral</div>
+          <div class="stacked-bar" style="background: var(--mb-bg-light);">
+            <div class="stacked-seg" style="width: 36%; background: var(--mb-accent1);">F: 1.94%</div>
+            <div style="width: 4%;"></div>
+            <div class="stacked-seg" style="width: 18%; background: var(--mb-accent5);">L: 0.99%</div>
+          </div>
+        </div>
+        <div class="stacked-row">
+          <div class="stacked-label">Organic Search</div>
+          <div class="stacked-bar" style="background: var(--mb-bg-light);">
+            <div class="stacked-seg" style="width: 32%; background: var(--mb-accent1);">F: 1.68%</div>
+            <div style="width: 4%;"></div>
+            <div class="stacked-seg" style="width: 32%; background: var(--mb-accent5);">L: 1.69%</div>
+          </div>
+        </div>
+        <div class="stacked-row">
+          <div class="stacked-label">Other</div>
+          <div class="stacked-bar" style="background: var(--mb-bg-light);">
+            <div class="stacked-seg" style="width: 14%; background: var(--mb-accent1);">F: 0.78%</div>
+            <div style="width: 4%;"></div>
+            <div class="stacked-seg" style="width: 12%; background: var(--mb-accent5);">L: 1.10%</div>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 16px; padding: 12px 0 0 0; font-size: 11px; color: var(--mb-text-medium); border-top: 1px solid var(--mb-border); margin-top: 12px;">
+        <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: var(--mb-accent1); border-radius: 2px;"></span>F = First-click conversion rate</div>
+        <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: var(--mb-accent5); border-radius: 2px;"></span>L = Last-click conversion rate</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================== -->
+<!-- ===== Module 2: User Path Reconstruction ===== -->
+<!-- =========================================== -->
+<div class="tab-content" id="m2">
+
+  <!-- Tab-level local filters -->
+  <div class="tab-filter-bar">
+    <span class="filter-scope-label">Tab Filters</span>
+    <div class="filter-pill-sm active">
+      <span class="label">Path Includes Channel</span>
+      <span class="value">Any</span>
+      <span class="caret">▼</span>
+    </div>
+    <div class="filter-pill-sm">
+      <span class="label">Path Length</span>
+      <span class="value">All</span>
+      <span class="caret">▼</span>
+    </div>
+  </div>
+
+  <!-- Top KPIs (replaced single/multi comparison) -->
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Avg Path Length</div>
+          <div class="card-subtitle">Unique channels touched before purchase</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">2.8 <span style="font-size: 16px; font-weight: 600; color: var(--mb-text-medium);">channels</span></div>
+      <div class="number-trend trend-neutral">
+        <span class="trend-context">Median: 3 channels · Within 7-21d expectation</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Total Reconstructed Paths</div>
+          <div class="card-subtitle">Purchasers with traceable path</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">1,462</div>
+      <div class="number-trend trend-neutral">
+        <span class="trend-context">⚠ Reference only · See note below</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data accuracy disclaimer -->
+  <div style="background: #FFF8E1; border: 1px solid #FFE082; border-left: 4px solid #F9A825; border-radius: 4px; padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: #6F4F00; line-height: 1.6;">
+    <strong>Data Accuracy Note</strong> — Path reconstruction relies on Shopify clientId persistence at the browser cookie layer. Cross-device visits, cache clearing, and private mode cause clientId discontinuity, leading to natural path fragmentation. Use this module as <strong>directional reference</strong>, not as precise attribution. For high-precision cross-platform attribution, a dedicated service should be evaluated separately.
+  </div>
+
+  <!-- Top conversion paths -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Top 10 Conversion Paths</div>
+        <div class="card-subtitle">Channel sequence among purchasers (deduplicated, order preserved)</div>
+      </div>
+      <div class="card-menu">⋯</div>
+    </div>
+    <table class="mb-table">
+      <thead>
+        <tr>
+          <th style="width: 50%;">Path</th>
+          <th class="numeric">Visitors</th>
+          <th class="numeric">Share</th>
+          <th class="numeric">Avg Order Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="path-cell">
+              <span class="path-step">Paid Social</span><span class="path-arrow">→</span>
+              <span class="path-step">Direct</span><span class="path-arrow">→</span>
+              <span class="path-step">Purchase</span>
+            </div>
+          </td>
+          <td class="numeric">184</td>
+          <td class="numeric">18.4%</td>
+          <td class="numeric">$1,920</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="path-cell">
+              <span class="path-step">Paid Social</span><span class="path-arrow">→</span>
+              <span class="path-step">Organic Search</span><span class="path-arrow">→</span>
+              <span class="path-step">Direct</span><span class="path-arrow">→</span>
+              <span class="path-step">Purchase</span>
+            </div>
+          </td>
+          <td class="numeric">142</td>
+          <td class="numeric">14.2%</td>
+          <td class="numeric">$1,985</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="path-cell">
+              <span class="path-step">Paid Search</span><span class="path-arrow">→</span>
+              <span class="path-step">Purchase</span>
+            </div>
+          </td>
+          <td class="numeric">118</td>
+          <td class="numeric">11.8%</td>
+          <td class="numeric">$1,742</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="path-cell">
+              <span class="path-step">Organic Search</span><span class="path-arrow">→</span>
+              <span class="path-step">Direct</span><span class="path-arrow">→</span>
+              <span class="path-step">Purchase</span>
+            </div>
+          </td>
+          <td class="numeric">96</td>
+          <td class="numeric">9.6%</td>
+          <td class="numeric">$1,840</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="path-cell">
+              <span class="path-step">Referral</span><span class="path-arrow">→</span>
+              <span class="path-step">Paid Social</span><span class="path-arrow">→</span>
+              <span class="path-step">Direct</span><span class="path-arrow">→</span>
+              <span class="path-step">Purchase</span>
+            </div>
+          </td>
+          <td class="numeric">81</td>
+          <td class="numeric">8.1%</td>
+          <td class="numeric">$2,045</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="path-cell">
+              <span class="path-step">Email</span><span class="path-arrow">→</span>
+              <span class="path-step">Direct</span><span class="path-arrow">→</span>
+              <span class="path-step">Purchase</span>
+            </div>
+          </td>
+          <td class="numeric">68</td>
+          <td class="numeric">6.8%</td>
+          <td class="numeric">$2,180</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="path-cell">
+              <span class="path-step">Paid Social</span><span class="path-arrow">→</span>
+              <span class="path-step">Paid Search</span><span class="path-arrow">→</span>
+              <span class="path-step">Direct</span><span class="path-arrow">→</span>
+              <span class="path-step">Purchase</span>
+            </div>
+          </td>
+          <td class="numeric">54</td>
+          <td class="numeric">5.4%</td>
+          <td class="numeric">$1,895</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="path-cell">
+              <span class="path-step">Direct</span><span class="path-arrow">→</span>
+              <span class="path-step">Purchase</span>
+            </div>
+          </td>
+          <td class="numeric">42</td>
+          <td class="numeric">4.2%</td>
+          <td class="numeric">$1,650</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="path-cell">
+              <span class="path-step">Organic Search</span><span class="path-arrow">→</span>
+              <span class="path-step">Paid Social</span><span class="path-arrow">→</span>
+              <span class="path-step">Direct</span><span class="path-arrow">→</span>
+              <span class="path-step">Purchase</span>
+            </div>
+          </td>
+          <td class="numeric">38</td>
+          <td class="numeric">3.8%</td>
+          <td class="numeric">$1,920</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="path-cell">
+              <span class="path-step">Paid Social</span><span class="path-arrow">→</span>
+              <span class="path-step">Email</span><span class="path-arrow">→</span>
+              <span class="path-step">Direct</span><span class="path-arrow">→</span>
+              <span class="path-step">Purchase</span>
+            </div>
+          </td>
+          <td class="numeric">32</td>
+          <td class="numeric">3.2%</td>
+          <td class="numeric">$2,250</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Path Length Distribution</div>
+          <div class="card-subtitle">Number of unique channels touched</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="bar-chart">
+        <div class="bar-group">
+          <div class="bar" style="height: 24%;"><div class="bar-value">142</div></div>
+          <div class="bar-label">1 channel</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 78%;"><div class="bar-value">462</div></div>
+          <div class="bar-label">2 channels</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 95%;"><div class="bar-value">562</div></div>
+          <div class="bar-label">3 channels</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 38%;"><div class="bar-value">224</div></div>
+          <div class="bar-label">4 channels</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 12%;"><div class="bar-value">72</div></div>
+          <div class="bar-label">5+ channels</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Channel Position in Paths</div>
+          <div class="card-subtitle">Cross-validates Module 1 role tags via real path positioning</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div style="padding: 8px 0;">
+        <div class="stacked-row">
+          <div class="stacked-label">Paid Social</div>
+          <div class="stacked-bar">
+            <div class="stacked-seg ch-paid-search" style="width: 58%;">58% First</div>
+            <div class="stacked-seg ch-paid-social" style="width: 30%;">30%</div>
+            <div class="stacked-seg ch-organic" style="width: 12%;">12%</div>
+          </div>
+        </div>
+        <div class="stacked-row">
+          <div class="stacked-label">Referral</div>
+          <div class="stacked-bar">
+            <div class="stacked-seg ch-paid-search" style="width: 52%;">52% First</div>
+            <div class="stacked-seg ch-paid-social" style="width: 38%;">38%</div>
+            <div class="stacked-seg ch-organic" style="width: 10%;">10%</div>
+          </div>
+        </div>
+        <div class="stacked-row">
+          <div class="stacked-label">Organic Search</div>
+          <div class="stacked-bar">
+            <div class="stacked-seg ch-paid-search" style="width: 28%;">28%</div>
+            <div class="stacked-seg ch-paid-social" style="width: 52%;">52% Mid</div>
+            <div class="stacked-seg ch-organic" style="width: 20%;">20%</div>
+          </div>
+        </div>
+        <div class="stacked-row">
+          <div class="stacked-label">Paid Search</div>
+          <div class="stacked-bar">
+            <div class="stacked-seg ch-paid-search" style="width: 18%;">18%</div>
+            <div class="stacked-seg ch-paid-social" style="width: 35%;">35%</div>
+            <div class="stacked-seg ch-organic" style="width: 47%;">47% Last</div>
+          </div>
+        </div>
+        <div class="stacked-row">
+          <div class="stacked-label">Email</div>
+          <div class="stacked-bar">
+            <div class="stacked-seg ch-paid-search" style="width: 12%;">12%</div>
+            <div class="stacked-seg ch-paid-social" style="width: 36%;">36%</div>
+            <div class="stacked-seg ch-organic" style="width: 52%;">52% Last</div>
+          </div>
+        </div>
+        <div class="stacked-row">
+          <div class="stacked-label">Direct</div>
+          <div class="stacked-bar">
+            <div class="stacked-seg ch-paid-search" style="width: 8%;">8%</div>
+            <div class="stacked-seg ch-paid-social" style="width: 14%;">14%</div>
+            <div class="stacked-seg ch-organic" style="width: 78%;">78% Last</div>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 16px; padding: 12px 0 0 0; font-size: 11px; color: var(--mb-text-medium); border-top: 1px solid var(--mb-border); margin-top: 12px;">
+        <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: var(--mb-brand); border-radius: 2px;"></span>First position</div>
+        <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: var(--mb-accent2); border-radius: 2px;"></span>Mid position</div>
+        <div style="display: flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 10px; background: var(--mb-accent1); border-radius: 2px;"></span>Last position</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- =========================================== -->
+<!-- ===== Module 3: Time Lag ================= -->
+<!-- =========================================== -->
+<div class="tab-content" id="m3">
+
+  <div class="grid grid-3">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Median Time Lag</div>
+          <div class="card-subtitle">First touch → first purchase</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">11 <span style="font-size: 16px; font-weight: 600; color: var(--mb-text-medium);">days</span></div>
+      <div class="number-trend trend-neutral">
+        <span class="trend-context">Within 7-21 day expectation</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">P90 Time Lag</div>
+          <div class="card-subtitle">Long-tail boundary</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">28 <span style="font-size: 16px; font-weight: 600; color: var(--mb-text-medium);">days</span></div>
+      <div class="number-trend trend-up">
+        <span class="trend-arrow">▲</span>
+        <span>+3 days</span>
+        <span class="trend-context">vs prior period</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Avg Sessions to Purchase</div>
+          <div class="card-subtitle">From first touch</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">4.2</div>
+      <div class="number-trend trend-neutral">
+        <span class="trend-context">Median: 3 sessions</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Time Lag Distribution</div>
+          <div class="card-subtitle">Days from first touch to first purchase · Click bar to see paths</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="bar-chart">
+        <div class="bar-group">
+          <div class="bar" style="height: 18%; background: var(--mb-accent1);"><div class="bar-value">82</div></div>
+          <div class="bar-label">0 day</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 38%; background: var(--mb-accent1);"><div class="bar-value">175</div></div>
+          <div class="bar-label">1-3 d</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 62%;"><div class="bar-value">285</div></div>
+          <div class="bar-label">4-7 d</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 95%;"><div class="bar-value">438</div></div>
+          <div class="bar-label">8-14 d</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 64%;"><div class="bar-value">295</div></div>
+          <div class="bar-label">15-21 d</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 35%; background: var(--mb-accent3);"><div class="bar-value">187</div></div>
+          <div class="bar-label">>21 d</div>
+        </div>
+      </div>
+      <div class="drill-bar">
+        <span class="drill-icon">↗</span>
+        <span class="drill-label">Drill</span>
+        <span class="drill-action">Click any time-range bar →</span>
+        <span class="drill-target">Module 2 Multi-touch Path (filtered by Time Lag cohort)</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Sessions to Purchase Distribution</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="bar-chart">
+        <div class="bar-group">
+          <div class="bar" style="height: 28%;"><div class="bar-value">128</div></div>
+          <div class="bar-label">1 session</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 52%;"><div class="bar-value">240</div></div>
+          <div class="bar-label">2 sessions</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 88%;"><div class="bar-value">405</div></div>
+          <div class="bar-label">3-4</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 72%;"><div class="bar-value">335</div></div>
+          <div class="bar-label">5-7</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 38%;"><div class="bar-value">175</div></div>
+          <div class="bar-label">8-12</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 16%;"><div class="bar-value">74</div></div>
+          <div class="bar-label">13+</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Time Lag by First-touch Channel</div>
+        <div class="card-subtitle">Identify "fast" vs "slow" channels</div>
+      </div>
+      <div class="card-menu">⋯</div>
+    </div>
+    <table class="mb-table">
+      <thead>
+        <tr>
+          <th>First-touch Channel</th>
+          <th class="numeric">Median (days)</th>
+          <th class="numeric">P90 (days)</th>
+          <th class="numeric">Avg Sessions</th>
+          <th class="numeric">Purchasers</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="channel-tag"><span class="channel-dot ch-email"></span>Email</span></td>
+          <td class="numeric"><span class="cell-success">5</span></td>
+          <td class="numeric">14</td>
+          <td class="numeric">2.8</td>
+          <td class="numeric">49</td>
+        </tr>
+        <tr>
+          <td><span class="channel-tag"><span class="channel-dot ch-paid-search"></span>Paid Search</span></td>
+          <td class="numeric"><span class="cell-success">7</span></td>
+          <td class="numeric">19</td>
+          <td class="numeric">3.4</td>
+          <td class="numeric">254</td>
+        </tr>
+        <tr>
+          <td><span class="channel-tag"><span class="channel-dot ch-paid-social"></span>Paid Social</span></td>
+          <td class="numeric">9</td>
+          <td class="numeric">24</td>
+          <td class="numeric">4.1</td>
+          <td class="numeric">421</td>
+        </tr>
+        <tr>
+          <td><span class="channel-tag"><span class="channel-dot ch-direct"></span>Direct</span></td>
+          <td class="numeric">12</td>
+          <td class="numeric">28</td>
+          <td class="numeric">4.6</td>
+          <td class="numeric">120</td>
+        </tr>
+        <tr>
+          <td><span class="channel-tag"><span class="channel-dot ch-organic"></span>Organic Search</span></td>
+          <td class="numeric"><span class="cell-warning">14</span></td>
+          <td class="numeric">35</td>
+          <td class="numeric">5.2</td>
+          <td class="numeric">156</td>
+        </tr>
+        <tr>
+          <td><span class="channel-tag"><span class="channel-dot ch-referral"></span>Referral</span></td>
+          <td class="numeric"><span class="cell-warning">15</span></td>
+          <td class="numeric">38</td>
+          <td class="numeric">5.5</td>
+          <td class="numeric">55</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- =========================================== -->
+<!-- ===== Module 4: Education Flow =========== -->
+<!-- =========================================== -->
+<div class="tab-content" id="m4">
+
+  <div class="grid grid-3">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Specs Page Reach</div>
+          <div class="card-subtitle">% of visitors who viewed Specs</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">38.4%</div>
+      <div class="number-trend trend-up">
+        <span class="trend-arrow">▲</span>
+        <span>+2.1pp</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Demo Page Reach</div>
+          <div class="card-subtitle">% of visitors who viewed Demo</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">22.7%</div>
+      <div class="number-trend trend-up">
+        <span class="trend-arrow">▲</span>
+        <span>+1.4pp</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">FAQ Page Reach</div>
+          <div class="card-subtitle">% of visitors who viewed FAQ</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">14.2%</div>
+      <div class="number-trend trend-down">
+        <span class="trend-arrow">▼</span>
+        <span>-0.3pp</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Top Education Page Sequences</div>
+        <div class="card-subtitle">Visitors who viewed 2+ education page types</div>
+      </div>
+      <div class="card-menu">⋯</div>
+    </div>
+    <table class="mb-table">
+      <thead>
+        <tr>
+          <th style="width: 45%;">Sequence</th>
+          <th class="numeric">Visitors</th>
+          <th class="numeric">Share</th>
+          <th class="numeric">Add-to-cart Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="path-cell">
+              <span class="path-step">Specs</span><span class="path-arrow">→</span>
+              <span class="path-step">FAQ</span><span class="path-arrow">→</span>
+              <span class="path-step">Demo</span>
+            </div>
+          </td>
+          <td class="numeric">1,842</td>
+          <td class="numeric">28.4%</td>
+          <td class="numeric"><span class="cell-success">12.4%</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="path-cell">
+              <span class="path-step">Specs</span><span class="path-arrow">→</span>
+              <span class="path-step">Demo</span>
+            </div>
+          </td>
+          <td class="numeric">1,506</td>
+          <td class="numeric">23.2%</td>
+          <td class="numeric"><span class="cell-success">10.8%</span></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="path-cell">
+              <span class="path-step">Demo</span><span class="path-arrow">→</span>
+              <span class="path-step">Specs</span>
+            </div>
+          </td>
+          <td class="numeric">1,215</td>
+          <td class="numeric">18.7%</td>
+          <td class="numeric">9.2%</td>
+          </tr>
+        <tr>
+          <td>
+            <div class="path-cell">
+              <span class="path-step">Specs</span><span class="path-arrow">→</span>
+              <span class="path-step">FAQ</span>
+            </div>
+          </td>
+          <td class="numeric">820</td>
+          <td class="numeric">12.6%</td>
+          <td class="numeric">6.8%</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="path-cell">
+              <span class="path-step">FAQ</span><span class="path-arrow">→</span>
+              <span class="path-step">Specs</span>
+            </div>
+          </td>
+          <td class="numeric">615</td>
+          <td class="numeric">9.5%</td>
+          <td class="numeric">5.4%</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="path-cell">
+              <span class="path-step">Demo</span><span class="path-arrow">→</span>
+              <span class="path-step">FAQ</span>
+            </div>
+          </td>
+          <td class="numeric">490</td>
+          <td class="numeric">7.6%</td>
+          <td class="numeric">4.8%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">View → Add-to-cart Conversion by Page Type</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="bar-chart">
+        <div class="bar-group">
+          <div class="bar" style="height: 88%; background: var(--mb-accent1);"><div class="bar-value">14.2%</div></div>
+          <div class="bar-label">Specs</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 72%;"><div class="bar-value">11.6%</div></div>
+          <div class="bar-label">Demo</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 42%; background: var(--mb-accent5);"><div class="bar-value">6.8%</div></div>
+          <div class="bar-label">FAQ</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 28%; background: var(--mb-text-light);"><div class="bar-value">4.5%</div></div>
+          <div class="bar-label">Site avg</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Avg Time on Page</div>
+          <div class="card-subtitle">Approximated from page_viewed time gap (page exits not measurable)</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="bar-chart">
+        <div class="bar-group">
+          <div class="bar" style="height: 92%;"><div class="bar-value">3:42</div></div>
+          <div class="bar-label">Specs</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 78%;"><div class="bar-value">3:08</div></div>
+          <div class="bar-label">Demo</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 48%;"><div class="bar-value">1:54</div></div>
+          <div class="bar-label">FAQ</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 32%; background: var(--mb-text-light);"><div class="bar-value">1:14</div></div>
+          <div class="bar-label">Site avg</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================== -->
+<!-- ===== Module 5: New vs Returning ========= -->
+<!-- =========================================== -->
+<div class="tab-content" id="m5">
+
+  <!-- Tab-level local filters -->
+  <div class="tab-filter-bar">
+    <span class="filter-scope-label">Tab Filters</span>
+    <span style="font-size: 11px; color: var(--mb-text-medium); margin-right: 4px;">View Mode:</span>
+    <div class="seg-toggle">
+      <button class="active">Side-by-side</button>
+      <button>New only</button>
+      <button>Returning only</button>
+    </div>
+  </div>
+
+  <div class="grid grid-3">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Visitor Mix</div>
+          <div class="card-subtitle">New vs Returning</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div style="margin-top: 8px;">
+        <div style="display: flex; gap: 4px; height: 32px; border-radius: 4px; overflow: hidden;">
+          <div style="background: var(--mb-brand); flex: 73; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 13px;">73% New</div>
+          <div style="background: var(--mb-accent1); flex: 27; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 13px;">27% Returning</div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--mb-text-medium);">
+          <span>30,892 new</span>
+          <span>11,426 returning</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Conversion Lift</div>
+          <div class="card-subtitle">Returning vs New</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">2.8 <span style="font-size: 16px; font-weight: 600; color: var(--mb-text-medium);">×</span></div>
+      <div class="number-trend trend-up">
+        <span>Returning: 4.82% / New: 1.72%</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">AOV Difference</div>
+          <div class="card-subtitle">Returning vs New</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">+$215</div>
+      <div class="number-trend trend-up">
+        <span>Returning: $1,985 / New: $1,770</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">New Visitor Funnel</div>
+          <div class="card-subtitle">First-time visitors</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="funnel">
+        <div class="funnel-row">
+          <div class="funnel-label">Landing Page</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 100%;">30,892</div>
+            <div class="funnel-pct">100%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Product View</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 58%;">17,917</div>
+            <div class="funnel-pct">58%</div>
+            <div class="funnel-drop">-42%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Add to Cart</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 12%;">3,707</div>
+            <div class="funnel-pct">12%</div>
+            <div class="funnel-drop">-79%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Checkout Start</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 5.4%;">1,668</div>
+            <div class="funnel-pct">5.4%</div>
+            <div class="funnel-drop">-55%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Payment Info</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 2.8%;">865</div>
+            <div class="funnel-pct">2.8%</div>
+            <div class="funnel-drop">-48%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Purchase</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 1.72%; background: var(--mb-success);">531</div>
+            <div class="funnel-pct">1.72%</div>
+            <div class="funnel-drop">-39%</div>
+          </div>
+        </div>
+      </div>
+      <div class="drill-bar">
+        <span class="drill-icon">↗</span>
+        <span class="drill-label">Drill</span>
+        <span class="drill-action">Click any funnel stage →</span>
+        <span class="drill-target">See drop-off visitors at that step (records list)</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Returning Visitor Funnel</div>
+          <div class="card-subtitle">Visitors with prior history</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="funnel">
+        <div class="funnel-row">
+          <div class="funnel-label">Landing Page</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 100%; background: var(--mb-accent1);">11,426</div>
+            <div class="funnel-pct">100%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Product View</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 78%; background: var(--mb-accent1);">8,912</div>
+            <div class="funnel-pct">78%</div>
+            <div class="funnel-drop">-22%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Add to Cart</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 24%; background: var(--mb-accent1);">2,742</div>
+            <div class="funnel-pct">24%</div>
+            <div class="funnel-drop">-69%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Checkout Start</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 14%; background: var(--mb-accent1);">1,599</div>
+            <div class="funnel-pct">14%</div>
+            <div class="funnel-drop">-42%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Payment Info</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 7.8%; background: var(--mb-accent1);">891</div>
+            <div class="funnel-pct">7.8%</div>
+            <div class="funnel-drop">-44%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Purchase</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 4.82%; background: var(--mb-success);">551</div>
+            <div class="funnel-pct">4.82%</div>
+            <div class="funnel-drop">-38%</div>
+          </div>
+        </div>
+      </div>
+      <div class="drill-bar">
+        <span class="drill-icon">↗</span>
+        <span class="drill-label">Drill</span>
+        <span class="drill-action">Click any funnel stage →</span>
+        <span class="drill-target">See drop-off visitors at that step (records list)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">New vs Returning · Side-by-side Metrics</div>
+      </div>
+      <div class="card-menu">⋯</div>
+    </div>
+    <table class="mb-table">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th class="numeric">New Visitors</th>
+          <th class="numeric">Returning Visitors</th>
+          <th class="numeric">Difference</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Visitors</td>
+          <td class="numeric">30,892</td>
+          <td class="numeric">11,426</td>
+          <td class="numeric cell-secondary">―</td>
+        </tr>
+        <tr>
+          <td>Conversion Rate</td>
+          <td class="numeric">1.72%</td>
+          <td class="numeric">4.82%</td>
+          <td class="numeric cell-success">+3.10 pp</td>
+        </tr>
+        <tr>
+          <td>Average Order Value</td>
+          <td class="numeric">$1,770</td>
+          <td class="numeric">$1,985</td>
+          <td class="numeric cell-success">+$215</td>
+        </tr>
+        <tr>
+          <td>Time Lag (median)</td>
+          <td class="numeric">14 days</td>
+          <td class="numeric">5 days</td>
+          <td class="numeric cell-success">-9 days</td>
+        </tr>
+        <tr>
+          <td>Avg Sessions before Purchase</td>
+          <td class="numeric">5.1</td>
+          <td class="numeric">2.4</td>
+          <td class="numeric cell-success">-2.7</td>
+        </tr>
+        <tr>
+          <td>Biggest Drop-off Stage</td>
+          <td class="numeric"><span style="color: var(--mb-error); font-weight: 600;">Product → Cart (-79%)</span></td>
+          <td class="numeric"><span style="color: var(--mb-error); font-weight: 600;">Product → Cart (-69%)</span></td>
+          <td class="numeric cell-secondary">―</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- =========================================== -->
+<!-- ===== Module 6: High-intent Leads ======== -->
+<!-- =========================================== -->
+<div class="tab-content" id="m6">
+
+  <!-- Tab-level local filters -->
+  <div class="tab-filter-bar">
+    <span class="filter-scope-label">Tab Filters</span>
+    <div class="filter-pill-sm active">
+      <span class="label">Trigger Rules</span>
+      <span class="value">All 4 (union)</span>
+      <span class="caret">▼</span>
+    </div>
+  </div>
+
+  <div class="grid grid-3">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Total High-intent Leads</div>
+          <div class="card-subtitle">Currently active</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">2,847</div>
+      <div class="number-trend trend-up">
+        <span class="trend-arrow">▲</span>
+        <span>+18.4%</span>
+        <span class="trend-context">vs prior period</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Lead → Purchase Rate</div>
+          <div class="card-subtitle">Validation of rule effectiveness</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">8.42%</div>
+      <div class="number-trend trend-up">
+        <span class="trend-context">vs site avg 2.14% (3.9× lift)</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Half-named Lead Share</div>
+          <div class="card-subtitle">Has email captured</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">42.1%</div>
+      <div class="number-trend trend-neutral">
+        <span class="trend-context">Eligible for EDM retargeting</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Trigger Rule Hit Distribution</div>
+          <div class="card-subtitle">Number of leads matching each rule (overlapping allowed)</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="bar-chart">
+        <div class="bar-group">
+          <div class="bar" style="height: 95%;"><div class="bar-value">1,842</div></div>
+          <div class="bar-label">Cart abandon</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 68%; background: var(--mb-accent2);"><div class="bar-value">1,318</div></div>
+          <div class="bar-label">Frequent PDP</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 52%; background: var(--mb-accent1);"><div class="bar-value">1,008</div></div>
+          <div class="bar-label">Long dwell</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 24%; background: var(--mb-accent5);"><div class="bar-value">462</div></div>
+          <div class="bar-label">Model search</div>
+        </div>
+      </div>
+      <div class="drill-hint">→ Leads matching 2+ rules have 14.8% conversion rate (1.8× of single-rule leads)</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Source Channel Mix</div>
+          <div class="card-subtitle">First-touch channel of high-intent leads</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="donut-wrap">
+        <div class="donut" style="background: conic-gradient(
+          var(--mb-paid-social, #A989C5) 0% 38%,
+          var(--mb-paid-search, #509EE3) 38% 60%,
+          var(--mb-organic, #88BF4D) 60% 78%,
+          var(--mb-direct, #7172AD) 78% 90%,
+          var(--mb-other, #F2A86F) 90% 96%,
+          var(--mb-text-light) 96% 100%);">
+          <div style="width: 100%; height: 100%; border-radius: 50%; background: white; transform: scale(0.55);"></div>
+        </div>
+        <div class="donut-legend">
+          <div class="legend-item">
+            <span class="legend-dot ch-paid-social"></span>
+            <span class="legend-label">Paid Social</span>
+            <span class="legend-value">38%</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot ch-paid-search"></span>
+            <span class="legend-label">Paid Search</span>
+            <span class="legend-value">22%</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot ch-organic"></span>
+            <span class="legend-label">Organic</span>
+            <span class="legend-value">18%</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot ch-direct"></span>
+            <span class="legend-label">Direct</span>
+            <span class="legend-value">12%</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot ch-referral"></span>
+            <span class="legend-label">Referral</span>
+            <span class="legend-value">6%</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot ch-other"></span>
+            <span class="legend-label">Other</span>
+            <span class="legend-value">4%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">High-intent Lead Detail</div>
+        <div class="card-subtitle">Click row for visit history · Use top-right icon to export CSV (email field permission-controlled)</div>
+      </div>
+      <div class="card-menu">⋯</div>
+    </div>
+    <table class="mb-table">
+      <thead>
+        <tr>
+          <th>Client ID</th>
+          <th>First-touch Channel</th>
+          <th>Triggered Rules</th>
+          <th class="numeric">Last Active</th>
+          <th>Cart Item</th>
+          <th>Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span style="font-family: monospace; font-size: 12px; color: var(--mb-text-medium);">a4e2…8c9f</span></td>
+          <td><span class="channel-tag"><span class="channel-dot ch-paid-social"></span>Paid Social</span></td>
+          <td><span style="font-size: 11px; color: var(--mb-text-medium);">Cart abandon · Frequent PDP · Long dwell</span></td>
+          <td class="numeric">2h ago</td>
+          <td>HyperShell Pro</td>
+          <td><span style="color: var(--mb-text-medium); font-size: 12px;">j***n@gmail.com</span></td>
+        </tr>
+        <tr>
+          <td><span style="font-family: monospace; font-size: 12px; color: var(--mb-text-medium);">9b1c…3d2a</span></td>
+          <td><span class="channel-tag"><span class="channel-dot ch-paid-search"></span>Paid Search</span></td>
+          <td><span style="font-size: 11px; color: var(--mb-text-medium);">Cart abandon · Model search</span></td>
+          <td class="numeric">5h ago</td>
+          <td>HyperShell Carbon</td>
+          <td><span style="color: var(--mb-text-medium); font-size: 12px;">m***s@outlook.com</span></td>
+        </tr>
+        <tr>
+          <td><span style="font-family: monospace; font-size: 12px; color: var(--mb-text-medium);">f7d8…1e4b</span></td>
+          <td><span class="channel-tag"><span class="channel-dot ch-organic"></span>Organic Search</span></td>
+          <td><span style="font-size: 11px; color: var(--mb-text-medium);">Frequent PDP · Long dwell · Model search</span></td>
+          <td class="numeric">8h ago</td>
+          <td><span class="cell-secondary">―</span></td>
+          <td><span style="color: var(--mb-text-light); font-size: 12px; font-style: italic;">anonymous</span></td>
+        </tr>
+        <tr>
+          <td><span style="font-family: monospace; font-size: 12px; color: var(--mb-text-medium);">2a5f…9b6c</span></td>
+          <td><span class="channel-tag"><span class="channel-dot ch-paid-social"></span>Paid Social</span></td>
+          <td><span style="font-size: 11px; color: var(--mb-text-medium);">Cart abandon</span></td>
+          <td class="numeric">12h ago</td>
+          <td>HyperShell Pro</td>
+          <td><span style="color: var(--mb-text-medium); font-size: 12px;">a***h@gmail.com</span></td>
+        </tr>
+        <tr>
+          <td><span style="font-family: monospace; font-size: 12px; color: var(--mb-text-medium);">c6e9…7d3f</span></td>
+          <td><span class="channel-tag"><span class="channel-dot ch-direct"></span>Direct</span></td>
+          <td><span style="font-size: 11px; color: var(--mb-text-medium);">Frequent PDP · Long dwell</span></td>
+          <td class="numeric">1d ago</td>
+          <td><span class="cell-secondary">―</span></td>
+          <td><span style="color: var(--mb-text-light); font-size: 12px; font-style: italic;">anonymous</span></td>
+        </tr>
+        <tr>
+          <td><span style="font-family: monospace; font-size: 12px; color: var(--mb-text-medium);">8e1d…5a2b</span></td>
+          <td><span class="channel-tag"><span class="channel-dot ch-paid-search"></span>Paid Search</span></td>
+          <td><span style="font-size: 11px; color: var(--mb-text-medium);">Cart abandon · Frequent PDP · Long dwell · Model search</span></td>
+          <td class="numeric">1d ago</td>
+          <td>HyperShell Carbon</td>
+          <td><span style="color: var(--mb-text-medium); font-size: 12px;">k***l@yahoo.com</span></td>
+        </tr>
+        <tr>
+          <td><span style="font-family: monospace; font-size: 12px; color: var(--mb-text-medium);">3f2a…6b8e</span></td>
+          <td><span class="channel-tag"><span class="channel-dot ch-email"></span>Email</span></td>
+          <td><span style="font-size: 11px; color: var(--mb-text-medium);">Cart abandon · Long dwell</span></td>
+          <td class="numeric">2d ago</td>
+          <td>HyperShell Pro</td>
+          <td><span style="color: var(--mb-text-medium); font-size: 12px;">r***t@gmail.com</span></td>
+        </tr>
+        <tr>
+          <td><span style="font-family: monospace; font-size: 12px; color: var(--mb-text-medium);">5d8c…2e7a</span></td>
+          <td><span class="channel-tag"><span class="channel-dot ch-paid-social"></span>Paid Social</span></td>
+          <td><span style="font-size: 11px; color: var(--mb-text-medium);">Frequent PDP · Model search</span></td>
+          <td class="numeric">2d ago</td>
+          <td><span class="cell-secondary">―</span></td>
+          <td><span style="color: var(--mb-text-light); font-size: 12px; font-style: italic;">anonymous</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="padding: 12px 0 0 0; font-size: 11px; color: var(--mb-text-light); border-top: 1px solid var(--mb-border); margin-top: 4px;">Showing 8 of 2,847 leads · <span style="color: var(--mb-brand); cursor: pointer;">Load more</span></div>
+    <div class="drill-bar">
+      <span class="drill-icon">↗</span>
+      <span class="drill-label">Drill</span>
+      <span class="drill-action">Click any lead row →</span>
+      <span class="drill-target">Visit history for that clientId (event timeline)</span>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================== -->
+<!-- ===== Module 7: Customer Value (RFM) ====== -->
+<!-- =========================================== -->
+<div class="tab-content" id="m7">
+
+  <!-- Subject change banner -->
+  <div class="subject-banner">
+    <span class="banner-icon">ℹ</span>
+    <div>
+      <strong>Subject change:</strong> This tab analyzes <strong>customer_id</strong> (named, post-purchase users), independent from Tabs 1–6 which use clientId (visitor-level). Time window is <strong>12 months</strong>, decoupled from the global 90-day filter.
+    </div>
+  </div>
+
+  <!-- Tab-level local filters -->
+  <div class="tab-filter-bar">
+    <span class="filter-scope-label">Tab Filters</span>
+    <div class="filter-pill-sm active">
+      <span class="label">RFM Window:</span>
+      <span class="value">12 months</span>
+      <span class="caret">▼</span>
+    </div>
+  </div>
+
+  <!-- ===== 7A · Asset Fundamentals ===== -->
+  <div class="section-title">7A · Asset Fundamentals</div>
+  <div class="grid grid-4">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Total Customers</div>
+          <div class="card-subtitle">Cumulative named users</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">12,847</div>
+      <div class="number-trend trend-up">
+        <span class="trend-arrow">▲</span>
+        <span>+342 this month</span>
+        <span class="trend-context">(+2.7% MoM)</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Subscribed Customers</div>
+          <div class="card-subtitle">Klaviyo active subscribers</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">7,524</div>
+      <div class="number-trend trend-up">
+        <span class="trend-arrow">▲</span>
+        <span>58.6% subscription rate</span>
+        <span class="trend-context">(+1.2pp YoY)</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Paying Customers</div>
+          <div class="card-subtitle">≥ 1 historical order</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">4,193</div>
+      <div class="number-trend trend-up">
+        <span class="trend-arrow">▲</span>
+        <span>32.6% payment rate</span>
+        <span class="trend-context">(+0.8pp YoY)</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Core Customers</div>
+          <div class="card-subtitle">Champion cohort (New + Active + Promising)</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="number-value">1,248</div>
+      <div class="number-trend trend-up">
+        <span class="trend-arrow">▲</span>
+        <span>+47 net this month</span>
+        <span class="trend-context">(+3.9% MoM)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 7B · RFM Segmentation ===== -->
+  <div class="section-title" style="margin-top: 24px;">7B · RFM Segmentation</div>
+
+  <div class="grid grid-2-1">
+    <!-- Left: 7-segment table -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">RFM Segments — 7 Sub-classes</div>
+          <div class="card-subtitle">12-month window · Durable-goods adapted (R: 180/540 days, F/M: M × 0.7 + F × 0.3)</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <table class="mb-table" style="margin-top: 8px;">
+        <thead>
+          <tr>
+            <th>Segment</th>
+            <th>Cohort</th>
+            <th class="numeric">Customers</th>
+            <th class="numeric">% of Paying</th>
+            <th class="numeric">MoM Δ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="seg-tag seg-new">新客 New</span></td>
+            <td><span class="group-cohort group-champion">Champion</span></td>
+            <td class="numeric">187</td>
+            <td class="numeric">4.5%</td>
+            <td class="numeric trend-up">+12.0%</td>
+          </tr>
+          <tr>
+            <td><span class="seg-tag seg-active">活跃冠军 Active</span></td>
+            <td><span class="group-cohort group-champion">Champion</span></td>
+            <td class="numeric">624</td>
+            <td class="numeric">14.9%</td>
+            <td class="numeric trend-up">+3.8%</td>
+          </tr>
+          <tr>
+            <td><span class="seg-tag seg-promising">潜力冠军 Promising</span></td>
+            <td><span class="group-cohort group-champion">Champion</span></td>
+            <td class="numeric">437</td>
+            <td class="numeric">10.4%</td>
+            <td class="numeric trend-up">+1.6%</td>
+          </tr>
+          <tr>
+            <td><span class="seg-tag seg-attention">需关注 Needs Attention</span></td>
+            <td><span class="group-cohort group-loyal">Loyal</span></td>
+            <td class="numeric">512</td>
+            <td class="numeric">12.2%</td>
+            <td class="numeric trend-down">-2.1%</td>
+          </tr>
+          <tr>
+            <td><span class="seg-tag seg-almostlost">即将流失 Almost Lost</span></td>
+            <td><span class="group-cohort group-loyal">Loyal</span></td>
+            <td class="numeric">683</td>
+            <td class="numeric">16.3%</td>
+            <td class="numeric trend-up">+5.4%</td>
+          </tr>
+          <tr>
+            <td><span class="seg-tag seg-atrisk">高风险 At Risk</span></td>
+            <td><span class="group-cohort group-former">Former</span></td>
+            <td class="numeric">329</td>
+            <td class="numeric">7.8%</td>
+            <td class="numeric trend-down">-1.2%</td>
+          </tr>
+          <tr>
+            <td><span class="seg-tag seg-dormant">休眠 Dormant</span></td>
+            <td><span class="group-cohort group-former">Former</span></td>
+            <td class="numeric">1,421</td>
+            <td class="numeric">33.9%</td>
+            <td class="numeric trend-up">+8.7%</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="drill-hint">→ Click a row to view that segment's customer list (see records)</div>
+    </div>
+
+    <!-- Right: 3-group visualization + GMV + per-capita multiplier -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Cohort Concentration</div>
+          <div class="card-subtitle">Customer count vs revenue contribution</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+
+      <div style="margin-top: 12px; font-size: 11px; color: var(--mb-text-medium); font-weight: 600;">Customers (% of paying)</div>
+      <div class="rfm-stacked">
+        <div class="rfm-stacked-segment champion" style="flex: 1248;">29.8%</div>
+        <div class="rfm-stacked-segment loyal" style="flex: 1195;">28.5%</div>
+        <div class="rfm-stacked-segment former" style="flex: 1750;">41.7%</div>
+      </div>
+      <div class="rfm-stacked-legend">
+        <span>Champion 1,248</span>
+        <span>Loyal 1,195</span>
+        <span>Former 1,750</span>
+      </div>
+
+      <div style="margin-top: 16px; font-size: 11px; color: var(--mb-text-medium); font-weight: 600;">GMV Contribution (% of revenue)</div>
+      <div class="rfm-stacked">
+        <div class="rfm-stacked-segment champion" style="flex: 52;">52%</div>
+        <div class="rfm-stacked-segment loyal" style="flex: 31;">31%</div>
+        <div class="rfm-stacked-segment former" style="flex: 17;">17%</div>
+      </div>
+      <div class="rfm-stacked-legend">
+        <span>$4.2M</span>
+        <span>$2.5M</span>
+        <span>$1.4M</span>
+      </div>
+
+      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--mb-border);">
+        <div style="font-size: 11px; color: var(--mb-text-medium); font-weight: 600; margin-bottom: 4px;">Per-capita GMV multiplier vs overall</div>
+        <div class="rfm-multiplier-row">
+          <div class="label-with-tag"><span class="group-cohort group-champion">Champion</span></div>
+          <div class="multiplier high">1.75 ×</div>
+        </div>
+        <div class="rfm-multiplier-row">
+          <div class="label-with-tag"><span class="group-cohort group-loyal">Loyal</span></div>
+          <div class="multiplier mid">1.09 ×</div>
+        </div>
+        <div class="rfm-multiplier-row">
+          <div class="label-with-tag"><span class="group-cohort group-former">Former</span></div>
+          <div class="multiplier low">0.41 ×</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 7C · Asset Health Trends ===== -->
+  <div class="section-title" style="margin-top: 24px;">7C · Asset Health Trends — Monthly</div>
+
+  <!-- Top priority: Core Customer Net Growth (full width, most important) -->
+  <div class="card" style="margin-bottom: 16px;">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Core Customer Net Growth (Inflow / Outflow Breakdown)</div>
+        <div class="card-subtitle">Champion cohort monthly delta · Earliest signal of asset health</div>
+        <div class="trend-badge">
+          <span>Current net rate:</span>
+          <span class="current-val">+3.9%</span>
+          <span class="delta-up">▲ +1.4pp vs avg</span>
+        </div>
+      </div>
+      <div class="card-menu">⋯</div>
+    </div>
+    <div class="line-chart-wrap">
+      <svg class="line-chart-svg" viewBox="0 0 720 160" preserveAspectRatio="none">
+        <!-- Grid lines -->
+        <line class="grid-line" x1="40" y1="40" x2="720" y2="40"/>
+        <line class="grid-line" x1="40" y1="80" x2="720" y2="80"/>
+        <line class="grid-line" x1="40" y1="120" x2="720" y2="120"/>
+        <line class="axis-line" x1="40" y1="80" x2="720" y2="80"/>
+        <!-- Y-axis labels -->
+        <text class="y-tick-label" x="34" y="44" text-anchor="end">+8%</text>
+        <text class="y-tick-label" x="34" y="84" text-anchor="end">0</text>
+        <text class="y-tick-label" x="34" y="124" text-anchor="end">-4%</text>
+        <!-- Inflow bars (positive, above zero line) -->
+        <rect class="bar-flow" x="50"  y="50" width="40" height="30"/>
+        <rect class="bar-flow" x="106" y="56" width="40" height="24"/>
+        <rect class="bar-flow" x="162" y="48" width="40" height="32"/>
+        <rect class="bar-flow" x="218" y="52" width="40" height="28"/>
+        <rect class="bar-flow" x="274" y="46" width="40" height="34"/>
+        <rect class="bar-flow" x="330" y="50" width="40" height="30"/>
+        <rect class="bar-flow" x="386" y="54" width="40" height="26"/>
+        <rect class="bar-flow" x="442" y="48" width="40" height="32"/>
+        <rect class="bar-flow" x="498" y="44" width="40" height="36"/>
+        <rect class="bar-flow" x="554" y="42" width="40" height="38"/>
+        <rect class="bar-flow" x="610" y="46" width="40" height="34"/>
+        <rect class="bar-flow" x="666" y="40" width="40" height="40"/>
+        <!-- Outflow bars (negative, below zero line) -->
+        <rect class="bar-churn" x="50"  y="80" width="40" height="22"/>
+        <rect class="bar-churn" x="106" y="80" width="40" height="18"/>
+        <rect class="bar-churn" x="162" y="80" width="40" height="26"/>
+        <rect class="bar-churn" x="218" y="80" width="40" height="20"/>
+        <rect class="bar-churn" x="274" y="80" width="40" height="24"/>
+        <rect class="bar-churn" x="330" y="80" width="40" height="22"/>
+        <rect class="bar-churn" x="386" y="80" width="40" height="20"/>
+        <rect class="bar-churn" x="442" y="80" width="40" height="18"/>
+        <rect class="bar-churn" x="498" y="80" width="40" height="22"/>
+        <rect class="bar-churn" x="554" y="80" width="40" height="20"/>
+        <rect class="bar-churn" x="610" y="80" width="40" height="18"/>
+        <rect class="bar-churn" x="666" y="80" width="40" height="22"/>
+        <!-- Net growth rate line overlay -->
+        <path class="line-path primary" d="M70,72 L126,76 L182,68 L238,72 L294,66 L350,72 L406,76 L462,72 L518,66 L574,62 L630,68 L686,58"/>
+        <circle class="line-dot" cx="686" cy="58" r="3.5"/>
+        <!-- X-axis labels -->
+        <text class="x-tick-label" x="70"  y="155" text-anchor="middle">Jun '25</text>
+        <text class="x-tick-label" x="182" y="155" text-anchor="middle">Aug</text>
+        <text class="x-tick-label" x="294" y="155" text-anchor="middle">Oct</text>
+        <text class="x-tick-label" x="406" y="155" text-anchor="middle">Dec</text>
+        <text class="x-tick-label" x="518" y="155" text-anchor="middle">Feb '26</text>
+        <text class="x-tick-label" x="630" y="155" text-anchor="middle">Apr</text>
+        <text class="x-tick-label" x="686" y="155" text-anchor="middle">May</text>
+      </svg>
+      <div class="line-legend">
+        <div class="line-legend-item"><span class="line-legend-swatch bar-flow"></span>Monthly inflow (new champions)</div>
+        <div class="line-legend-item"><span class="line-legend-swatch bar-churn"></span>Monthly outflow (downgraded)</div>
+        <div class="line-legend-item"><span class="line-legend-swatch line-primary"></span>Net growth rate</div>
+      </div>
+    </div>
+    <div class="drill-hint">→ Click a bar to view that month's inflow/outflow customer details</div>
+  </div>
+
+  <!-- Second row: 2x2 of remaining trends -->
+  <div class="grid grid-2">
+    <!-- Trend 2: First-order conversion rate -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">First-Order Conversion Rate</div>
+          <div class="card-subtitle">Of monthly active named users</div>
+          <div class="trend-badge">
+            <span>Current:</span>
+            <span class="current-val">8.2%</span>
+            <span class="delta-up">▲ +0.6pp MoM</span>
+          </div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="line-chart-wrap">
+        <svg class="line-chart-svg" viewBox="0 0 360 140" preserveAspectRatio="none">
+          <line class="grid-line" x1="32" y1="30" x2="360" y2="30"/>
+          <line class="grid-line" x1="32" y1="70" x2="360" y2="70"/>
+          <line class="grid-line" x1="32" y1="110" x2="360" y2="110"/>
+          <text class="y-tick-label" x="28" y="34" text-anchor="end">10%</text>
+          <text class="y-tick-label" x="28" y="74" text-anchor="end">7%</text>
+          <text class="y-tick-label" x="28" y="114" text-anchor="end">4%</text>
+          <path class="line-area" d="M40,82 L70,76 L100,80 L130,72 L160,68 L190,74 L220,66 L250,62 L280,58 L310,56 L340,54 L355,46 L355,120 L40,120 Z"/>
+          <path class="line-path primary" d="M40,82 L70,76 L100,80 L130,72 L160,68 L190,74 L220,66 L250,62 L280,58 L310,56 L340,54 L355,46"/>
+          <circle class="line-dot" cx="355" cy="46" r="3"/>
+          <text class="x-tick-label" x="40"  y="135" text-anchor="middle">Jun '25</text>
+          <text class="x-tick-label" x="190" y="135" text-anchor="middle">Nov</text>
+          <text class="x-tick-label" x="355" y="135" text-anchor="middle">May '26</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Trend 3: First-order time -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Avg First-Order Time</div>
+          <div class="card-subtitle">Median days from first visit to first purchase</div>
+          <div class="trend-badge">
+            <span>Current:</span>
+            <span class="current-val">11.4 d</span>
+            <span class="delta-up">▼ -1.2 d MoM (faster)</span>
+          </div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="line-chart-wrap">
+        <svg class="line-chart-svg" viewBox="0 0 360 140" preserveAspectRatio="none">
+          <line class="grid-line" x1="32" y1="30" x2="360" y2="30"/>
+          <line class="grid-line" x1="32" y1="70" x2="360" y2="70"/>
+          <line class="grid-line" x1="32" y1="110" x2="360" y2="110"/>
+          <text class="y-tick-label" x="28" y="34" text-anchor="end">16d</text>
+          <text class="y-tick-label" x="28" y="74" text-anchor="end">12d</text>
+          <text class="y-tick-label" x="28" y="114" text-anchor="end">8d</text>
+          <path class="line-area" d="M40,52 L70,58 L100,54 L130,62 L160,68 L190,64 L220,70 L250,74 L280,72 L310,78 L340,76 L355,82 L355,120 L40,120 Z"/>
+          <path class="line-path primary" d="M40,52 L70,58 L100,54 L130,62 L160,68 L190,64 L220,70 L250,74 L280,72 L310,78 L340,76 L355,82"/>
+          <circle class="line-dot" cx="355" cy="82" r="3"/>
+          <text class="x-tick-label" x="40"  y="135" text-anchor="middle">Jun '25</text>
+          <text class="x-tick-label" x="190" y="135" text-anchor="middle">Nov</text>
+          <text class="x-tick-label" x="355" y="135" text-anchor="middle">May '26</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Trend 4: Subscription rate -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Subscription Rate</div>
+          <div class="card-subtitle">Klaviyo subscribers ÷ total customers</div>
+          <div class="trend-badge">
+            <span>Current:</span>
+            <span class="current-val">58.6%</span>
+            <span class="delta-up">▲ +0.4pp MoM</span>
+          </div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="line-chart-wrap">
+        <svg class="line-chart-svg" viewBox="0 0 360 140" preserveAspectRatio="none">
+          <line class="grid-line" x1="32" y1="30" x2="360" y2="30"/>
+          <line class="grid-line" x1="32" y1="70" x2="360" y2="70"/>
+          <line class="grid-line" x1="32" y1="110" x2="360" y2="110"/>
+          <text class="y-tick-label" x="28" y="34" text-anchor="end">60%</text>
+          <text class="y-tick-label" x="28" y="74" text-anchor="end">55%</text>
+          <text class="y-tick-label" x="28" y="114" text-anchor="end">50%</text>
+          <path class="line-area" d="M40,92 L70,88 L100,84 L130,80 L160,76 L190,72 L220,68 L250,64 L280,60 L310,56 L340,46 L355,42 L355,120 L40,120 Z"/>
+          <path class="line-path primary" d="M40,92 L70,88 L100,84 L130,80 L160,76 L190,72 L220,68 L250,64 L280,60 L310,56 L340,46 L355,42"/>
+          <circle class="line-dot" cx="355" cy="42" r="3"/>
+          <text class="x-tick-label" x="40"  y="135" text-anchor="middle">Jun '25</text>
+          <text class="x-tick-label" x="190" y="135" text-anchor="middle">Nov</text>
+          <text class="x-tick-label" x="355" y="135" text-anchor="middle">May '26</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Trend 5: Repurchase rate by cohort -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Repurchase Rate by Cohort</div>
+          <div class="card-subtitle">% of cohort with ≥ 2 orders, monthly</div>
+          <div class="trend-badge">
+            <span>Champion:</span>
+            <span class="current-val">42.1%</span>
+            <span class="delta-up">▲ +1.8pp MoM</span>
+          </div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="line-chart-wrap">
+        <svg class="line-chart-svg" viewBox="0 0 360 140" preserveAspectRatio="none">
+          <line class="grid-line" x1="32" y1="30" x2="360" y2="30"/>
+          <line class="grid-line" x1="32" y1="70" x2="360" y2="70"/>
+          <line class="grid-line" x1="32" y1="110" x2="360" y2="110"/>
+          <text class="y-tick-label" x="28" y="34" text-anchor="end">50%</text>
+          <text class="y-tick-label" x="28" y="74" text-anchor="end">25%</text>
+          <text class="y-tick-label" x="28" y="114" text-anchor="end">5%</text>
+          <!-- Champion line -->
+          <path class="line-path champion" d="M40,58 L70,56 L100,54 L130,56 L160,52 L190,54 L220,50 L250,48 L280,46 L310,44 L340,42 L355,38"/>
+          <circle class="line-dot" cx="355" cy="38" r="3" style="fill: var(--mb-accent1)"/>
+          <!-- Loyal line -->
+          <path class="line-path loyal" d="M40,82 L70,84 L100,82 L130,86 L160,84 L190,88 L220,86 L250,90 L280,92 L310,90 L340,94 L355,96"/>
+          <circle class="line-dot" cx="355" cy="96" r="3" style="fill: var(--mb-accent4)"/>
+          <!-- Former line -->
+          <path class="line-path former" d="M40,108 L70,106 L100,108 L130,110 L160,108 L190,112 L220,110 L250,112 L280,110 L310,114 L340,112 L355,114"/>
+          <circle class="line-dot" cx="355" cy="114" r="3" style="fill: var(--mb-accent3)"/>
+          <text class="x-tick-label" x="40"  y="135" text-anchor="middle">Jun '25</text>
+          <text class="x-tick-label" x="190" y="135" text-anchor="middle">Nov</text>
+          <text class="x-tick-label" x="355" y="135" text-anchor="middle">May '26</text>
+        </svg>
+        <div class="line-legend">
+          <div class="line-legend-item"><span class="line-legend-swatch line-champion"></span>Champion (42.1%)</div>
+          <div class="line-legend-item"><span class="line-legend-swatch line-loyal"></span>Loyal (15.3%)</div>
+          <div class="line-legend-item"><span class="line-legend-swatch line-former"></span>Former (6.8%)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Tab switching
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (tab.classList.contains('disabled')) return;
+      const target = tab.dataset.tab;
+
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
