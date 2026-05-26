@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hypershell Layer 1 · Channel Traffic Overview (v1)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #F9FBFC;
+    color: #2E353B;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 24px;
+  }
+
+  :root {
+    --mb-brand: #509EE3;
+    --mb-brand-light: #E5F0F8;
+    --mb-success: #84BB4C;
+    --mb-warning: #F9CF48;
+    --mb-error: #ED6E6E;
+    --mb-text-dark: #2E353B;
+    --mb-text-medium: #696E7B;
+    --mb-text-light: #949AAB;
+    --mb-bg-light: #F9FBFC;
+    --mb-bg-white: #FFFFFF;
+    --mb-border: #EDF0F1;
+    --mb-border-strong: #D7DBE0;
+  }
+
+  /* ===== Dashboard header ===== */
+  .dashboard-header {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    padding: 18px 24px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .dashboard-title { font-size: 20px; font-weight: 700; }
+  .dashboard-meta { font-size: 12px; color: var(--mb-text-light); margin-top: 2px; }
+  .header-actions { display: flex; gap: 8px; }
+  .icon-btn {
+    width: 32px; height: 32px; border-radius: 4px;
+    border: 1px solid var(--mb-border); background: white;
+    color: var(--mb-text-medium);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px;
+  }
+
+  /* ===== Filter bar ===== */
+  .filter-bar {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    padding: 10px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .filter-pill {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 13px;
+    color: var(--mb-text-dark);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .filter-pill:hover { background: var(--mb-bg-light); }
+  .filter-pill.active { background: var(--mb-bg-light); }
+  .filter-pill .label { color: var(--mb-text-medium); font-size: 13px; }
+  .filter-pill .label::after { content: ":"; margin-left: 2px; }
+  .filter-pill .value { color: var(--mb-brand); font-weight: 600; }
+  .filter-pill .caret { color: var(--mb-text-light); font-size: 9px; margin-left: 2px; }
+
+  /* ===== Tabs ===== */
+  .tab-bar {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px 6px 0 0;
+    border-bottom: none;
+    display: flex;
+    padding: 0 8px;
+  }
+  .tab {
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--mb-text-medium);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    font-weight: 500;
+  }
+  .tab:hover { color: var(--mb-text-dark); }
+  .tab.active {
+    color: var(--mb-brand);
+    border-bottom-color: var(--mb-brand);
+    font-weight: 600;
+  }
+
+  /* Tab content */
+  .tab-content {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 0 0 6px 6px;
+    padding: 20px;
+    display: none;
+  }
+  .tab-content.active { display: block; }
+
+  /* ===== Section ===== */
+  .module-block { margin-bottom: 28px; }
+  .module-block:last-child { margin-bottom: 0; }
+  .section-title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .section-title-text { font-size: 15px; font-weight: 700; }
+  .section-title-meta {
+    font-size: 11px;
+    color: var(--mb-text-light);
+    margin-left: 8px;
+    font-weight: 400;
+  }
+
+  /* ===== KPI row ===== */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .kpi-card {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    padding: 16px;
+  }
+  .kpi-label {
+    font-size: 11px;
+    color: var(--mb-text-medium);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 6px;
+  }
+  .kpi-value {
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--mb-text-dark);
+    line-height: 1.1;
+  }
+  .kpi-value .unit {
+    font-size: 14px;
+    color: var(--mb-text-medium);
+    font-weight: 700;
+  }
+  .kpi-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 5px;
+  }
+  .kpi-delta.up { color: var(--mb-success); }
+  .kpi-delta.down { color: var(--mb-error); }
+  .kpi-delta.inverse-up { color: var(--mb-error); }
+  .kpi-delta.inverse-down { color: var(--mb-success); }
+  .delta-arrow { font-size: 9px; }
+
+  /* ===== Grid layouts ===== */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-2-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-map { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  /* ===== Card ===== */
+  .card {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    padding: 16px;
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .card-title { font-size: 13px; font-weight: 700; line-height: 1.3; }
+  .card-subtitle { font-size: 11px; color: var(--mb-text-light); margin-top: 2px; }
+  .card-menu { color: var(--mb-text-light); font-size: 16px; cursor: pointer; line-height: 1; }
+
+  /* ===== Bar chart ===== */
+  .bar-chart { display: flex; flex-direction: column; gap: 9px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; }
+  .bar-label {
+    font-size: 12px;
+    color: var(--mb-text-dark);
+    width: 140px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .bar-track {
+    flex: 1;
+    height: 18px;
+    background: var(--mb-bg-light);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--mb-brand);
+    transition: width 0.3s ease;
+  }
+  .bar-fill.organic-search { background: #509EE3; }
+  .bar-fill.direct { background: #9CC177; }
+  .bar-fill.paid-ads { background: #F9D45C; }
+  .bar-fill.affiliate { background: #F1A9A0; }
+  .bar-fill.email { background: #B4C7E7; }
+  .bar-fill.influencers { background: #D5A6BD; }
+  .bar-fill.organic-social { background: #A9C4A0; }
+  .bar-fill.organic-video { background: #C4A9E7; }
+  .bar-fill.referral { background: #F4C28B; }
+  .bar-fill.pr { background: #AAD8D3; }
+  .bar-val {
+    font-size: 12px;
+    color: var(--mb-text-medium);
+    width: 70px;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ===== Donut chart ===== */
+  .donut-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 20px;
+    padding: 8px 0;
+  }
+  .donut-svg-wrap { position: relative; }
+  .donut-center-label {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+  .donut-center-value { font-size: 22px; font-weight: 900; color: var(--mb-text-dark); }
+  .donut-center-sub { font-size: 10px; color: var(--mb-text-light); font-weight: 600; text-transform: uppercase; }
+  .donut-legend { display: flex; gap: 20px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-label { color: var(--mb-text-medium); }
+  .legend-value { font-weight: 700; color: var(--mb-text-dark); margin-left: 3px; }
+
+  /* ===== Table ===== */
+  .table-container {
+    border: 1px solid var(--mb-border);
+    border-radius: 4px;
+    overflow: auto;
+  }
+  .mb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .mb-table thead tr { background: var(--mb-bg-light); }
+  .mb-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--mb-text-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-bottom: 1px solid var(--mb-border);
+    white-space: nowrap;
+  }
+  .mb-table th.numeric { text-align: right; }
+  .mb-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--mb-border);
+    color: var(--mb-text-dark);
+    white-space: nowrap;
+  }
+  .mb-table td.numeric {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .mb-table tbody tr { cursor: pointer; }
+  .mb-table tbody tr:hover { background: var(--mb-bg-light); }
+  .mb-table tbody tr:last-child td { border-bottom: none; }
+
+  .drill-arrow {
+    color: var(--mb-text-light);
+    margin-left: 4px;
+    opacity: 0;
+    font-size: 10px;
+  }
+  .mb-table tbody tr:hover .drill-arrow {
+    opacity: 1;
+    color: var(--mb-brand);
+  }
+
+  /* Condition color cells */
+  .cell-good { color: var(--mb-success); font-weight: 600; }
+  .cell-warn { color: var(--mb-error); font-weight: 600; }
+  .cell-neutral { color: var(--mb-text-dark); }
+
+  /* Channel color dot */
+  .ch-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* Table footnote */
+  .table-footnote {
+    font-size: 11px;
+    color: var(--mb-text-light);
+    margin-top: 8px;
+    line-height: 1.6;
+    font-style: italic;
+    padding: 0 4px;
+  }
+
+  /* ===== Map placeholder ===== */
+  .map-placeholder {
+    background: var(--mb-bg-light);
+    border: 1px solid var(--mb-border);
+    border-radius: 4px;
+    height: 260px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--mb-text-light);
+    font-size: 13px;
+  }
+  .map-placeholder svg { opacity: 0.25; }
+  .map-placeholder-label { font-size: 12px; color: var(--mb-text-light); }
+
+  /* ===== Combo chart placeholder ===== */
+  .chart-placeholder {
+    background: var(--mb-bg-light);
+    border: 1px solid var(--mb-border);
+    border-radius: 4px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--mb-text-light);
+    font-size: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Inline mini sparkline (SVG-based) */
+  .chart-area {
+    width: 100%;
+    padding: 4px 0 0;
+  }
+
+  /* ===== GSC line chart area ===== */
+  .line-chart-wrap {
+    width: 100%;
+    padding: 0;
+  }
+
+  /* Divider */
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--mb-border);
+    margin: 24px 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Dashboard Header ===== -->
+<div class="dashboard-header">
+  <div>
+    <div class="dashboard-title">Layer 1 · Channel Traffic Overview</div>
+    <div class="dashboard-meta">Hypershell · Updated just now · Russell</div>
+  </div>
+  <div class="header-actions">
+    <div class="icon-btn">🔖</div>
+    <div class="icon-btn">⋮</div>
+    <div class="icon-btn">✎</div>
+  </div>
+</div>
+
+<!-- ===== Global Filters ===== -->
+<div class="filter-bar">
+  <div class="filter-pill active">
+    <span class="label">Date</span>
+    <span class="value">Past 3 Months</span>
+    <span class="caret">▼</span>
+  </div>
+  <div class="filter-pill active">
+    <span class="label">Project</span>
+    <span class="value">HYPERSHELL</span>
+    <span class="caret">▼</span>
+  </div>
+  <div class="filter-pill">
+    <span class="label">Country</span>
+    <span class="value">All</span>
+    <span class="caret">▼</span>
+  </div>
+  <div class="filter-pill">
+    <span class="label">Channel Group</span>
+    <span class="value">All</span>
+    <span class="caret">▼</span>
+  </div>
+  <div class="filter-pill">
+    <span class="label">Attribution Model</span>
+    <span class="value">First Click</span>
+    <span class="caret">▼</span>
+  </div>
+</div>
+
+<!-- ===== Tab Bar ===== -->
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('tab1', this)">Channel Traffic Overview</div>
+  <div class="tab" onclick="switchTab('tab2', this)">Brand Search Performance</div>
+</div>
+
+<!-- ===== TAB 1: Channel Traffic Overview ===== -->
+<div class="tab-content active" id="tab1">
+
+  <!-- Block 1: KPI Row -->
+  <div class="module-block">
+    <div class="section-title-row">
+      <div>
+        <span class="section-title-text">Site Overview</span>
+        <span class="section-title-meta">Past 3 Months · All Channels · Shopify data · vs previous period</span>
+      </div>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">Unique Sessions</div>
+        <div class="kpi-value">133,189</div>
+        <div class="kpi-delta up"><span class="delta-arrow">▲</span>8.3% vs prev</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">New Visitor %</div>
+        <div class="kpi-value">62<span class="unit">%</span></div>
+        <div class="kpi-delta up"><span class="delta-arrow">▲</span>2.1pt vs prev</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Bounce Rate</div>
+        <div class="kpi-value">51<span class="unit">%</span></div>
+        <div class="kpi-delta inverse-up"><span class="delta-arrow">▲</span>1.4pt vs prev</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Avg Session Duration</div>
+        <div class="kpi-value">2<span class="unit">:46</span></div>
+        <div class="kpi-delta down"><span class="delta-arrow">▼</span>0:12 vs prev</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Orders</div>
+        <div class="kpi-value">1,024</div>
+        <div class="kpi-delta up"><span class="delta-arrow">▲</span>5.6% vs prev</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Revenue (GMV)</div>
+        <div class="kpi-value"><span class="unit">$</span>2.1<span class="unit">M</span></div>
+        <div class="kpi-delta up"><span class="delta-arrow">▲</span>11.2% vs prev</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Block 2: Bar + Donut -->
+  <div class="module-block">
+    <div class="section-title-row">
+      <div>
+        <span class="section-title-text">Channel Distribution</span>
+        <span class="section-title-meta">Sessions by channel group · New vs Returning split</span>
+      </div>
+    </div>
+    <div class="grid-2-3">
+      <!-- Bar chart -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Sessions by Channel Group</div>
+            <div class="card-subtitle">Unique sessions · sorted by volume</div>
+          </div>
+          <div class="card-menu">⋯</div>
+        </div>
+        <div class="bar-chart">
+          <div class="bar-row">
+            <div class="bar-label">Organic Search</div>
+            <div class="bar-track"><div class="bar-fill organic-search" style="width:89%"></div></div>
+            <div class="bar-val">40,255</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Direct</div>
+            <div class="bar-track"><div class="bar-fill direct" style="width:67%"></div></div>
+            <div class="bar-val">30,401</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Paid Ads</div>
+            <div class="bar-track"><div class="bar-fill paid-ads" style="width:42%"></div></div>
+            <div class="bar-val">18,793</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Organic Social</div>
+            <div class="bar-track"><div class="bar-fill organic-social" style="width:33%"></div></div>
+            <div class="bar-val">14,697</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Affiliate</div>
+            <div class="bar-track"><div class="bar-fill affiliate" style="width:19%"></div></div>
+            <div class="bar-val">8,733</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Email &amp; SMS</div>
+            <div class="bar-track"><div class="bar-fill email" style="width:18%"></div></div>
+            <div class="bar-val">8,026</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Influencers</div>
+            <div class="bar-track"><div class="bar-fill influencers" style="width:14%"></div></div>
+            <div class="bar-val">6,121</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Referral</div>
+            <div class="bar-track"><div class="bar-fill referral" style="width:6%"></div></div>
+            <div class="bar-val">2,872</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Organic Video</div>
+            <div class="bar-track"><div class="bar-fill organic-video" style="width:5%"></div></div>
+            <div class="bar-val">2,172</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">PR / Blogs</div>
+            <div class="bar-track"><div class="bar-fill pr" style="width:3%"></div></div>
+            <div class="bar-val">1,119</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Donut chart -->
+      <div class="card" style="display:flex; flex-direction:column; justify-content:center;">
+        <div class="card-header" style="margin-bottom:8px;">
+          <div>
+            <div class="card-title">New vs Returning Visitors</div>
+            <div class="card-subtitle">Site-wide · all channels</div>
+          </div>
+          <div class="card-menu">⋯</div>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:center; gap:32px; padding:12px 0 16px;">
+          <!-- Donut SVG - gap between segments -->
+          <div style="position:relative; flex-shrink:0;">
+            <svg width="180" height="180" viewBox="0 0 180 180">
+              <!-- r=70, circumference = 439.8 -->
+              <!-- gap = 3px each side = ~6px total per segment = dashoffset trick -->
+              <!-- Returning 38% = 167.1, New 62% = 272.7 -->
+              <!-- Returning arc (grey), starts at top (-90deg), gap 2deg each end -->
+              <circle cx="90" cy="90" r="70" fill="none" stroke="#E8EBEE" stroke-width="26"
+                      stroke-dasharray="163.1 276.7" stroke-dashoffset="4"
+                      transform="rotate(-90 90 90)" stroke-linecap="round"/>
+              <!-- New arc (blue) -->
+              <circle cx="90" cy="90" r="70" fill="none" stroke="#509EE3" stroke-width="26"
+                      stroke-dasharray="268.7 171.1" stroke-dashoffset="-170.7"
+                      transform="rotate(-90 90 90)" stroke-linecap="round"/>
+              <!-- Center label -->
+              <text x="90" y="84" text-anchor="middle" font-size="28" font-weight="900" fill="#2E353B" font-family="Lato, sans-serif">62%</text>
+              <text x="90" y="102" text-anchor="middle" font-size="11" font-weight="700" fill="#949AAB" font-family="Lato, sans-serif" letter-spacing="1">NEW</text>
+            </svg>
+          </div>
+          <!-- Legend vertical -->
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div style="width:12px;height:12px;border-radius:50%;background:#509EE3;flex-shrink:0;"></div>
+                <span style="font-size:12px;color:#696E7B;">New Visitor</span>
+              </div>
+              <div style="font-size:22px;font-weight:900;color:#2E353B;padding-left:20px;">62%</div>
+              <div style="font-size:11px;color:#949AAB;padding-left:20px;">82,577 sessions</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div style="width:12px;height:12px;border-radius:50%;background:#E8EBEE;border:1px solid #D7DBE0;flex-shrink:0;"></div>
+                <span style="font-size:12px;color:#696E7B;">Returning</span>
+              </div>
+              <div style="font-size:22px;font-weight:900;color:#2E353B;padding-left:20px;">38%</div>
+              <div style="font-size:11px;color:#949AAB;padding-left:20px;">50,612 sessions</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Block 3: Channel Group Table -->
+  <div class="module-block">
+    <div class="section-title-row">
+      <div>
+        <span class="section-title-text">All Channel Group</span>
+        <span class="section-title-meta">Grouped by channel group · click row to drill into Layer 3</span>
+      </div>
+    </div>
+    <div class="table-container">
+      <table class="mb-table">
+        <thead>
+          <tr>
+            <th>Channel Group</th>
+            <th class="numeric">Sessions</th>
+            <th class="numeric">Session %</th>
+            <th class="numeric">New Visitor %</th>
+            <th class="numeric">Bounce Rate</th>
+            <th class="numeric">Avg Duration (s)</th>
+            <th class="numeric">ATC Sessions</th>
+            <th class="numeric">ATC %</th>
+            <th class="numeric">Orders</th>
+            <th class="numeric">CVR %</th>
+            <th class="numeric">Revenue</th>
+            <th class="numeric">AOV</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="ch-dot" style="background:#509EE3"></span>Organic Search<span class="drill-arrow">›</span></td>
+            <td class="numeric">40,255</td>
+            <td class="numeric">30.2%</td>
+            <td class="numeric">68%</td>
+            <td class="numeric cell-good">42%</td>
+            <td class="numeric">133</td>
+            <td class="numeric">8,204</td>
+            <td class="numeric cell-good">20.4%</td>
+            <td class="numeric">326</td>
+            <td class="numeric cell-good">0.81%</td>
+            <td class="numeric">$621,500</td>
+            <td class="numeric">$1,905</td>
+          </tr>
+          <tr>
+            <td><span class="ch-dot" style="background:#9CC177"></span>Direct<span class="drill-arrow">›</span></td>
+            <td class="numeric">30,401</td>
+            <td class="numeric">22.8%</td>
+            <td class="numeric">39%</td>
+            <td class="numeric">51%</td>
+            <td class="numeric">222</td>
+            <td class="numeric">6,432</td>
+            <td class="numeric">21.2%</td>
+            <td class="numeric">248</td>
+            <td class="numeric">0.82%</td>
+            <td class="numeric">$492,680</td>
+            <td class="numeric">$1,986</td>
+          </tr>
+          <tr>
+            <td><span class="ch-dot" style="background:#F9D45C"></span>Paid Ads<span class="drill-arrow">›</span></td>
+            <td class="numeric">18,793</td>
+            <td class="numeric">14.1%</td>
+            <td class="numeric">84%</td>
+            <td class="numeric cell-warn">68%</td>
+            <td class="numeric">127</td>
+            <td class="numeric">3,196</td>
+            <td class="numeric">17.0%</td>
+            <td class="numeric">156</td>
+            <td class="numeric">0.83%</td>
+            <td class="numeric">$283,560</td>
+            <td class="numeric">$1,818</td>
+          </tr>
+          <tr>
+            <td><span class="ch-dot" style="background:#A9C4A0"></span>Organic Social<span class="drill-arrow">›</span></td>
+            <td class="numeric">14,697</td>
+            <td class="numeric">11.0%</td>
+            <td class="numeric">72%</td>
+            <td class="numeric cell-warn">71%</td>
+            <td class="numeric">97</td>
+            <td class="numeric">1,763</td>
+            <td class="numeric">12.0%</td>
+            <td class="numeric">74</td>
+            <td class="numeric cell-warn">0.50%</td>
+            <td class="numeric">$141,680</td>
+            <td class="numeric">$1,914</td>
+          </tr>
+          <tr>
+            <td><span class="ch-dot" style="background:#F1A9A0"></span>Affiliate<span class="drill-arrow">›</span></td>
+            <td class="numeric">8,733</td>
+            <td class="numeric">6.6%</td>
+            <td class="numeric">55%</td>
+            <td class="numeric">49%</td>
+            <td class="numeric">141</td>
+            <td class="numeric">1,964</td>
+            <td class="numeric">22.5%</td>
+            <td class="numeric">88</td>
+            <td class="numeric">1.01%</td>
+            <td class="numeric">$177,056</td>
+            <td class="numeric">$2,012</td>
+          </tr>
+          <tr>
+            <td><span class="ch-dot" style="background:#B4C7E7"></span>Email &amp; SMS<span class="drill-arrow">›</span></td>
+            <td class="numeric">8,026</td>
+            <td class="numeric">6.0%</td>
+            <td class="numeric">32%</td>
+            <td class="numeric cell-good">35%</td>
+            <td class="numeric">159</td>
+            <td class="numeric">2,328</td>
+            <td class="numeric cell-good">29.0%</td>
+            <td class="numeric">136</td>
+            <td class="numeric cell-good">1.69%</td>
+            <td class="numeric">$291,040</td>
+            <td class="numeric">$2,140</td>
+          </tr>
+          <tr>
+            <td><span class="ch-dot" style="background:#D5A6BD"></span>Influencers<span class="drill-arrow">›</span></td>
+            <td class="numeric">6,121</td>
+            <td class="numeric">4.6%</td>
+            <td class="numeric">81%</td>
+            <td class="numeric cell-warn">79%</td>
+            <td class="numeric">69</td>
+            <td class="numeric">490</td>
+            <td class="numeric">8.0%</td>
+            <td class="numeric">18</td>
+            <td class="numeric cell-warn">0.29%</td>
+            <td class="numeric">$33,768</td>
+            <td class="numeric">$1,876</td>
+          </tr>
+          <tr>
+            <td><span class="ch-dot" style="background:#F4C28B"></span>Referral<span class="drill-arrow">›</span></td>
+            <td class="numeric">2,872</td>
+            <td class="numeric">2.2%</td>
+            <td class="numeric">65%</td>
+            <td class="numeric">58%</td>
+            <td class="numeric">141</td>
+            <td class="numeric">517</td>
+            <td class="numeric">18.0%</td>
+            <td class="numeric">29</td>
+            <td class="numeric">1.01%</td>
+            <td class="numeric">$58,348</td>
+            <td class="numeric">$2,012</td>
+          </tr>
+          <tr>
+            <td><span class="ch-dot" style="background:#C4A9E7"></span>Organic Video<span class="drill-arrow">›</span></td>
+            <td class="numeric">2,172</td>
+            <td class="numeric">1.6%</td>
+            <td class="numeric">74%</td>
+            <td class="numeric">65%</td>
+            <td class="numeric">94</td>
+            <td class="numeric">282</td>
+            <td class="numeric">13.0%</td>
+            <td class="numeric">11</td>
+            <td class="numeric">0.51%</td>
+            <td class="numeric">$20,757</td>
+            <td class="numeric">$1,887</td>
+          </tr>
+          <tr>
+            <td><span class="ch-dot" style="background:#AAD8D3"></span>PR / Blogs<span class="drill-arrow">›</span></td>
+            <td class="numeric">1,119</td>
+            <td class="numeric">0.8%</td>
+            <td class="numeric">50%</td>
+            <td class="numeric">66%</td>
+            <td class="numeric">115</td>
+            <td class="numeric">179</td>
+            <td class="numeric">16.0%</td>
+            <td class="numeric">8</td>
+            <td class="numeric">0.72%</td>
+            <td class="numeric">$15,040</td>
+            <td class="numeric">$1,880</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-footnote">
+      <strong>CVR%</strong> = Orders / Unique Sessions &nbsp;·&nbsp;
+      <strong>AOV</strong> = Revenue / Orders &nbsp;·&nbsp;
+      <strong>Bounce Rate</strong> = Shopify single-page sessions &nbsp;·&nbsp;
+      Click any row → Layer 3 Ad Performance (filtered by channel group)
+    </div>
+  </div>
+
+  <!-- Block 4: All Channel Table -->
+  <div class="module-block">
+    <div class="section-title-row">
+      <div>
+        <span class="section-title-text">All Channel</span>
+        <span class="section-title-meta">Individual channel level · same metrics</span>
+      </div>
+    </div>
+    <div class="table-container">
+      <table class="mb-table">
+        <thead>
+          <tr>
+            <th>Channel</th>
+            <th class="numeric">Sessions</th>
+            <th class="numeric">Session %</th>
+            <th class="numeric">New Visitor %</th>
+            <th class="numeric">Bounce Rate</th>
+            <th class="numeric">Avg Duration (s)</th>
+            <th class="numeric">ATC Sessions</th>
+            <th class="numeric">ATC %</th>
+            <th class="numeric">Orders</th>
+            <th class="numeric">CVR %</th>
+            <th class="numeric">Revenue</th>
+            <th class="numeric">AOV</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Google Search<span class="drill-arrow">›</span></td>
+            <td class="numeric">38,240</td>
+            <td class="numeric">28.7%</td>
+            <td class="numeric">67%</td>
+            <td class="numeric cell-good">41%</td>
+            <td class="numeric">135</td>
+            <td class="numeric">7,831</td>
+            <td class="numeric cell-good">20.5%</td>
+            <td class="numeric">312</td>
+            <td class="numeric cell-good">0.82%</td>
+            <td class="numeric">$595,920</td>
+            <td class="numeric">$1,910</td>
+          </tr>
+          <tr>
+            <td>Bing Search<span class="drill-arrow">›</span></td>
+            <td class="numeric">2,015</td>
+            <td class="numeric">1.5%</td>
+            <td class="numeric">71%</td>
+            <td class="numeric">52%</td>
+            <td class="numeric">121</td>
+            <td class="numeric">373</td>
+            <td class="numeric">18.5%</td>
+            <td class="numeric">14</td>
+            <td class="numeric">0.69%</td>
+            <td class="numeric">$25,620</td>
+            <td class="numeric">$1,830</td>
+          </tr>
+          <tr>
+            <td>Direct<span class="drill-arrow">›</span></td>
+            <td class="numeric">30,401</td>
+            <td class="numeric">22.8%</td>
+            <td class="numeric">39%</td>
+            <td class="numeric">51%</td>
+            <td class="numeric">222</td>
+            <td class="numeric">6,432</td>
+            <td class="numeric">21.2%</td>
+            <td class="numeric">248</td>
+            <td class="numeric">0.82%</td>
+            <td class="numeric">$492,680</td>
+            <td class="numeric">$1,986</td>
+          </tr>
+          <tr>
+            <td>Google Ads<span class="drill-arrow">›</span></td>
+            <td class="numeric">10,847</td>
+            <td class="numeric">8.1%</td>
+            <td class="numeric">86%</td>
+            <td class="numeric cell-warn">70%</td>
+            <td class="numeric">127</td>
+            <td class="numeric">1,843</td>
+            <td class="numeric">17.0%</td>
+            <td class="numeric">90</td>
+            <td class="numeric">0.83%</td>
+            <td class="numeric">$163,350</td>
+            <td class="numeric">$1,815</td>
+          </tr>
+          <tr>
+            <td>Meta Ads<span class="drill-arrow">›</span></td>
+            <td class="numeric">5,612</td>
+            <td class="numeric">4.2%</td>
+            <td class="numeric">82%</td>
+            <td class="numeric cell-warn">72%</td>
+            <td class="numeric">116</td>
+            <td class="numeric">954</td>
+            <td class="numeric">17.0%</td>
+            <td class="numeric">47</td>
+            <td class="numeric">0.84%</td>
+            <td class="numeric">$85,260</td>
+            <td class="numeric">$1,814</td>
+          </tr>
+          <tr>
+            <td>TikTok Ads<span class="drill-arrow">›</span></td>
+            <td class="numeric">2,334</td>
+            <td class="numeric">1.8%</td>
+            <td class="numeric">91%</td>
+            <td class="numeric cell-warn">74%</td>
+            <td class="numeric">68</td>
+            <td class="numeric">397</td>
+            <td class="numeric">17.0%</td>
+            <td class="numeric">19</td>
+            <td class="numeric">0.81%</td>
+            <td class="numeric">$34,390</td>
+            <td class="numeric">$1,810</td>
+          </tr>
+          <tr>
+            <td>Instagram<span class="drill-arrow">›</span></td>
+            <td class="numeric">7,860</td>
+            <td class="numeric">5.9%</td>
+            <td class="numeric">75%</td>
+            <td class="numeric cell-warn">73%</td>
+            <td class="numeric">88</td>
+            <td class="numeric">943</td>
+            <td class="numeric">12.0%</td>
+            <td class="numeric">40</td>
+            <td class="numeric cell-warn">0.51%</td>
+            <td class="numeric">$75,840</td>
+            <td class="numeric">$1,896</td>
+          </tr>
+          <tr>
+            <td>Facebook<span class="drill-arrow">›</span></td>
+            <td class="numeric">3,810</td>
+            <td class="numeric">2.9%</td>
+            <td class="numeric">70%</td>
+            <td class="numeric cell-warn">69%</td>
+            <td class="numeric">91</td>
+            <td class="numeric">457</td>
+            <td class="numeric">12.0%</td>
+            <td class="numeric">19</td>
+            <td class="numeric cell-warn">0.50%</td>
+            <td class="numeric">$36,290</td>
+            <td class="numeric">$1,910</td>
+          </tr>
+          <tr>
+            <td>YouTube<span class="drill-arrow">›</span></td>
+            <td class="numeric">3,027</td>
+            <td class="numeric">2.3%</td>
+            <td class="numeric">69%</td>
+            <td class="numeric">68%</td>
+            <td class="numeric">102</td>
+            <td class="numeric">363</td>
+            <td class="numeric">12.0%</td>
+            <td class="numeric">15</td>
+            <td class="numeric">0.50%</td>
+            <td class="numeric">$29,550</td>
+            <td class="numeric">$1,970</td>
+          </tr>
+          <tr>
+            <td>Admitad<span class="drill-arrow">›</span></td>
+            <td class="numeric">4,966</td>
+            <td class="numeric">3.7%</td>
+            <td class="numeric">58%</td>
+            <td class="numeric">52%</td>
+            <td class="numeric">145</td>
+            <td class="numeric">1,117</td>
+            <td class="numeric">22.5%</td>
+            <td class="numeric">50</td>
+            <td class="numeric">1.01%</td>
+            <td class="numeric">$100,600</td>
+            <td class="numeric">$2,012</td>
+          </tr>
+          <tr>
+            <td>Tapfiliate<span class="drill-arrow">›</span></td>
+            <td class="numeric">3,767</td>
+            <td class="numeric">2.8%</td>
+            <td class="numeric">61%</td>
+            <td class="numeric">46%</td>
+            <td class="numeric">138</td>
+            <td class="numeric">848</td>
+            <td class="numeric">22.5%</td>
+            <td class="numeric">38</td>
+            <td class="numeric">1.01%</td>
+            <td class="numeric">$76,456</td>
+            <td class="numeric">$2,012</td>
+          </tr>
+          <tr>
+            <td>Klaviyo<span class="drill-arrow">›</span></td>
+            <td class="numeric">5,619</td>
+            <td class="numeric">4.2%</td>
+            <td class="numeric">29%</td>
+            <td class="numeric cell-good">31%</td>
+            <td class="numeric">165</td>
+            <td class="numeric">1,630</td>
+            <td class="numeric cell-good">29.0%</td>
+            <td class="numeric">95</td>
+            <td class="numeric cell-good">1.69%</td>
+            <td class="numeric">$203,490</td>
+            <td class="numeric">$2,142</td>
+          </tr>
+          <tr>
+            <td>Mailchimp<span class="drill-arrow">›</span></td>
+            <td class="numeric">2,407</td>
+            <td class="numeric">1.8%</td>
+            <td class="numeric">38%</td>
+            <td class="numeric cell-good">42%</td>
+            <td class="numeric">149</td>
+            <td class="numeric">698</td>
+            <td class="numeric cell-good">29.0%</td>
+            <td class="numeric">41</td>
+            <td class="numeric cell-good">1.70%</td>
+            <td class="numeric">$87,550</td>
+            <td class="numeric">$2,135</td>
+          </tr>
+          <tr>
+            <td>Other Influencers<span class="drill-arrow">›</span></td>
+            <td class="numeric">6,121</td>
+            <td class="numeric">4.6%</td>
+            <td class="numeric">81%</td>
+            <td class="numeric cell-warn">79%</td>
+            <td class="numeric">69</td>
+            <td class="numeric">490</td>
+            <td class="numeric">8.0%</td>
+            <td class="numeric">18</td>
+            <td class="numeric cell-warn">0.29%</td>
+            <td class="numeric">$33,768</td>
+            <td class="numeric">$1,876</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-footnote">
+      <strong>CVR%</strong> = Orders / Unique Sessions &nbsp;·&nbsp;
+      <strong>AOV</strong> = Revenue / Orders &nbsp;·&nbsp;
+      Showing top channels by session volume
+    </div>
+  </div>
+
+  <!-- Block 5: Country -->
+  <div class="module-block">
+    <div class="section-title-row">
+      <div>
+        <span class="section-title-text">Country / Region Penetration</span>
+        <span class="section-title-meta">Controlled by Country filter above · sortable by any column</span>
+      </div>
+    </div>
+    <div class="table-container">
+      <table class="mb-table">
+        <thead>
+          <tr>
+            <th>Country</th>
+            <th class="numeric">Sessions</th>
+            <th class="numeric">Session %</th>
+            <th class="numeric">CVR %</th>
+            <th class="numeric">Revenue</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>🇺🇸 United States</td>
+            <td class="numeric">42,310</td>
+            <td class="numeric">31.8%</td>
+            <td class="numeric cell-good">0.92%</td>
+            <td class="numeric">$740,280</td>
+          </tr>
+          <tr>
+            <td>🇯🇵 Japan</td>
+            <td class="numeric">18,640</td>
+            <td class="numeric">14.0%</td>
+            <td class="numeric cell-good">0.88%</td>
+            <td class="numeric">$310,560</td>
+          </tr>
+          <tr>
+            <td>🇬🇧 United Kingdom</td>
+            <td class="numeric">14,220</td>
+            <td class="numeric">10.7%</td>
+            <td class="numeric">0.74%</td>
+            <td class="numeric">$198,960</td>
+          </tr>
+          <tr>
+            <td>🇩🇪 Germany</td>
+            <td class="numeric">9,870</td>
+            <td class="numeric">7.4%</td>
+            <td class="numeric">0.71%</td>
+            <td class="numeric">$133,380</td>
+          </tr>
+          <tr>
+            <td>🇨🇦 Canada</td>
+            <td class="numeric">8,540</td>
+            <td class="numeric">6.4%</td>
+            <td class="numeric">0.69%</td>
+            <td class="numeric">$111,940</td>
+          </tr>
+          <tr>
+            <td>🇦🇺 Australia</td>
+            <td class="numeric">7,120</td>
+            <td class="numeric">5.3%</td>
+            <td class="numeric">0.65%</td>
+            <td class="numeric">$87,580</td>
+          </tr>
+          <tr>
+            <td>🇫🇷 France</td>
+            <td class="numeric">5,890</td>
+            <td class="numeric">4.4%</td>
+            <td class="numeric cell-warn">0.42%</td>
+            <td class="numeric">$46,980</td>
+          </tr>
+          <tr>
+            <td>🇸🇬 Singapore</td>
+            <td class="numeric">4,210</td>
+            <td class="numeric">3.2%</td>
+            <td class="numeric">0.61%</td>
+            <td class="numeric">$48,660</td>
+          </tr>
+          <tr>
+            <td>🇰🇷 South Korea</td>
+            <td class="numeric">3,840</td>
+            <td class="numeric">2.9%</td>
+            <td class="numeric">0.58%</td>
+            <td class="numeric">$42,280</td>
+          </tr>
+          <tr>
+            <td>🇳🇱 Netherlands</td>
+            <td class="numeric">2,960</td>
+            <td class="numeric">2.2%</td>
+            <td class="numeric">0.54%</td>
+            <td class="numeric">$30,240</td>
+          </tr>
+          <tr>
+            <td style="color:var(--mb-text-light);font-style:italic;">Others</td>
+            <td class="numeric">15,589</td>
+            <td class="numeric">11.7%</td>
+            <td class="numeric">0.51%</td>
+            <td class="numeric">$151,280</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-footnote">
+      <strong>CVR%</strong> = Orders / Sessions &nbsp;·&nbsp; Click column header to sort
+    </div>
+  </div>
+
+</div><!-- /tab1 -->
+
+<!-- ===== TAB 2: Brand Search Performance ===== -->
+<div class="tab-content" id="tab2">
+
+  <!-- Tab 2 local filters -->
+  <div style="background:var(--mb-bg-light); border:1px solid var(--mb-border); border-radius:4px; padding:10px 14px; margin-bottom:20px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+    <span style="font-size:11px; color:var(--mb-text-medium); font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Tab Filters</span>
+    <div class="filter-pill active" style="background:white; border:1px solid var(--mb-border);">
+      <span class="label">Date</span>
+      <span class="value">Past 3 Months</span>
+      <span class="caret">▼</span>
+    </div>
+    <div class="filter-pill" style="background:white; border:1px solid var(--mb-border);">
+      <span class="label">Country</span>
+      <span class="value">All</span>
+      <span class="caret">▼</span>
+    </div>
+    <div class="filter-pill" style="background:white; border:1px solid var(--mb-border);">
+      <span class="label">Device</span>
+      <span class="value">All</span>
+      <span class="caret">▼</span>
+    </div>
+    <div class="filter-pill" style="background:white; border:1px solid var(--mb-border);">
+      <span class="label">Query</span>
+      <span class="value">Search…</span>
+      <span class="caret">🔍</span>
+    </div>
+  </div>
+
+  <!-- Block 1: GSC KPI -->
+  <div class="module-block">
+    <div class="section-title-row">
+      <div>
+        <span class="section-title-text">Brand Search Overview</span>
+        <span class="section-title-meta">Google Search Console · brand queries only · past 3 months</span>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:12px; margin-bottom:16px;">
+      <div class="kpi-card">
+        <div class="kpi-label">Total Impressions</div>
+        <div class="kpi-value">40,800</div>
+        <div class="kpi-delta up"><span class="delta-arrow">▲</span>12.4% vs prev</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Clicks</div>
+        <div class="kpi-value">8,770</div>
+        <div class="kpi-delta up"><span class="delta-arrow">▲</span>15.1% vs prev</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Avg CTR</div>
+        <div class="kpi-value">21.5<span class="unit">%</span></div>
+        <div class="kpi-delta up"><span class="delta-arrow">▲</span>0.5pt vs prev</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Avg Position</div>
+        <div class="kpi-value">1.32</div>
+        <div class="kpi-delta inverse-down"><span class="delta-arrow">▼</span>0.08 vs prev</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Block 2: Combo trend chart -->
+  <div class="module-block">
+    <div class="section-title-row">
+      <div>
+        <span class="section-title-text">Impressions &amp; Clicks Trend</span>
+        <span class="section-title-meta">Weekly · bar = impressions · line = clicks</span>
+      </div>
+    </div>
+    <div class="card">
+      <div style="position:relative; height:220px;">
+        <svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+          <!-- Y axis labels left -->
+          <text x="8" y="20" font-size="9" fill="#949AAB">6k</text>
+          <text x="8" y="60" font-size="9" fill="#949AAB">5k</text>
+          <text x="8" y="100" font-size="9" fill="#949AAB">4k</text>
+          <text x="8" y="140" font-size="9" fill="#949AAB">3k</text>
+          <text x="8" y="180" font-size="9" fill="#949AAB">0</text>
+          <!-- Y axis labels right (clicks) -->
+          <text x="730" y="20" font-size="9" fill="#949AAB" text-anchor="end">1.4k</text>
+          <text x="730" y="60" font-size="9" fill="#949AAB" text-anchor="end">1.3k</text>
+          <text x="730" y="100" font-size="9" fill="#949AAB" text-anchor="end">1.1k</text>
+          <text x="730" y="140" font-size="9" fill="#949AAB" text-anchor="end">0.9k</text>
+          <!-- Grid lines -->
+          <line x1="30" y1="18" x2="720" y2="18" stroke="#EDF0F1" stroke-width="1"/>
+          <line x1="30" y1="58" x2="720" y2="58" stroke="#EDF0F1" stroke-width="1"/>
+          <line x1="30" y1="98" x2="720" y2="98" stroke="#EDF0F1" stroke-width="1"/>
+          <line x1="30" y1="138" x2="720" y2="138" stroke="#EDF0F1" stroke-width="1"/>
+          <line x1="30" y1="178" x2="720" y2="178" stroke="#EDF0F1" stroke-width="1"/>
+          <!-- Bars (impressions) - 8 weeks -->
+          <rect x="42" y="108" width="70" height="70" fill="#D9EAF7" rx="2"/>
+          <rect x="132" y="88" width="70" height="90" fill="#D9EAF7" rx="2"/>
+          <rect x="222" y="83" width="70" height="95" fill="#D9EAF7" rx="2"/>
+          <rect x="312" y="93" width="70" height="85" fill="#D9EAF7" rx="2"/>
+          <rect x="402" y="86" width="70" height="92" fill="#D9EAF7" rx="2"/>
+          <rect x="492" y="73" width="70" height="105" fill="#D9EAF7" rx="2"/>
+          <rect x="582" y="78" width="70" height="100" fill="#D9EAF7" rx="2"/>
+          <rect x="622" y="58" width="70" height="120" fill="#D9EAF7" rx="2"/>
+          <!-- Line (clicks) -->
+          <polyline points="77,168 167,148 257,128 347,123 437,118 527,108 567,113 657,103"
+                    fill="none" stroke="#ED6E6E" stroke-width="2.5" stroke-linejoin="round"/>
+          <circle cx="77" cy="168" r="4" fill="#ED6E6E"/>
+          <circle cx="167" cy="148" r="4" fill="#ED6E6E"/>
+          <circle cx="257" cy="128" r="4" fill="#ED6E6E"/>
+          <circle cx="347" cy="123" r="4" fill="#ED6E6E"/>
+          <circle cx="437" cy="118" r="4" fill="#ED6E6E"/>
+          <circle cx="527" cy="108" r="4" fill="#ED6E6E"/>
+          <circle cx="567" cy="113" r="4" fill="#ED6E6E"/>
+          <circle cx="657" cy="103" r="4" fill="#ED6E6E"/>
+          <!-- X axis labels -->
+          <text x="77" y="196" font-size="9" fill="#949AAB" text-anchor="middle">Mar W3</text>
+          <text x="167" y="196" font-size="9" fill="#949AAB" text-anchor="middle">Mar W4</text>
+          <text x="257" y="196" font-size="9" fill="#949AAB" text-anchor="middle">Mar W5</text>
+          <text x="347" y="196" font-size="9" fill="#949AAB" text-anchor="middle">Apr W1</text>
+          <text x="437" y="196" font-size="9" fill="#949AAB" text-anchor="middle">Apr W2</text>
+          <text x="527" y="196" font-size="9" fill="#949AAB" text-anchor="middle">Apr W3</text>
+          <text x="617" y="196" font-size="9" fill="#949AAB" text-anchor="middle">Apr W4</text>
+          <text x="690" y="196" font-size="9" fill="#949AAB" text-anchor="middle">May W1</text>
+          <!-- Legend -->
+          <rect x="32" y="4" width="12" height="10" fill="#D9EAF7" rx="1"/>
+          <text x="48" y="13" font-size="10" fill="#696E7B">Impressions</text>
+          <line x1="130" y1="9" x2="148" y2="9" stroke="#ED6E6E" stroke-width="2.5"/>
+          <circle cx="139" cy="9" r="3" fill="#ED6E6E"/>
+          <text x="154" y="13" font-size="10" fill="#696E7B">Clicks</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Block 3: CTR + Ranking trends -->
+  <div class="module-block">
+    <div class="section-title-row">
+      <div>
+        <span class="section-title-text">CTR &amp; Position Trends</span>
+        <span class="section-title-meta">Weekly · left = CTR · right = avg position (lower is better)</span>
+      </div>
+    </div>
+    <div class="grid-2">
+      <!-- CTR trend -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">CTR Trend</div>
+            <div class="card-subtitle">Weekly avg CTR · brand queries</div>
+          </div>
+          <div class="card-menu">⋯</div>
+        </div>
+        <div style="height:160px;">
+          <svg viewBox="0 0 340 140" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+            <line x1="30" y1="10" x2="330" y2="10" stroke="#EDF0F1" stroke-width="1"/>
+            <line x1="30" y1="40" x2="330" y2="40" stroke="#EDF0F1" stroke-width="1"/>
+            <line x1="30" y1="70" x2="330" y2="70" stroke="#EDF0F1" stroke-width="1"/>
+            <line x1="30" y1="100" x2="330" y2="100" stroke="#EDF0F1" stroke-width="1"/>
+            <text x="22" y="13" font-size="8" fill="#949AAB" text-anchor="end">27%</text>
+            <text x="22" y="43" font-size="8" fill="#949AAB" text-anchor="end">24%</text>
+            <text x="22" y="73" font-size="8" fill="#949AAB" text-anchor="end">21%</text>
+            <text x="22" y="103" font-size="8" fill="#949AAB" text-anchor="end">18%</text>
+            <!-- Area fill -->
+            <path d="M42,95 L82,87 L122,78 L162,80 L202,74 L242,72 L282,70 L322,65 L322,110 L42,110 Z"
+                  fill="#84BB4C" opacity="0.12"/>
+            <!-- Line -->
+            <polyline points="42,95 82,87 122,78 162,80 202,74 242,72 282,70 322,65"
+                      fill="none" stroke="#84BB4C" stroke-width="2.5" stroke-linejoin="round"/>
+            <circle cx="42" cy="95" r="3.5" fill="#84BB4C"/>
+            <circle cx="82" cy="87" r="3.5" fill="#84BB4C"/>
+            <circle cx="122" cy="78" r="3.5" fill="#84BB4C"/>
+            <circle cx="162" cy="80" r="3.5" fill="#84BB4C"/>
+            <circle cx="202" cy="74" r="3.5" fill="#84BB4C"/>
+            <circle cx="242" cy="72" r="3.5" fill="#84BB4C"/>
+            <circle cx="282" cy="70" r="3.5" fill="#84BB4C"/>
+            <circle cx="322" cy="65" r="3.5" fill="#84BB4C"/>
+            <!-- X labels -->
+            <text x="42" y="126" font-size="7.5" fill="#949AAB" text-anchor="middle">Mar W3</text>
+            <text x="122" y="126" font-size="7.5" fill="#949AAB" text-anchor="middle">Mar W5</text>
+            <text x="202" y="126" font-size="7.5" fill="#949AAB" text-anchor="middle">Apr W2</text>
+            <text x="282" y="126" font-size="7.5" fill="#949AAB" text-anchor="middle">Apr W4</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Avg position trend -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Avg Position Trend</div>
+            <div class="card-subtitle">Weekly · lower value = better ranking</div>
+          </div>
+          <div class="card-menu">⋯</div>
+        </div>
+        <div style="height:160px;">
+          <svg viewBox="0 0 340 140" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+            <line x1="30" y1="10" x2="330" y2="10" stroke="#EDF0F1" stroke-width="1"/>
+            <line x1="30" y1="40" x2="330" y2="40" stroke="#EDF0F1" stroke-width="1"/>
+            <line x1="30" y1="70" x2="330" y2="70" stroke="#EDF0F1" stroke-width="1"/>
+            <line x1="30" y1="100" x2="330" y2="100" stroke="#EDF0F1" stroke-width="1"/>
+            <!-- Y axis inverted (1.0 at top, 1.8 at bottom) -->
+            <text x="22" y="13" font-size="8" fill="#949AAB" text-anchor="end">1.00</text>
+            <text x="22" y="43" font-size="8" fill="#949AAB" text-anchor="end">1.20</text>
+            <text x="22" y="73" font-size="8" fill="#949AAB" text-anchor="end">1.40</text>
+            <text x="22" y="103" font-size="8" fill="#949AAB" text-anchor="end">1.80</text>
+            <text x="14" y="57" font-size="7" fill="#84BB4C" text-anchor="middle" transform="rotate(-90,14,57)">↑ better</text>
+            <!-- Area -->
+            <path d="M42,90 L82,78 L122,55 L162,58 L202,62 L242,65 L282,67 L322,70 L322,110 L42,110 Z"
+                  fill="#7172AD" opacity="0.10"/>
+            <!-- Line -->
+            <polyline points="42,90 82,78 122,55 162,58 202,62 242,65 282,67 322,70"
+                      fill="none" stroke="#7172AD" stroke-width="2.5" stroke-linejoin="round"/>
+            <circle cx="42" cy="90" r="3.5" fill="#7172AD"/>
+            <circle cx="82" cy="78" r="3.5" fill="#7172AD"/>
+            <circle cx="122" cy="55" r="3.5" fill="#7172AD"/>
+            <circle cx="162" cy="58" r="3.5" fill="#7172AD"/>
+            <circle cx="202" cy="62" r="3.5" fill="#7172AD"/>
+            <circle cx="242" cy="65" r="3.5" fill="#7172AD"/>
+            <circle cx="282" cy="67" r="3.5" fill="#7172AD"/>
+            <circle cx="322" cy="70" r="3.5" fill="#7172AD"/>
+            <text x="42" y="126" font-size="7.5" fill="#949AAB" text-anchor="middle">Mar W3</text>
+            <text x="122" y="126" font-size="7.5" fill="#949AAB" text-anchor="middle">Mar W5</text>
+            <text x="202" y="126" font-size="7.5" fill="#949AAB" text-anchor="middle">Apr W2</text>
+            <text x="282" y="126" font-size="7.5" fill="#949AAB" text-anchor="middle">Apr W4</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Block 4: Query table -->
+  <div class="module-block">
+    <div class="section-title-row">
+      <div>
+        <span class="section-title-text">Top Search Queries</span>
+        <span class="section-title-meta">Brand queries · sorted by Clicks · showing top 50</span>
+      </div>
+    </div>
+    <div class="table-container">
+      <table class="mb-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Query</th>
+            <th class="numeric">Clicks</th>
+            <th class="numeric">Impressions</th>
+            <th class="numeric">CTR</th>
+            <th class="numeric">Avg Position</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--mb-text-light);font-size:12px;">1</td>
+            <td>hypershell</td>
+            <td class="numeric">4,999</td>
+            <td class="numeric">24,623</td>
+            <td class="numeric cell-good">20.3%</td>
+            <td class="numeric cell-good">1.1</td>
+          </tr>
+          <tr>
+            <td style="color:var(--mb-text-light);font-size:12px;">2</td>
+            <td>exoskeleton</td>
+            <td class="numeric">1,762</td>
+            <td class="numeric">65,841</td>
+            <td class="numeric cell-warn">2.7%</td>
+            <td class="numeric">3.4</td>
+          </tr>
+          <tr>
+            <td style="color:var(--mb-text-light);font-size:12px;">3</td>
+            <td>hypershell exoskeleton</td>
+            <td class="numeric">1,385</td>
+            <td class="numeric">11,219</td>
+            <td class="numeric cell-good">12.3%</td>
+            <td class="numeric cell-good">1.2</td>
+          </tr>
+          <tr>
+            <td style="color:var(--mb-text-light);font-size:12px;">4</td>
+            <td>exoskeleton legs</td>
+            <td class="numeric">822</td>
+            <td class="numeric">9,396</td>
+            <td class="numeric">8.7%</td>
+            <td class="numeric">2.1</td>
+          </tr>
+          <tr>
+            <td style="color:var(--mb-text-light);font-size:12px;">5</td>
+            <td>hypershell x ultra</td>
+            <td class="numeric">771</td>
+            <td class="numeric">5,762</td>
+            <td class="numeric cell-good">13.4%</td>
+            <td class="numeric cell-good">1.3</td>
+          </tr>
+          <tr>
+            <td style="color:var(--mb-text-light);font-size:12px;">6</td>
+            <td>hypershell x pro</td>
+            <td class="numeric">684</td>
+            <td class="numeric">4,655</td>
+            <td class="numeric cell-good">14.7%</td>
+            <td class="numeric cell-good">1.2</td>
+          </tr>
+          <tr>
+            <td style="color:var(--mb-text-light);font-size:12px;">7</td>
+            <td>hypershell x</td>
+            <td class="numeric">587</td>
+            <td class="numeric">3,580</td>
+            <td class="numeric cell-good">16.4%</td>
+            <td class="numeric cell-good">1.1</td>
+          </tr>
+          <tr>
+            <td style="color:var(--mb-text-light);font-size:12px;">8</td>
+            <td>hypershell pro x</td>
+            <td class="numeric">411</td>
+            <td class="numeric">3,126</td>
+            <td class="numeric">13.2%</td>
+            <td class="numeric cell-good">1.4</td>
+          </tr>
+          <tr>
+            <td style="color:var(--mb-text-light);font-size:12px;">9</td>
+            <td>hypershell omega</td>
+            <td class="numeric">338</td>
+            <td class="numeric">2,810</td>
+            <td class="numeric">12.0%</td>
+            <td class="numeric cell-good">1.3</td>
+          </tr>
+          <tr>
+            <td style="color:var(--mb-text-light);font-size:12px;">10</td>
+            <td>hypershell carbon</td>
+            <td class="numeric">291</td>
+            <td class="numeric">2,340</td>
+            <td class="numeric">12.4%</td>
+            <td class="numeric cell-good">1.2</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-footnote">
+      Brand queries defined as: contains "hypershell" or product model variants (X, Pro, Ultra, Omega, Carbon) &nbsp;·&nbsp;
+      <strong>Avg Position</strong>: lower = closer to top of search results &nbsp;·&nbsp; Source: Google Search Console
+    </div>
+  </div>
+
+</div><!-- /tab2 -->
+
+<script>
+  function switchTab(tabId, el) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    el.classList.add('active');
+  }
+</script>
+
+</body>
+</html>
