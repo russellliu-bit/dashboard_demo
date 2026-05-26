@@ -1,0 +1,3285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hypershell Layer 2 · User Decision & Profile</title>
+<style>
+  /* ===== Metabase OSS visual baseline ===== */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #F9FBFC;
+    color: #2E353B;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 24px;
+  }
+
+  /* ===== Color tokens (Metabase brand) ===== */
+  :root {
+    --mb-brand: #509EE3;
+    --mb-brand-light: #E5F0F8;
+    --mb-success: #84BB4C;
+    --mb-warning: #F9CF48;
+    --mb-error: #ED6E6E;
+    --mb-text-dark: #2E353B;
+    --mb-text-medium: #696E7B;
+    --mb-text-light: #949AAB;
+    --mb-bg-light: #F9FBFC;
+    --mb-bg-white: #FFFFFF;
+    --mb-border: #EDF0F1;
+    --mb-border-strong: #D7DBE0;
+    --mb-accent1: #88BF4D;
+    --mb-accent2: #A989C5;
+    --mb-accent3: #EF8C8C;
+    --mb-accent4: #F9D45C;
+    --mb-accent5: #F2A86F;
+    --mb-accent6: #98D9D9;
+    --mb-accent7: #7172AD;
+  }
+
+  /* ===== Dashboard header ===== */
+  .dashboard-header {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    padding: 18px 24px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .dashboard-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--mb-text-dark);
+  }
+  .dashboard-meta {
+    font-size: 12px;
+    color: var(--mb-text-light);
+    margin-top: 2px;
+  }
+  .header-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .icon-btn {
+    width: 32px; height: 32px;
+    border-radius: 4px;
+    border: 1px solid var(--mb-border);
+    background: white;
+    color: var(--mb-text-medium);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .icon-btn:hover { background: var(--mb-bg-light); }
+
+  /* ===== Global filters bar ===== */
+  .filter-bar {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    padding: 10px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  /* Metabase-style filter pill — flat, inline label:value with caret */
+  .filter-pill {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 13px;
+    color: var(--mb-text-dark);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .filter-pill:hover { background: var(--mb-bg-light); }
+  .filter-pill.active {
+    background: var(--mb-bg-light);
+  }
+  .filter-pill .label {
+    color: var(--mb-text-medium);
+    font-size: 13px;
+    font-weight: 400;
+  }
+  .filter-pill .label::after { content: ":"; margin-left: 2px; }
+  .filter-pill .value {
+    color: var(--mb-brand);
+    font-weight: 600;
+    font-size: 13px;
+  }
+  .filter-pill .caret { color: var(--mb-text-light); font-size: 9px; margin-left: 2px; }
+
+  /* ===== Tabs ===== */
+  .tab-bar {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px 6px 0 0;
+    border-bottom: none;
+    display: flex;
+    overflow-x: auto;
+    padding: 0 8px;
+  }
+  .tab {
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--mb-text-medium);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .tab:hover { color: var(--mb-text-dark); }
+  .tab.active {
+    color: var(--mb-brand);
+    border-bottom-color: var(--mb-brand);
+    font-weight: 600;
+  }
+  .tab.disabled {
+    color: var(--mb-text-light);
+    cursor: not-allowed;
+    font-style: italic;
+  }
+
+  /* ===== Tab content area ===== */
+  .tab-content {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 0 0 6px 6px;
+    padding: 20px;
+    display: none;
+  }
+  .tab-content.active { display: block; }
+
+  /* ===== Grid system ===== */
+  .grid {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-2-1 { grid-template-columns: 2fr 1fr; }
+  .grid-1-2 { grid-template-columns: 1fr 2fr; }
+
+  /* ===== Card (Metabase question card) ===== */
+  .card {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    padding: 16px;
+    position: relative;
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--mb-text-dark);
+    line-height: 1.3;
+  }
+  .card-subtitle {
+    font-size: 11px;
+    color: var(--mb-text-light);
+    margin-top: 2px;
+  }
+  .card-menu {
+    color: var(--mb-text-light);
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  /* ===== Number card (KPI) ===== */
+  .number-value {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--mb-text-dark);
+    line-height: 1.1;
+    margin-top: 4px;
+  }
+  .number-trend {
+    font-size: 12px;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .trend-up { color: var(--mb-success); }
+  .trend-down { color: var(--mb-error); }
+  .trend-neutral { color: var(--mb-text-light); }
+  .trend-arrow { font-size: 10px; }
+  .trend-context { color: var(--mb-text-light); margin-left: 4px; }
+
+  /* Mini delta tag — 卡片大数字下方的占位红/绿百分比(口径由数据中台调研) */
+  .delta-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+  .delta-mini.up { color: var(--mb-success); }
+  .delta-mini.down { color: var(--mb-error); }
+
+  /* ===== Bar chart (CSS-rendered) ===== */
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    height: 200px;
+    padding: 16px 8px 24px 8px;
+    border-bottom: 1px solid var(--mb-border);
+    position: relative;
+  }
+  .bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+  .bar {
+    width: 100%;
+    background: var(--mb-brand);
+    border-radius: 2px 2px 0 0;
+    position: relative;
+    transition: opacity 0.2s;
+  }
+  .bar:hover { opacity: 0.8; }
+  .bar-label {
+    font-size: 11px;
+    color: var(--mb-text-medium);
+    white-space: nowrap;
+    margin-top: 6px;
+  }
+  .bar-value {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: var(--mb-text-dark);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .bar-stacked {
+    width: 100%;
+    display: flex;
+    flex-direction: column-reverse;
+    border-radius: 2px 2px 0 0;
+    overflow: hidden;
+  }
+  .bar-segment {
+    width: 100%;
+  }
+
+  /* ===== Y-axis labels ===== */
+  .chart-container {
+    position: relative;
+  }
+  .y-axis {
+    position: absolute;
+    left: 0; top: 0; bottom: 24px;
+    width: 40px;
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: space-between;
+    padding-bottom: 0;
+  }
+  .y-tick {
+    font-size: 10px;
+    color: var(--mb-text-light);
+    text-align: right;
+    padding-right: 6px;
+  }
+  .chart-with-axis {
+    padding-left: 40px;
+  }
+
+  /* ===== Table (Metabase pivot/table) ===== */
+  .mb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .mb-table thead tr {
+    background: var(--mb-bg-light);
+    border-bottom: 1px solid var(--mb-border);
+  }
+  .mb-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--mb-text-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .mb-table th:hover { color: var(--mb-text-dark); }
+  .mb-table th.numeric { text-align: right; }
+  .mb-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--mb-border);
+    color: var(--mb-text-dark);
+  }
+  .mb-table td.numeric {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .mb-table tbody tr:hover {
+    background: var(--mb-bg-light);
+    cursor: pointer;
+  }
+  .mb-table tbody tr:last-child td { border-bottom: none; }
+  .channel-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .channel-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .cell-secondary { color: var(--mb-text-medium); font-size: 12px; }
+  .cell-success { color: var(--mb-success); font-weight: 600; }
+  .cell-warning { color: var(--mb-warning); font-weight: 600; }
+
+  /* ===== Funnel chart ===== */
+  .funnel {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 0;
+  }
+  .funnel-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .funnel-label {
+    width: 130px;
+    font-size: 12px;
+    color: var(--mb-text-medium);
+    text-align: right;
+  }
+  .funnel-bar-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .funnel-bar {
+    height: 28px;
+    background: var(--mb-brand);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .funnel-pct {
+    font-size: 11px;
+    color: var(--mb-text-light);
+    width: 60px;
+  }
+  .funnel-drop {
+    font-size: 11px;
+    color: var(--mb-error);
+    width: 70px;
+  }
+
+  /* ===== Pie / Donut (CSS) ===== */
+  .donut-wrap {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 12px;
+  }
+  .donut {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .donut-legend {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+  }
+  .legend-label { flex: 1; color: var(--mb-text-dark); }
+  .legend-value { color: var(--mb-text-medium); font-variant-numeric: tabular-nums; }
+
+  /* ===== Stacked horizontal bar (channel role) ===== */
+  .stacked-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .stacked-label {
+    width: 130px;
+    font-size: 12px;
+    color: var(--mb-text-dark);
+  }
+  .stacked-bar {
+    flex: 1;
+    height: 22px;
+    display: flex;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .stacked-seg {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* ===== Path table (sequence) ===== */
+  .path-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .path-step {
+    background: var(--mb-bg-light);
+    border: 1px solid var(--mb-border);
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 11px;
+    color: var(--mb-text-dark);
+  }
+  .path-arrow {
+    color: var(--mb-text-light);
+    font-size: 10px;
+  }
+
+  /* ===== Empty / disabled state for tab 7 ===== */
+  .empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--mb-text-light);
+  }
+  .empty-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+  }
+  .empty-title {
+    font-size: 16px;
+    color: var(--mb-text-medium);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .empty-desc {
+    font-size: 13px;
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* ===== Section header inside tab ===== */
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--mb-text-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin: 8px 0 12px 0;
+  }
+
+  /* ===== Drill hint ===== */
+  .drill-hint {
+    font-size: 11px;
+    color: var(--mb-brand);
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  /* ===== Specific channel colors ===== */
+  .ch-paid-search { background: var(--mb-brand); }
+  .ch-paid-social { background: var(--mb-accent2); }
+  .ch-organic { background: var(--mb-accent1); }
+  .ch-direct { background: var(--mb-accent7); }
+  .ch-referral { background: var(--mb-accent5); }
+  .ch-email { background: var(--mb-accent4); }
+  .ch-other { background: var(--mb-text-light); }
+
+  /* ===== Tab-level filter bar (per-tab local filters) ===== */
+  .tab-filter-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 12px;
+    background: #FAFCFD;
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .tab-filter-bar .filter-scope-label {
+    font-size: 11px;
+    color: var(--mb-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  .filter-pill-sm {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 12px;
+    color: var(--mb-text-dark);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .filter-pill-sm:hover { background: var(--mb-bg-white); }
+  .filter-pill-sm.active { background: var(--mb-bg-white); }
+  .filter-pill-sm .label {
+    color: var(--mb-text-medium);
+    font-size: 12px;
+    font-weight: 400;
+  }
+  .filter-pill-sm .label::after { content: ":"; margin-left: 2px; }
+  .filter-pill-sm .value {
+    color: var(--mb-brand);
+    font-weight: 600;
+  }
+  .filter-pill-sm .caret {
+    color: var(--mb-text-light);
+    font-size: 9px;
+  }
+
+  /* Segmented toggle (for new vs returning, etc.) */
+  .seg-toggle {
+    display: inline-flex;
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border-strong);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .seg-toggle button {
+    border: none;
+    background: transparent;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: var(--mb-text-medium);
+    cursor: pointer;
+    font-family: inherit;
+    border-right: 1px solid var(--mb-border);
+  }
+  .seg-toggle button:last-child { border-right: none; }
+  .seg-toggle button.active {
+    background: var(--mb-brand);
+    color: white;
+    font-weight: 600;
+  }
+
+  /* ===== Drill-through indicator (standardized per-card footer) ===== */
+  .drill-bar {
+    margin-top: 12px;
+    padding: 8px 10px;
+    background: #F4F8FC;
+    border: 1px dashed #C8DDF0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--mb-brand);
+  }
+  .drill-bar .drill-icon {
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .drill-bar .drill-label {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--mb-text-light);
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+  .drill-bar .drill-action {
+    color: var(--mb-text-medium);
+    flex: 1;
+  }
+  .drill-bar .drill-target {
+    color: var(--mb-brand);
+    font-weight: 600;
+  }
+  .drill-bar.multi {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .drill-bar.multi .drill-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  /* ===== Channel role tag ===== */
+  .role-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+  .role-acquisition {
+    background: #E8F5E9;
+    color: #2E7D32;
+    border: 1px solid #A5D6A7;
+  }
+  .role-conversion {
+    background: #FFF3E0;
+    color: #E65100;
+    border: 1px solid #FFCC80;
+  }
+  .role-full-funnel {
+    background: #E3F2FD;
+    color: #1565C0;
+    border: 1px solid #90CAF9;
+  }
+  .role-insufficient {
+    background: #F5F5F5;
+    color: #757575;
+    border: 1px solid #E0E0E0;
+    font-style: italic;
+  }
+
+  /* ===== Side-by-side metric pair (for first-click vs last-click) ===== */
+  .metric-pair {
+    display: flex;
+    gap: 0;
+    margin-top: 4px;
+  }
+  .metric-pair .metric-half {
+    flex: 1;
+    padding: 6px 10px;
+  }
+  .metric-pair .metric-half:first-child {
+    border-right: 1px solid var(--mb-border);
+  }
+  .metric-half-label {
+    font-size: 10px;
+    color: var(--mb-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+  .metric-half-value {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--mb-text-dark);
+    line-height: 1.1;
+    margin-top: 2px;
+  }
+  .metric-half.first-click .metric-half-label { color: var(--mb-success); }
+  .metric-half.last-click .metric-half-label { color: var(--mb-accent5); }
+
+  /* ===== Diverging bar chart (for role positioning) ===== */
+  .diverging-chart {
+    padding: 16px 0;
+  }
+  .diverging-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    height: 28px;
+  }
+  .diverging-label {
+    width: 140px;
+    font-size: 12px;
+    color: var(--mb-text-dark);
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .diverging-track {
+    flex: 1;
+    display: flex;
+    height: 100%;
+    position: relative;
+  }
+  .diverging-track::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -4px; bottom: -4px;
+    width: 1px;
+    background: var(--mb-border-strong);
+  }
+  .diverging-half {
+    flex: 1;
+    display: flex;
+    height: 100%;
+  }
+  .diverging-half.left {
+    justify-content: flex-end;
+  }
+  .diverging-half.right {
+    justify-content: flex-start;
+  }
+  .diverging-bar {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 2px;
+  }
+  .diverging-bar.acquisition { background: var(--mb-accent1); }
+  .diverging-bar.conversion { background: var(--mb-accent5); }
+  .diverging-value {
+    font-size: 11px;
+    color: var(--mb-text-medium);
+    width: 50px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .diverging-axis {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--mb-border);
+    font-size: 10px;
+    color: var(--mb-text-light);
+  }
+  .diverging-axis .axis-label {
+    flex: 1;
+  }
+  .diverging-axis .axis-label.left { text-align: right; padding-right: 8px; }
+  .diverging-axis .axis-label.right { text-align: left; padding-left: 8px; }
+  .diverging-axis .axis-spacer { width: 140px; }
+  .diverging-axis .axis-end { width: 50px; }
+
+  /* ===== Subject change banner (Module 7) ===== */
+  .subject-banner {
+    background: linear-gradient(90deg, #FFF8E5 0%, #FFFCEF 100%);
+    border: 1px solid #F4D88A;
+    border-radius: 6px;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #6B5D2E;
+    line-height: 1.5;
+  }
+  .subject-banner .banner-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .subject-banner strong {
+    font-weight: 700;
+    color: #4D4422;
+  }
+
+  /* ===== RFM segment tags ===== */
+  .seg-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    white-space: nowrap;
+  }
+  .seg-new        { background: var(--mb-brand); }
+  .seg-active     { background: var(--mb-accent1); }
+  .seg-promising  { background: var(--mb-accent6); color: #2E353B; }
+  .seg-attention  { background: var(--mb-accent4); color: #6B5D2E; }
+  .seg-almostlost { background: var(--mb-accent5); }
+  .seg-atrisk     { background: var(--mb-accent3); }
+  .seg-dormant    { background: var(--mb-text-light); }
+
+  /* ===== RFM 3-group cohort label ===== */
+  .group-cohort {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .group-champion { background: rgba(136, 191, 77, 0.18); color: #5a8a2e; }
+  .group-loyal    { background: rgba(249, 207, 72, 0.25); color: #8a6d1a; }
+  .group-former   { background: rgba(237, 110, 110, 0.18); color: #b04545; }
+
+  /* ===== RFM 3-group stacked bar ===== */
+  .rfm-stacked {
+    display: flex;
+    height: 32px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .rfm-stacked-segment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .rfm-stacked-segment.champion { background: var(--mb-accent1); }
+  .rfm-stacked-segment.loyal    { background: var(--mb-accent4); color: #6B5D2E; }
+  .rfm-stacked-segment.former   { background: var(--mb-accent3); }
+  .rfm-stacked-legend {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--mb-text-medium);
+  }
+  .rfm-multiplier-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 12px;
+    color: var(--mb-text-dark);
+  }
+  .rfm-multiplier-row + .rfm-multiplier-row {
+    border-top: 1px dashed var(--mb-border);
+  }
+  .rfm-multiplier-row .label-with-tag {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .rfm-multiplier-row .multiplier {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .multiplier.high { color: var(--mb-success); }
+  .multiplier.mid  { color: var(--mb-text-dark); }
+  .multiplier.low  { color: var(--mb-text-medium); }
+
+  /* ===== Line chart (SVG-based, for 7C trends) ===== */
+  .line-chart-wrap {
+    position: relative;
+    margin-top: 8px;
+  }
+  .line-chart-svg {
+    width: 100%;
+    height: 160px;
+    overflow: visible;
+  }
+  .line-chart-svg .grid-line {
+    stroke: var(--mb-border);
+    stroke-width: 1;
+    stroke-dasharray: 2 3;
+  }
+  .line-chart-svg .axis-line {
+    stroke: var(--mb-border-strong);
+    stroke-width: 1;
+  }
+  .line-chart-svg .line-path {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+  .line-chart-svg .line-path.primary { stroke: var(--mb-brand); }
+  .line-chart-svg .line-path.champion { stroke: var(--mb-accent1); }
+  .line-chart-svg .line-path.loyal    { stroke: var(--mb-accent4); }
+  .line-chart-svg .line-path.former   { stroke: var(--mb-accent3); }
+  .line-chart-svg .line-area {
+    fill: var(--mb-brand-light);
+    opacity: 0.5;
+  }
+  .line-chart-svg .line-dot {
+    fill: var(--mb-brand);
+    stroke: white;
+    stroke-width: 1.5;
+  }
+  .line-chart-svg .y-tick-label,
+  .line-chart-svg .x-tick-label {
+    font-size: 10px;
+    fill: var(--mb-text-light);
+    font-family: 'Lato', sans-serif;
+  }
+  .line-chart-svg .bar-flow {
+    fill: var(--mb-accent1);
+    opacity: 0.7;
+  }
+  .line-chart-svg .bar-churn {
+    fill: var(--mb-accent3);
+    opacity: 0.7;
+  }
+  .line-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--mb-text-medium);
+    flex-wrap: wrap;
+  }
+  .line-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .line-legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+  .line-legend-swatch.line-primary  { background: var(--mb-brand); }
+  .line-legend-swatch.line-champion { background: var(--mb-accent1); }
+  .line-legend-swatch.line-loyal    { background: var(--mb-accent4); }
+  .line-legend-swatch.line-former   { background: var(--mb-accent3); }
+  .line-legend-swatch.bar-flow      { background: var(--mb-accent1); opacity: 0.7; }
+  .line-legend-swatch.bar-churn     { background: var(--mb-accent3); opacity: 0.7; }
+
+  /* Trend value badge in card header */
+  .trend-badge {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--mb-text-medium);
+    margin-top: 2px;
+  }
+  .trend-badge .current-val {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--mb-text-dark);
+  }
+  .trend-badge .delta-up   { color: var(--mb-success); font-weight: 600; }
+  .trend-badge .delta-down { color: var(--mb-error); font-weight: 600; }
+
+  /* ===== Tab 1 specific styles (merged from v3) ===== */
+  .banner {
+    background: #FFF9E6;
+    border: 1px solid #F4D27A;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: #6A5816;
+    line-height: 1.55;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .banner-icon {
+    flex-shrink: 0;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #D9A627;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 1px;
+  }
+  .banner b { color: #4A3E0E; }
+  .banner.data-pending {
+    background: #F0EDFA;
+    border-color: #B8A8E2;
+    color: #4A3A7A;
+  }
+  .banner.data-pending .banner-icon { background: #7172AD; }
+  .banner.data-pending b { color: #3A2A6A; }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 24px 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--mb-border);
+  }
+  .section-header:first-of-type { margin-top: 4px; }
+  .section-num {
+    background: var(--mb-text-medium);
+    color: white;
+    padding: 1px 7px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .section-title { font-size: 15px; font-weight: 700; color: var(--mb-text-dark); }
+  .section-sub { font-size: 12px; color: var(--mb-text-light); margin-left: auto; }
+
+  .grid-5 { grid-template-columns: repeat(5, 1fr); }
+
+  .number-unit {
+    font-size: 13px;
+    color: var(--mb-text-light);
+    font-weight: 600;
+    margin-left: 4px;
+  }
+  .trend-flat { color: var(--mb-text-light); }
+  .trend-label { color: var(--mb-text-light); }
+
+  /* Tab 1 channel dot aliases (.dot-* mirror .ch-*) */
+  .channel-cell { display: flex; align-items: center; gap: 8px; }
+  .dot-paid-social { background: #A989C5; }
+  .dot-paid-search { background: #509EE3; }
+  .dot-organic-search { background: #88BF4D; }
+  .dot-direct { background: #7172AD; }
+  .dot-referral { background: #F2A86F; }
+  .dot-email { background: #F9D45C; }
+  .dot-other { background: #98A4B3; }
+
+  /* ===== Histogram (path length) ===== */
+  .histogram-container { padding: 10px 0; }
+  .histogram-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 100px;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+  }
+  .histogram-label { font-size: 13px; font-weight: 500; color: var(--mb-text-dark); }
+  .histogram-track {
+    height: 22px;
+    background: var(--mb-bg-light);
+    border-radius: 3px;
+    position: relative;
+  }
+  .histogram-bar {
+    height: 100%;
+    background: var(--mb-brand);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    font-size: 11px;
+    color: white;
+    font-weight: 600;
+  }
+  .histogram-bar.short { background: #88BF4D; }
+  .histogram-bar.medium { background: var(--mb-brand); }
+  .histogram-bar.long { background: #F2A86F; }
+  .histogram-bar.very-long { background: #ED6E6E; }
+  .histogram-meta { font-size: 11px; color: var(--mb-text-light); text-align: right; }
+
+  /* ===== Path sequence cell ===== */
+  .path-sequence { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .path-step {
+    background: var(--mb-bg-light);
+    border: 1px solid var(--mb-border-strong);
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--mb-text-dark);
+    white-space: nowrap;
+  }
+  .path-arrow { color: var(--mb-text-light); font-size: 11px; }
+  .step-paid-social { border-color: #A989C5; color: #6E4F94; background: #F2EBF8; }
+  .step-paid-search { border-color: #509EE3; color: #1E6FB5; background: #E5F0F8; }
+  .step-organic-search { border-color: #88BF4D; color: #4F7A26; background: #EFF7E2; }
+  .step-direct { border-color: #7172AD; color: #424B7E; background: #ECEDF5; }
+  .step-referral { border-color: #F2A86F; color: #A05F2A; background: #FCEEDF; }
+  .step-email { border-color: #F9D45C; color: #8C7220; background: #FEF7DC; }
+  .step-other { border-color: #98A4B3; color: #4F5C6E; background: #EEF0F3; }
+
+  /* ===== Stacked bar (path complexity) ===== */
+  .stacked-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 80px;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+  }
+  .stacked-channel { font-size: 13px; font-weight: 500; }
+  .stacked-track { display: flex; height: 22px; border-radius: 3px; overflow: hidden; }
+  .stacked-seg {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: white;
+    font-weight: 600;
+  }
+  .stacked-seg.s1 { background: #88BF4D; }
+  .stacked-seg.s2 { background: #509EE3; }
+  .stacked-seg.s3 { background: #7172AD; }
+  .stacked-seg.s4 { background: #F2A86F; }
+  .stacked-seg.s5 { background: #ED6E6E; }
+  .stacked-total {
+    font-size: 12px;
+    color: var(--mb-text-medium);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .stacked-legend {
+    display: flex;
+    gap: 14px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--mb-border);
+    font-size: 11px;
+    color: var(--mb-text-medium);
+    flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* ===== Migration matrix ===== */
+  .matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .matrix-table th {
+    padding: 8px;
+    background: var(--mb-bg-light);
+    text-align: center;
+    font-weight: 600;
+    color: var(--mb-text-medium);
+    font-size: 10px;
+    text-transform: uppercase;
+    border: 1px solid var(--mb-border);
+    white-space: nowrap;
+  }
+  .matrix-table th.row-header { text-align: left; background: white; }
+  .matrix-table td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid var(--mb-border);
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+  }
+  .matrix-table td.row-label {
+    text-align: left;
+    font-weight: 600;
+    background: var(--mb-bg-light);
+    color: var(--mb-text-dark);
+  }
+  .matrix-cell.low { background: #FAFCFD; color: var(--mb-text-light); }
+  .matrix-cell.med-low { background: #E5F0F8; color: #1E6FB5; }
+  .matrix-cell.med { background: #C8DDF0; color: #1E6FB5; font-weight: 600; }
+  .matrix-cell.high { background: #84B5DC; color: white; font-weight: 700; }
+  .matrix-cell.diagonal { outline: 2px solid var(--mb-warning); outline-offset: -2px; }
+
+  .card-footer-hint {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--mb-border);
+    font-size: 11px;
+    color: var(--mb-text-light);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .drill-icon { color: var(--mb-brand); font-weight: 700; }
+
+
+  /* New vs Returning · by Channel — 列分组视觉强化 */
+  .col-new-bg { background: #FAFCFE; }
+  .col-ret-bg { background: #FBFCF7; }
+
+  /* ===== 5A Transition Funnel (Cumulative Reach) ===== */
+  .funnel5a-wrapper {
+    padding: 20px 8px 4px;
+  }
+  .funnel5a-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 80px 80px;
+    gap: 16px;
+    align-items: center;
+    padding: 8px 0;
+  }
+  .funnel5a-stage {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--mb-text-dark);
+  }
+  .funnel5a-bar-wrap {
+    background: var(--mb-bg-light);
+    border-radius: 3px;
+    height: 30px;
+    overflow: hidden;
+    position: relative;
+  }
+  .funnel5a-bar {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 12px;
+    transition: width 0.3s;
+    position: relative;
+  }
+  .funnel5a-value {
+    color: white;
+    font-weight: 700;
+    font-size: 13px;
+    position: relative;
+    white-space: nowrap;
+  }
+  .funnel5a-cumpct {
+    text-align: right;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--mb-text-dark);
+  }
+  .funnel5a-droppct {
+    text-align: right;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* ===== Sankey Diagram (GA4-style) ===== */
+  .sankey-wrapper {
+    padding: 8px 0;
+  }
+  /* Sankey granularity tabs(三 tab 切换 page path / page title / session) */
+  .sankey-granularity-tabs {
+    display: inline-flex;
+    background: var(--mb-bg-light);
+    border-radius: 6px;
+    padding: 3px;
+    gap: 2px;
+    margin-bottom: 12px;
+  }
+  .sgt-tab {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--mb-text-medium);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.15s, color 0.15s;
+    user-select: none;
+  }
+  .sgt-tab:hover { color: var(--mb-text-dark); }
+  .sgt-tab.active {
+    background: var(--mb-bg-white);
+    color: var(--mb-brand);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .sankey-headers {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-bottom: 6px;
+  }
+  .sankey-col-header {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--mb-text-medium);
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 0 10px;
+  }
+  .sankey-edit {
+    color: var(--mb-text-light);
+    font-size: 10px;
+    margin-left: 6px;
+    cursor: pointer;
+  }
+  .sankey-subheaders {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-bottom: 10px;
+    padding: 0 10px;
+  }
+  .sankey-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    background: white;
+    border: 1px solid var(--mb-border-strong);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--mb-text-dark);
+    width: fit-content;
+    max-width: calc(100% - 20px);
+  }
+  .sankey-pill-icon {
+    color: var(--mb-text-light);
+    font-size: 12px;
+  }
+  .sankey-pill-caret {
+    color: var(--mb-text-light);
+    font-size: 9px;
+    margin-left: 4px;
+  }
+
+  .sankey-flow {
+    position: relative;
+    height: 460px;
+    overflow: hidden;
+  }
+  .sankey-paths {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .sankey-paths path {
+    fill: #509EE3;
+    opacity: 0.18;
+  }
+  /* 主流向 ribbon — 品牌蓝 */
+  .sankey-paths path.rb-flow {
+    fill: var(--mb-brand);
+    opacity: 0.32;
+  }
+  /* +15 More 长尾 ribbon — 灰蓝降权 */
+  .sankey-paths path.rb-tail {
+    fill: #9AA8B8;
+    opacity: 0.22;
+  }
+  /* Exit/Drop-off ribbon — 浅灰流失 */
+  .sankey-paths path.rb-exit {
+    fill: #BCC5CF;
+    opacity: 0.28;
+  }
+  .sankey-cols {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    height: 100%;
+    position: relative;
+    z-index: 2;
+  }
+  .sankey-col {
+    display: flex;
+    flex-direction: column;
+    padding: 0 14px 0 6px;
+    gap: 3px;
+    position: relative;
+  }
+  .sankey-col:first-child {
+    padding: 0 14px 0 0;
+  }
+  .sankey-col:last-child {
+    padding: 0 0 0 6px;
+  }
+
+  .sankey-node {
+    display: flex;
+    align-items: stretch;
+    min-height: 28px;
+    gap: 8px;
+    background: transparent;
+    position: relative;
+  }
+  .sankey-bar {
+    width: 8px;
+    flex-shrink: 0;
+    background: var(--mb-brand);
+    border-radius: 2px;
+    opacity: 0.95;
+  }
+  .sankey-node-start {
+    background: linear-gradient(to bottom, #5B9DD5, #3E80B8);
+    color: white;
+    padding: 16px 14px;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .sankey-node-start .sankey-node-label {
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    margin-bottom: 6px;
+  }
+  .sankey-node-start .sankey-node-value {
+    color: white;
+    font-size: 18px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  .sankey-node-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    padding: 2px 0;
+  }
+  .sankey-node-label {
+    font-size: 12px;
+    color: var(--mb-text-dark);
+    font-weight: 500;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 1px;
+  }
+  .sankey-node-value {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--mb-text-dark);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.3px;
+  }
+  .sankey-node-more .sankey-bar {
+    background: var(--mb-brand);
+    opacity: 0.5;
+  }
+  .sankey-node-more-label {
+    color: var(--mb-brand);
+    font-weight: 600;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ===== Dashboard header ===== -->
+<div class="dashboard-header">
+  <div>
+    <div class="dashboard-title">Hypershell · Layer 2 — User Decision & Profile</div>
+    <div class="dashboard-meta">Auto-refresh hourly · Last updated 2026-05-08 14:32</div>
+  </div>
+  <div class="header-actions">
+    <div class="icon-btn">↻</div>
+    <div class="icon-btn">⤓</div>
+    <div class="icon-btn">⋯</div>
+  </div>
+</div>
+
+<!-- ===== Global filters ===== -->
+<div class="filter-bar">
+  <div class="filter-pill active">
+    <span class="label">Date Range</span>
+    <span class="value">Past 90 days</span>
+    <span class="caret">▼</span>
+  </div>
+  <div class="filter-pill">
+    <span class="label">Device</span>
+    <span class="value">All</span>
+    <span class="caret">▼</span>
+  </div>
+</div>
+
+<!-- ===== Tab bar ===== -->
+<div class="tab-bar">
+  <div class="tab active" data-tab="m1">1 · User Acquisition &amp; Path</div>
+  <div class="tab" data-tab="m3">2 · Page Flow Analysis</div>
+  <div class="tab" data-tab="m4">3 · New vs Returning</div>
+  <div class="tab" data-tab="m5a">5A Funnel</div>
+</div>
+
+<!-- =========================================== -->
+<!-- ===== Module 1: Channel Quality (First/Last Click) ====== -->
+<!-- =========================================== -->
+<div class="tab-content active" id="m1">
+
+  <!-- ===== § 1 · 首访触点分布 ===== -->
+  <div class="section-header">
+    <span class="section-num">§ 1</span>
+    <span class="section-title">User First-click Distribution</span>
+    <span class="section-sub">以用户为分析单位 · First-click 渠道分布与后续行为概览</span>
+  </div>
+
+  <!-- KPI 卡 -->
+  <div class="grid grid-4">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Unique Visitors</div>
+          <div class="card-subtitle">Distinct clientId in date range</div>
+        </div>
+        <span class="card-menu">⋯</span>
+      </div>
+      <div class="number-value">5,436,315</div>
+      <div class="delta-mini up">▲ +7.1%</div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">New Visitors</div>
+          <div class="card-subtitle">First-time visitors · Share of Total</div>
+        </div>
+        <span class="card-menu">⋯</span>
+      </div>
+      <div class="number-value">4,220,933</div>
+      <div class="delta-mini up">▲ +6.2%</div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Purchase Users</div>
+          <div class="card-subtitle">Users with ≥ 1 purchase · Conversion Rate</div>
+        </div>
+        <span class="card-menu">⋯</span>
+      </div>
+      <div class="number-value">12,604</div>
+      <div class="delta-mini up">▲ +15.4%</div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Avg Days to Conversion</div>
+          <div class="card-subtitle">First click → first purchase · User avg</div>
+        </div>
+        <span class="card-menu">⋯</span>
+      </div>
+      <div class="number-value">11.2<span class="number-unit">days</span></div>
+      <div class="delta-mini down">▲ +0.8 days</div>
+    </div>
+  </div>
+
+  <!-- ===== Time Lag · Decision Window (Tab 1 内子区段) ===== -->
+  <div class="section-header" style="margin-top: 18px;">
+    <span class="section-title">Time Lag · Decision Window</span>
+    <span class="section-sub">已购用户从 first click 到 first purchase 的决策周期分布</span>
+  </div>
+
+  <!-- Days / Sessions 分布(2 张并列) -->
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Days to First Purchase Distribution</div>
+          <div class="card-subtitle">Days from first click to first purchase · Click bar to see paths</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="bar-chart">
+        <div class="bar-group">
+          <div class="bar" style="height: 18%; background: var(--mb-accent1);"><div class="bar-value">82</div></div>
+          <div class="bar-label">0 day</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 38%; background: var(--mb-accent1);"><div class="bar-value">175</div></div>
+          <div class="bar-label">1-3 d</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 62%;"><div class="bar-value">285</div></div>
+          <div class="bar-label">4-7 d</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 95%;"><div class="bar-value">438</div></div>
+          <div class="bar-label">8-14 d</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 64%;"><div class="bar-value">295</div></div>
+          <div class="bar-label">15-21 d</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 35%; background: var(--mb-accent3);"><div class="bar-value">187</div></div>
+          <div class="bar-label">&gt;21 d</div>
+        </div>
+      </div>
+      <div class="card-footer-hint">
+        <span class="drill-icon">●</span> 0-3 d(绿) = 即时型决策(品牌已记忆) · 8-14 d(主峰) = 典型决策周期 · &gt;21 d(红) = 长尾用户需结合 Tab 4 High-intent Leads 综合评估
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Sessions to First Purchase Distribution</div>
+          <div class="card-subtitle">Number of sessions from first click to first purchase</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="bar-chart">
+        <div class="bar-group">
+          <div class="bar" style="height: 28%;"><div class="bar-value">128</div></div>
+          <div class="bar-label">1 session</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 52%;"><div class="bar-value">240</div></div>
+          <div class="bar-label">2 sessions</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 88%;"><div class="bar-value">405</div></div>
+          <div class="bar-label">3-4</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 72%;"><div class="bar-value">335</div></div>
+          <div class="bar-label">5-7</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 38%;"><div class="bar-value">175</div></div>
+          <div class="bar-label">8-12</div>
+        </div>
+        <div class="bar-group">
+          <div class="bar" style="height: 16%;"><div class="bar-value">74</div></div>
+          <div class="bar-label">13+</div>
+        </div>
+      </div>
+      <div class="card-footer-hint">
+        <span class="drill-icon">●</span> 主峰 3-4 sessions = 用户典型需要 3-4 次访问完成首购(与 § 1 主表 Avg Days to Conversion 联合解读决策效率)
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 首触渠道用户行为概览表 -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">First-click Channel Group</div>
+        <div class="card-subtitle">按用户 First-click 渠道分组 · 看每群用户的转化效率与决策模式</div>
+      </div>
+      <span class="card-menu">⋯</span>
+    </div>
+
+    <table class="mb-table">
+      <thead>
+        <tr>
+          <th>Channel Group</th>
+          <th class="numeric">Unique Visitors</th>
+          <th class="numeric">Avg Session Duration</th>
+          <th class="numeric">ATC Rate</th>
+          <th class="numeric">Purchase Users</th>
+          <th class="numeric">User Conversion Rate</th>          <th class="numeric">Avg Days to Conversion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="clickable">
+          <td><div class="channel-cell"><span class="channel-dot dot-paid-social"></span>Paid Social</div></td>
+          <td class="numeric">1,359,079</td>
+          <td class="numeric">95s</td>
+          <td class="numeric">3.8%</td>
+          <td class="numeric">3,175</td>
+          <td class="numeric">0.23%</td>
+          <td class="numeric">4.5</td>
+        </tr>
+        <tr class="clickable">
+          <td><div class="channel-cell"><span class="channel-dot dot-organic-search"></span>Organic Search</div></td>
+          <td class="numeric">1,087,263</td>
+          <td class="numeric session-per-uv-high">142s</td>
+          <td class="numeric">4.2%</td>
+          <td class="numeric">2,540</td>
+          <td class="numeric">0.23%</td>
+          <td class="numeric">3.2</td>
+        </tr>
+        <tr class="clickable">
+          <td><div class="channel-cell"><span class="channel-dot dot-paid-search"></span>Paid Search</div></td>
+          <td class="numeric">978,537</td>
+          <td class="numeric">128s</td>
+          <td class="numeric">4.5%</td>
+          <td class="numeric">2,286</td>
+          <td class="numeric">0.23%</td>
+          <td class="numeric">2.8</td>
+        </tr>
+        <tr class="clickable">
+          <td><div class="channel-cell"><span class="channel-dot dot-referral"></span>Referral</div></td>
+          <td class="numeric">815,447</td>
+          <td class="numeric">86s</td>
+          <td class="numeric">3.2%</td>
+          <td class="numeric">1,905</td>
+          <td class="numeric">0.23%</td>
+          <td class="numeric">6.2</td>
+        </tr>
+        <tr class="clickable">
+          <td><div class="channel-cell"><span class="channel-dot dot-direct"></span>Direct</div></td>
+          <td class="numeric">543,632</td>
+          <td class="numeric session-per-uv-high">165s</td>
+          <td class="numeric">5.6%</td>
+          <td class="numeric">1,270</td>
+          <td class="numeric">0.23%</td>
+          <td class="numeric">2.1</td>
+        </tr>
+        <tr class="clickable">
+          <td><div class="channel-cell"><span class="channel-dot dot-email"></span>Email</div></td>
+          <td class="numeric">380,542</td>
+          <td class="numeric">118s</td>
+          <td class="numeric">6.8%</td>
+          <td class="numeric">889</td>
+          <td class="numeric">0.23%</td>
+          <td class="numeric">2.4</td>
+        </tr>
+        <tr class="clickable">
+          <td><div class="channel-cell"><span class="channel-dot dot-other"></span>Other</div></td>
+          <td class="numeric">271,816</td>
+          <td class="numeric">72s</td>
+          <td class="numeric">3.5%</td>
+          <td class="numeric">634</td>
+          <td class="numeric">0.23%</td>
+          <td class="numeric">3.8</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td>All Users</td>
+          <td class="numeric">5,436,315</td>
+          <td class="numeric">124s</td>
+          <td class="numeric">4.1%</td>
+          <td class="numeric">12,699</td>
+          <td class="numeric">0.23%</td>
+          <td class="numeric">3.4</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="card-footer-hint">
+      <span class="drill-icon">↗</span>
+      点击任意渠道行 → 钻取到 First-click Channel 明细(下方表)聚焦该 Channel Group
+    </div>
+  </div>
+
+  <!-- 首触渠道细分明细表 -->
+  <div class="card" style="margin-top: 16px;">
+    <div class="card-header">
+      <div>
+        <div class="card-title">First-click Channel</div>
+        <div class="card-subtitle">
+          细分到具体 channel 颗粒度 · 按 Unique Visitors 降序 · 显示 Top 10 ·
+          受全局筛选器 First-click Channel Group + 主表渠道行点击联动
+        </div>
+      </div>
+      <span class="card-menu">⋯</span>
+    </div>
+
+    <div style="overflow-x: auto;">
+    <table class="mb-table">
+      <thead>
+        <tr>
+          <th>Channel</th>
+          <th>Channel Group</th>
+          <th class="numeric">Unique Visitors</th>
+          <th class="numeric">Avg Session Duration</th>
+          <th class="numeric">ATC Rate</th>
+          <th class="numeric">Purchase Users</th>
+          <th class="numeric">User Conversion Rate</th>          <th class="numeric">Avg Days to Conversion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>YouTube Influencers</td>
+          <td><div class="channel-cell"><span class="channel-dot dot-referral"></span>Referral</div></td>
+          <td class="numeric">285,420</td>
+          <td class="numeric">88s</td>
+          <td class="numeric">3.4%</td>
+          <td class="numeric">724</td>
+          <td class="numeric">0.25%</td>
+          <td class="numeric">6.8</td>
+        </tr>
+        <tr>
+          <td>TikTok Influencers</td>
+          <td><div class="channel-cell"><span class="channel-dot dot-referral"></span>Referral</div></td>
+          <td class="numeric">218,640</td>
+          <td class="numeric">72s</td>
+          <td class="numeric">3.1%</td>
+          <td class="numeric">512</td>
+          <td class="numeric">0.23%</td>
+          <td class="numeric">7.2</td>
+        </tr>
+        <tr>
+          <td>Yahoo Search</td>
+          <td><div class="channel-cell"><span class="channel-dot dot-organic-search"></span>Organic Search</div></td>
+          <td class="numeric">196,810</td>
+          <td class="numeric session-per-uv-high">138s</td>
+          <td class="numeric">4.0%</td>
+          <td class="numeric">468</td>
+          <td class="numeric">0.24%</td>
+          <td class="numeric">3.4</td>
+        </tr>
+        <tr>
+          <td>X Social</td>
+          <td><div class="channel-cell"><span class="channel-dot dot-paid-social"></span>Paid Social</div></td>
+          <td class="numeric">182,540</td>
+          <td class="numeric">92s</td>
+          <td class="numeric">3.6%</td>
+          <td class="numeric">425</td>
+          <td class="numeric">0.23%</td>
+          <td class="numeric">4.2</td>
+        </tr>
+        <tr>
+          <td>TikTok Social</td>
+          <td><div class="channel-cell"><span class="channel-dot dot-paid-social"></span>Paid Social</div></td>
+          <td class="numeric">168,230</td>
+          <td class="numeric">84s</td>
+          <td class="numeric">3.7%</td>
+          <td class="numeric">389</td>
+          <td class="numeric">0.23%</td>
+          <td class="numeric">4.6</td>
+        </tr>
+        <tr>
+          <td>chatgpt.com</td>
+          <td><div class="channel-cell"><span class="channel-dot dot-referral"></span>Referral</div></td>
+          <td class="numeric">154,720</td>
+          <td class="numeric session-per-uv-high">168s</td>
+          <td class="numeric">4.2%</td>
+          <td class="numeric">428</td>
+          <td class="numeric">0.28%</td>
+          <td class="numeric">5.4</td>
+        </tr>
+        <tr>
+          <td>Bit Social</td>
+          <td><div class="channel-cell"><span class="channel-dot dot-paid-social"></span>Paid Social</div></td>
+          <td class="numeric">142,360</td>
+          <td class="numeric">86s</td>
+          <td class="numeric">3.5%</td>
+          <td class="numeric">312</td>
+          <td class="numeric">0.22%</td>
+          <td class="numeric">4.8</td>
+        </tr>
+        <tr>
+          <td>Yandex Ads</td>
+          <td><div class="channel-cell"><span class="channel-dot dot-paid-search"></span>Paid Search</div></td>
+          <td class="numeric">125,840</td>
+          <td class="numeric">116s</td>
+          <td class="numeric">4.4%</td>
+          <td class="numeric">298</td>
+          <td class="numeric">0.24%</td>
+          <td class="numeric">2.6</td>
+        </tr>
+        <tr>
+          <td>Instagram Social</td>
+          <td><div class="channel-cell"><span class="channel-dot dot-paid-social"></span>Paid Social</div></td>
+          <td class="numeric">118,950</td>
+          <td class="numeric">98s</td>
+          <td class="numeric">3.9%</td>
+          <td class="numeric">285</td>
+          <td class="numeric">0.24%</td>
+          <td class="numeric">4.4</td>
+        </tr>
+        <tr>
+          <td>shop_app</td>
+          <td><div class="channel-cell"><span class="channel-dot dot-direct"></span>Direct</div></td>
+          <td class="numeric">98,450</td>
+          <td class="numeric session-per-uv-high">186s</td>
+          <td class="numeric">5.8%</td>
+          <td class="numeric">238</td>
+          <td class="numeric">0.24%</td>
+          <td class="numeric">2.0</td>
+        </tr>
+        <tr>
+          <td colspan="8" style="text-align:center;color:var(--mb-text-light);font-style:italic;font-size:12px;padding:14px;">
+            … 显示 Top 10 / 共 1,520+ 行 ·
+            <a href="#" style="color:var(--mb-brand);">加载更多</a> ·
+            <a href="#" style="color:var(--mb-brand);">下载完整明细</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="card-footer-hint">
+      <span class="drill-icon">●</span> 此表回答客户问题:"用户第一次进入网站具体通过哪个渠道(如 TechCrunch 报道或 YouTube 测评)"
+      <span style="margin-left: 14px;"><span class="drill-icon">●</span> 注意 chatgpt.com / shop_app 的 User CVR 高于均值,Referral 渠道总体质量高但量小</span>
+    </div>
+  </div>
+
+  <!-- ===== § 2 · Top Channel Paths(高频转化路径) ===== -->
+  <div class="section-header">
+    <span class="section-num">§ 2</span>
+    <span class="section-title">Top Channel Paths</span>
+    <span class="section-sub">已购用户的高频转化路径 · 含新老用户 · 已对连续相同渠道去重</span>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Top Channel Paths</div>
+        <div class="card-subtitle">已购用户的高频转化路径 · 按用户数降序 · 显示 Top 10</div>
+      </div>
+      <span class="card-menu">⋯</span>
+    </div>
+
+    <div style="overflow-x: auto;">
+    <table class="mb-table">
+      <thead>
+        <tr>
+          <th class="center">#</th>
+          <th>Channel Path</th>
+          <th class="numeric">Users</th>
+          <th class="numeric">Avg Order Value</th>
+          <th class="numeric">Avg Days to Conversion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="center">1</td>
+          <td>
+            <div class="path-sequence">
+              <span class="path-step step-paid-social">Paid Social</span>
+              <span class="path-arrow">→</span>
+              <span class="path-step step-direct">Direct</span>
+            </div>
+          </td>
+          <td class="numeric">156,420</td>
+          <td class="numeric">$1,920</td>
+          <td class="numeric">8.4</td>
+        </tr>
+        <tr>
+          <td class="center">2</td>
+          <td>
+            <div class="path-sequence">
+              <span class="path-step step-paid-search">Paid Search</span>
+            </div>
+          </td>
+          <td class="numeric">123,820</td>
+          <td class="numeric">$1,820</td>
+          <td class="numeric">2.1</td>
+        </tr>
+        <tr>
+          <td class="center">3</td>
+          <td>
+            <div class="path-sequence">
+              <span class="path-step step-organic-search">Organic Search</span>
+              <span class="path-arrow">→</span>
+              <span class="path-step step-direct">Direct</span>
+            </div>
+          </td>
+          <td class="numeric">91,250</td>
+          <td class="numeric">$1,890</td>
+          <td class="numeric">9.8</td>
+        </tr>
+        <tr>
+          <td class="center">4</td>
+          <td>
+            <div class="path-sequence">
+              <span class="path-step step-paid-social">Paid Social</span>
+              <span class="path-arrow">→</span>
+              <span class="path-step step-paid-search">Paid Search</span>
+              <span class="path-arrow">→</span>
+              <span class="path-step step-direct">Direct</span>
+            </div>
+          </td>
+          <td class="numeric">73,160</td>
+          <td class="numeric">$1,950</td>
+          <td class="numeric">12.6</td>
+        </tr>
+        <tr>
+          <td class="center">5</td>
+          <td>
+            <div class="path-sequence">
+              <span class="path-step step-direct">Direct</span>
+            </div>
+          </td>
+          <td class="numeric">63,810</td>
+          <td class="numeric">$1,915</td>
+          <td class="numeric">3.4</td>
+        </tr>
+        <tr>
+          <td class="center">6</td>
+          <td>
+            <div class="path-sequence">
+              <span class="path-step step-referral">Referral</span>
+              <span class="path-arrow">→</span>
+              <span class="path-step step-organic-search">Organic Search</span>
+              <span class="path-arrow">→</span>
+              <span class="path-step step-direct">Direct</span>
+            </div>
+          </td>
+          <td class="numeric">50,850</td>
+          <td class="numeric">$2,012</td>
+          <td class="numeric">18.2</td>
+        </tr>
+        <tr>
+          <td class="center">7</td>
+          <td>
+            <div class="path-sequence">
+              <span class="path-step step-paid-social">Paid Social</span>
+              <span class="path-arrow">→</span>
+              <span class="path-step step-organic-search">Organic Search</span>
+              <span class="path-arrow">→</span>
+              <span class="path-step step-direct">Direct</span>
+            </div>
+          </td>
+          <td class="numeric">44,310</td>
+          <td class="numeric">$1,898</td>
+          <td class="numeric">14.4</td>
+        </tr>
+        <tr>
+          <td class="center">8</td>
+          <td>
+            <div class="path-sequence">
+              <span class="path-step step-email">Email</span>
+              <span class="path-arrow">→</span>
+              <span class="path-step step-direct">Direct</span>
+            </div>
+          </td>
+          <td class="numeric">37,820</td>
+          <td class="numeric">$2,180</td>
+          <td class="numeric">5.6</td>
+        </tr>
+        <tr>
+          <td class="center">9</td>
+          <td>
+            <div class="path-sequence">
+              <span class="path-step step-paid-search">Paid Search</span>
+              <span class="path-arrow">→</span>
+              <span class="path-step step-direct">Direct</span>
+            </div>
+          </td>
+          <td class="numeric">31,260</td>
+          <td class="numeric">$1,840</td>
+          <td class="numeric">6.8</td>
+        </tr>
+        <tr>
+          <td class="center">10</td>
+          <td>
+            <div class="path-sequence">
+              <span class="path-step step-referral">Referral</span>
+              <span class="path-arrow">→</span>
+              <span class="path-step step-paid-search">Paid Search</span>
+              <span class="path-arrow">→</span>
+              <span class="path-step step-direct">Direct</span>
+            </div>
+          </td>
+          <td class="numeric">24,820</td>
+          <td class="numeric">$1,962</td>
+          <td class="numeric">16.8</td>
+        </tr>
+        <tr>
+          <td colspan="5" style="text-align:center;color:var(--mb-text-light);font-style:italic;font-size:12px;padding:14px;">
+            … Top 10 路径覆盖 53.5% 总用户 · 其余 46.5% 分散在 200+ 长尾路径 ·
+            <a href="#" style="color:var(--mb-brand);">查看全部路径</a> ·
+            <a href="#" style="color:var(--mb-brand);">下载明细</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="card-footer-hint">
+      <span class="drill-icon">●</span> 路径已对连续相同渠道去重(如 "Paid Social → Paid Social → Direct" 简化为 "Paid Social → Direct")
+      <span style="margin-left: 14px;"><span class="drill-icon">●</span> Users = 已购用户数 · AOV / Avg Days 反映该路径的质量与决策效率</span>
+      <span style="margin-left: 14px;"><span class="drill-icon">●</span> Top 10 路径覆盖 53.5% 已购用户;长尾路径多为 Referral / Paid Social 首触</span>
+    </div>
+  </div>
+
+  <!-- §4 First-click → Last-click Migration Matrix 已删除 -->
+
+</div>
+
+<!-- =========================================== -->
+<!-- ===== Module 3: Education Flow =========== -->
+<!-- =========================================== -->
+<div class="tab-content" id="m3">
+
+  <!-- ===== Section 2: Page Flow Path Exploration (Sankey · 三 Tab 切换) ===== -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Page Flow Path Exploration</div>
+        <div class="card-subtitle" id="sankey-subtitle">Session-level page flow · Starting from <code>session_start</code> · Top 5 per step + grouped tail + exit drop-off · <b>Granularity:</b> Page Path</div>
+      </div>
+      <div class="card-menu">⋯</div>
+    </div>
+
+    <!-- Granularity Tab 切换(对齐 GA4 Path Exploration 三种 granularity) -->
+    <div class="sankey-granularity-tabs">
+      <div class="sgt-tab active" data-view="pp">Page Path</div>
+      <div class="sgt-tab" data-view="pt">Page Title</div>
+      <div class="sgt-tab" data-view="ss">Session (Event)</div>
+    </div>
+
+    <!-- Sankey 容器 -->
+    <div class="sankey-wrapper">
+      <!-- 4 列标题 -->
+      <div class="sankey-headers">
+        <div class="sankey-col-header">Starting Point</div>
+        <div class="sankey-col-header">Step +1 <span class="sankey-edit">✎</span></div>
+        <div class="sankey-col-header">Step +2 <span class="sankey-edit">✎</span></div>
+        <div class="sankey-col-header">Step +3 <span class="sankey-edit">✎</span></div>
+      </div>
+
+      <!-- 桑基图本体 -->
+      <div class="sankey-flow">
+        <!-- SVG ribbon 流向 -->
+        <!-- viewBox: 400 wide × 460 tall; 4 列各占 100 单位宽
+             col 0 (Starting): x = 0 → 100 (节点 bar 在 x≈85-95,占满整列高度)
+             col 1 (Step +1):  x = 100 → 200 (节点 bar 在 x≈106-114)
+             col 2 (Step +2):  x = 200 → 300 (节点 bar 在 x≈206-214)
+             col 3 (Step +3):  x = 300 → 400 (节点 bar 在 x≈306-314)
+             ribbon 从 col N 的 bar 右边出发,到 col N+1 的 bar 左边 -->
+        <svg class="sankey-paths" viewBox="0 0 400 460" preserveAspectRatio="none">
+          <!-- viewBox 设计:400 宽 × 460 高,4 列各占 100 单位
+               每条 ribbon 是 closed path:M(src_top) C(...)(tgt_top) L(tgt_bot) C(...)(src_bot) Z
+               控制点统一放在两列中点 x_mid,确保贝塞尔曲线水平平滑过渡
+               配色:rb-flow = 品牌蓝主流,rb-tail = 灰蓝 +15More 长尾,rb-exit = 浅灰 exit 流失 -->
+
+          <!-- ===== Col 0 → Col 1: 6 main ribbons ===== -->
+          <path class="rb-flow" d="M100,0.0 C150,0.0 150,0.0 200,0.0 L200,55.4 C150,55.4 150,57.2 100,57.2Z"/>
+          <path class="rb-flow" d="M100,57.2 C150,57.2 150,58.4 200,58.4 L200,96.8 C150,96.8 150,97.0 100,97.0Z"/>
+          <path class="rb-flow" d="M100,97.0 C150,97.0 150,99.8 200,99.8 L200,137.4 C150,137.4 150,135.9 100,135.9Z"/>
+          <path class="rb-flow" d="M100,135.9 C150,135.9 150,140.4 200,140.4 L200,173.0 C150,173.0 150,169.8 100,169.8Z"/>
+          <path class="rb-flow" d="M100,169.8 C150,169.8 150,176.0 200,176.0 L200,197.9 C150,197.9 150,192.3 100,192.3Z"/>
+          <path class="rb-tail" d="M100,192.3 C150,192.3 150,200.9 200,200.9 L200,460.0 C150,460.0 150,460.0 100,460.0Z"/>
+
+          <!-- ===== Col 1 → Col 2: 6 continue + 6 exit =====
+               每个 col 1 节点 65% 继续流向 col 2,35% 作为 exit 流入底部消失带 -->
+          <path class="rb-flow" d="M200,0.0 C250,0.0 250,0.0 300,0.0 L300,120.4 C250,120.4 250,36.0 200,36.0Z"/>
+          <path class="rb-flow" d="M200,58.4 C250,58.4 250,123.4 300,123.4 L300,186.6 C250,186.6 250,83.4 200,83.4Z"/>
+          <path class="rb-flow" d="M200,99.8 C250,99.8 250,189.6 300,189.6 L300,236.1 C250,236.1 250,124.2 200,124.2Z"/>
+          <path class="rb-flow" d="M200,140.4 C250,140.4 250,239.1 300,239.1 L300,274.5 C250,274.5 250,161.6 200,161.6Z"/>
+          <path class="rb-flow" d="M200,176.0 C250,176.0 250,277.5 300,277.5 L300,309.3 C250,309.3 250,190.2 200,190.2Z"/>
+          <path class="rb-tail" d="M200,200.9 C250,200.9 250,312.3 300,312.3 L300,460.0 C250,460.0 250,369.3 200,369.3Z"/>
+          <path class="rb-exit" d="M200,36.0 C250,36.0 250,458.0 300,458.0 L300,460.0 C250,460.0 250,55.4 200,55.4Z"/>
+          <path class="rb-exit" d="M200,83.4 C250,83.4 250,458.0 300,458.0 L300,460.0 C250,460.0 250,96.8 200,96.8Z"/>
+          <path class="rb-exit" d="M200,124.2 C250,124.2 250,458.0 300,458.0 L300,460.0 C250,460.0 250,137.4 200,137.4Z"/>
+          <path class="rb-exit" d="M200,161.6 C250,161.6 250,458.0 300,458.0 L300,460.0 C250,460.0 250,173.0 200,173.0Z"/>
+          <path class="rb-exit" d="M200,190.2 C250,190.2 250,458.0 300,458.0 L300,460.0 C250,460.0 250,197.9 200,197.9Z"/>
+          <path class="rb-exit" d="M200,369.3 C250,369.3 250,458.0 300,458.0 L300,460.0 C250,460.0 250,460.0 200,460.0Z"/>
+
+          <!-- ===== Col 2 → Col 3: 6 continue + 6 exit =====
+               col 3 BuyX 节点是大头(占 53.2%),由 col 2 前三个节点 (XUltra/Anniv/AI) 共同流入
+               BuyX 节点内部按 col 2 三节点流量比例切段 -->
+          <path class="rb-flow" d="M300,0.0 C350,0.0 350,0.0 400,0.0 L400,174.4 C350,174.4 350,78.3 300,78.3Z"/>
+          <path class="rb-flow" d="M300,123.4 C350,123.4 350,174.4 400,174.4 L400,265.9 C350,265.9 350,164.5 300,164.5Z"/>
+          <path class="rb-flow" d="M300,189.6 C350,189.6 350,265.9 400,265.9 L400,333.4 C350,333.4 350,219.8 300,219.8Z"/>
+          <path class="rb-flow" d="M300,239.1 C350,239.1 350,336.4 400,336.4 L400,357.1 C350,357.1 350,262.1 300,262.1Z"/>
+          <path class="rb-flow" d="M300,277.5 C350,277.5 350,360.1 400,360.1 L400,377.7 C350,377.7 350,298.1 300,298.1Z"/>
+          <path class="rb-tail" d="M300,312.3 C350,312.3 350,416.1 400,416.1 L400,460.0 C350,460.0 350,408.3 300,408.3Z"/>
+          <path class="rb-exit" d="M300,78.3 C350,78.3 350,458.0 400,458.0 L400,460.0 C350,460.0 350,120.4 300,120.4Z"/>
+          <path class="rb-exit" d="M300,164.5 C350,164.5 350,458.0 400,458.0 L400,460.0 C350,460.0 350,186.6 300,186.6Z"/>
+          <path class="rb-exit" d="M300,219.8 C350,219.8 350,458.0 400,458.0 L400,460.0 C350,460.0 350,236.1 300,236.1Z"/>
+          <path class="rb-exit" d="M300,262.1 C350,262.1 350,458.0 400,458.0 L400,460.0 C350,460.0 350,274.5 300,274.5Z"/>
+          <path class="rb-exit" d="M300,298.1 C350,298.1 350,458.0 400,458.0 L400,460.0 C350,460.0 350,309.3 300,309.3Z"/>
+          <path class="rb-exit" d="M300,408.3 C350,408.3 350,458.0 400,458.0 L400,460.0 C350,460.0 350,460.0 300,460.0Z"/>
+        </svg>
+
+        <!-- 节点列 -->
+        <div class="sankey-cols">
+          <!-- Column 0: Starting Point -->
+          <div class="sankey-col">
+            <div class="sankey-node sankey-node-start" style="height: 92%;">
+              <div class="sankey-node-label" data-pp="session_start" data-pt="session_start" data-ss="session_start">session_start</div>
+              <div class="sankey-node-value" data-pp="438,490" data-pt="438,490" data-ss="438,490">438,490</div>
+            </div>
+          </div>
+
+          <!-- Column 1: STEP +1 (Top 5 Page Title) -->
+          <div class="sankey-col">
+            <div class="sankey-node" style="height: 12.4%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label" data-pp="/" data-pt="Buy Hypershell X | Official..." data-ss="page_view">/</div>
+                <div class="sankey-node-value" data-pp="78,420" data-pt="54,281" data-ss="402,180">78,420</div>
+              </div>
+            </div>
+            <div class="sankey-node" style="height: 8.6%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label" data-pp="/products/*" data-pt="Hypershell: World's First..." data-ss="user_engagement">/products/*</div>
+                <div class="sankey-node-value" data-pp="62,830" data-pt="37,787" data-ss="24,520">62,830</div>
+              </div>
+            </div>
+            <div class="sankey-node" style="height: 8.4%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label" data-pp="/pages/specs" data-pt="Hypershell: AI-Powered..." data-ss="scroll">/pages/specs</div>
+                <div class="sankey-node-value" data-pp="48,210" data-pt="36,974" data-ss="6,840">48,210</div>
+              </div>
+            </div>
+            <div class="sankey-node" style="height: 7.3%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label" data-pp="/pages/hypershell-pro" data-pt="Buy Hypershell X Ultra..." data-ss="view_item">/pages/hypershell-pro</div>
+                <div class="sankey-node-value" data-pp="38,690" data-pt="32,141" data-ss="2,910">38,690</div>
+              </div>
+            </div>
+            <div class="sankey-node" style="height: 4.9%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label" data-pp="/collections/*" data-pt="Buy Hypershell X Series..." data-ss="click">/collections/*</div>
+                <div class="sankey-node-value" data-pp="32,140" data-pt="21,418" data-ss="1,180">32,140</div>
+              </div>
+            </div>
+            <div class="sankey-node sankey-node-more" style="height: 58%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label sankey-node-more-label" data-pp="+12 More" data-pt="+15 More" data-ss="+8 More">+12 More</div>
+                <div class="sankey-node-value" data-pp="178,200" data-pt="254,126" data-ss="860">178,200</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: STEP +2 -->
+          <div class="sankey-col">
+            <div class="sankey-node" style="height: 26.9%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label" data-pp="/products/*" data-pt="Buy Hypershell X Ultra..." data-ss="view_item">/products/*</div>
+                <div class="sankey-node-value" data-pp="2,820" data-pt="2,499" data-ss="3,210">2,820</div>
+              </div>
+            </div>
+            <div class="sankey-node" style="height: 14.1%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label" data-pp="/cart" data-pt="Hypershell Anniversary..." data-ss="user_engagement">/cart</div>
+                <div class="sankey-node-value" data-pp="1,540" data-pt="1,312" data-ss="2,460">1,540</div>
+              </div>
+            </div>
+            <div class="sankey-node" style="height: 10.4%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label" data-pp="/pages/specs" data-pt="Hypershell: AI-Powered..." data-ss="page_view">/pages/specs</div>
+                <div class="sankey-node-value" data-pp="1,180" data-pt="968" data-ss="1,820">1,180</div>
+              </div>
+            </div>
+            <div class="sankey-node" style="height: 7.9%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label" data-pp="/pages/faq" data-pt="Hypershell: World's First..." data-ss="add_to_cart">/pages/faq</div>
+                <div class="sankey-node-value" data-pp="892" data-pt="733" data-ss="892">892</div>
+              </div>
+            </div>
+            <div class="sankey-node" style="height: 7.1%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label" data-pp="/collections/*" data-pt="Buy Hypershell X Series..." data-ss="scroll">/collections/*</div>
+                <div class="sankey-node-value" data-pp="714" data-pt="664" data-ss="510">714</div>
+              </div>
+            </div>
+            <div class="sankey-node sankey-node-more" style="height: 33%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label sankey-node-more-label" data-pp="+10 More" data-pt="+15 More" data-ss="+8 More">+10 More</div>
+                <div class="sankey-node-value" data-pp="2,106" data-pt="3,076" data-ss="360">2,106</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 3: STEP +3 -->
+          <div class="sankey-col">
+            <div class="sankey-node" style="height: 53.2%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label" data-pp="/checkouts/*" data-pt="Buy Hypershell X | Official..." data-ss="begin_checkout">/checkouts/*</div>
+                <div class="sankey-node-value" data-pp="1,420" data-pt="1,377" data-ss="1,402">1,420</div>
+              </div>
+            </div>
+            <div class="sankey-node" style="height: 3.3%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label" data-pp="/products/*" data-pt="Hypershell: World's First..." data-ss="add_to_cart">/products/*</div>
+                <div class="sankey-node-value" data-pp="52" data-pt="47" data-ss="88">52</div>
+              </div>
+            </div>
+            <div class="sankey-node" style="height: 2.8%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label" data-pp="/cart" data-pt="Hypershell X Ultra" data-ss="view_item">/cart</div>
+                <div class="sankey-node-value" data-pp="38" data-pt="36" data-ss="54">38</div>
+              </div>
+            </div>
+            <div class="sankey-node" style="height: 2.4%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label" data-pp="/pages/faq" data-pt="Hypershell: AI-Powered..." data-ss="user_engagement">/pages/faq</div>
+                <div class="sankey-node-value" data-pp="32" data-pt="31" data-ss="38">32</div>
+              </div>
+            </div>
+            <div class="sankey-node" style="height: 2.3%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label" data-pp="/account/*" data-pt="Hypershell Anniversary..." data-ss="page_view">/account/*</div>
+                <div class="sankey-node-value" data-pp="26" data-pt="30" data-ss="29">26</div>
+              </div>
+            </div>
+            <div class="sankey-node sankey-node-more" style="height: 7%;">
+              <div class="sankey-bar"></div>
+              <div class="sankey-node-content">
+                <div class="sankey-node-label sankey-node-more-label" data-pp="+8 More" data-pt="+15 More" data-ss="+8 More">+8 More</div>
+                <div class="sankey-node-value" data-pp="63" data-pt="110" data-ss="20">63</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- =========================================== -->
+<!-- ===== Module 4: New vs Returning ========= -->
+<!-- =========================================== -->
+<div class="tab-content" id="m4">
+
+  <!-- Banner: 新老用户定义说明 -->
+  <div class="banner">
+    <div class="banner-icon">ⓘ</div>
+    <div>
+      <b>新老用户定义:</b>
+      New = 选定窗口内首次出现的 clientId;Returning = 窗口前已访问过本站(不论是否购买)。
+      <b>Returning ≠ 复购用户</b>。
+    </div>
+  </div>
+
+  <!-- Tab-level local filters · 改为 First-click / Last-click 切换 -->
+  <div class="tab-filter-bar">
+    <span class="filter-scope-label">Tab Filters</span>
+    <span style="font-size: 11px; color: var(--mb-text-medium); margin-right: 4px;">Attribution View:</span>
+    <div class="seg-toggle">
+      <button class="active">First-click</button>
+      <button>Last-click</button>
+    </div>
+    <span style="font-size: 11px; color: var(--mb-text-light); margin-left: 14px;">所有指标默认 User-level · 归因影响 KPI 卡 / 触发渠道分布;漏斗不受影响(漏斗本身是用户级,与归因正交)</span>
+  </div>
+
+  <!-- ===== § 1 · 6 张 KPI 卡(双数字并列)===== -->
+  <div class="grid grid-3">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Visitor Mix</div>
+          <div class="card-subtitle">New vs Returning</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div style="margin-top: 8px;">
+        <div style="display: flex; gap: 4px; height: 32px; border-radius: 4px; overflow: hidden;">
+          <div style="background: var(--mb-brand); flex: 73; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 13px;">73% New</div>
+          <div style="background: var(--mb-accent1); flex: 27; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 13px;">27% Returning</div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--mb-text-medium);">
+          <span>30,892 new</span>
+          <span>11,426 returning</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">User Conversion Rate</div>
+          <div class="card-subtitle">Purchasers ÷ Users</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: baseline; margin-top: 6px;">
+        <div>
+          <div style="font-size: 11px; color: var(--mb-text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;">New</div>
+          <div style="font-size: 22px; font-weight: 900; color: var(--mb-brand);">1.72%</div>
+          <div class="delta-mini up" style="margin-top: 4px; font-size: 11px;">▲ +0.2pp</div>
+        </div>
+        <div style="border-left: 1px solid var(--mb-border); padding-left: 16px;">
+          <div style="font-size: 11px; color: var(--mb-text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;">Returning</div>
+          <div style="font-size: 22px; font-weight: 900; color: var(--mb-accent1);">4.82%</div>
+          <div class="delta-mini down" style="margin-top: 4px; font-size: 11px;">▼ -0.3pp</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">AOV</div>
+          <div class="card-subtitle">Average Order Value (USD)</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: baseline; margin-top: 6px;">
+        <div>
+          <div style="font-size: 11px; color: var(--mb-text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;">New</div>
+          <div style="font-size: 22px; font-weight: 900; color: var(--mb-brand);">$1,770</div>
+          <div class="delta-mini up" style="margin-top: 4px; font-size: 11px;">▲ +2.4%</div>
+        </div>
+        <div style="border-left: 1px solid var(--mb-border); padding-left: 16px;">
+          <div style="font-size: 11px; color: var(--mb-text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;">Returning</div>
+          <div style="font-size: 22px; font-weight: 900; color: var(--mb-accent1);">$1,985</div>
+          <div class="delta-mini up" style="margin-top: 4px; font-size: 11px;">▲ +1.8%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-3">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Avg Revenue per Visitor</div>
+          <div class="card-subtitle">Avg Revenue per Visitor (USD)</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: baseline; margin-top: 6px;">
+        <div>
+          <div style="font-size: 11px; color: var(--mb-text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;">New</div>
+          <div style="font-size: 22px; font-weight: 900; color: var(--mb-brand);">$30.4</div>
+          <div class="delta-mini up" style="margin-top: 4px; font-size: 11px;">▲ +5.1%</div>
+        </div>
+        <div style="border-left: 1px solid var(--mb-border); padding-left: 16px;">
+          <div style="font-size: 11px; color: var(--mb-text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;">Returning</div>
+          <div style="font-size: 22px; font-weight: 900; color: var(--mb-accent1);">$95.7</div>
+          <div class="delta-mini up" style="margin-top: 4px; font-size: 11px;">▲ +8.6%</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Avg Days to First Purchase</div>
+          <div class="card-subtitle">First click → first purchase · 均值</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: baseline; margin-top: 6px;">
+        <div>
+          <div style="font-size: 11px; color: var(--mb-text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;">New</div>
+          <div style="font-size: 22px; font-weight: 900; color: var(--mb-brand);">17.6 <span style="font-size:13px; font-weight:600; color: var(--mb-text-medium);">days</span></div>
+          <div class="delta-mini up" style="margin-top: 4px; font-size: 11px;">▼ -1.2 d</div>
+        </div>
+        <div style="border-left: 1px solid var(--mb-border); padding-left: 16px;">
+          <div style="font-size: 11px; color: var(--mb-text-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;">Returning</div>
+          <div style="font-size: 22px; font-weight: 900; color: var(--mb-accent1);">6.4 <span style="font-size:13px; font-weight:600; color: var(--mb-text-medium);">days</span></div>
+          <div class="delta-mini up" style="margin-top: 4px; font-size: 11px;">▼ -0.4 d</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Revenue Share</div>
+          <div class="card-subtitle">% of total revenue contribution</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div style="margin-top: 8px;">
+        <div style="display: flex; gap: 4px; height: 32px; border-radius: 4px; overflow: hidden;">
+          <div style="background: var(--mb-brand); flex: 51; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 13px;">51% New</div>
+          <div style="background: var(--mb-accent1); flex: 49; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 13px;">49% Returning</div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--mb-text-medium);">
+          <span>$939K from new</span>
+          <span>$903K from returning</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== § 2 · 漏斗(并排,不受归因切换影响)===== -->
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">New Visitor Funnel</div>
+          <div class="card-subtitle">First-time visitors · User-level · 不受 Attribution View 切换影响</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="funnel">
+        <div class="funnel-row">
+          <div class="funnel-label">Landing Page</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 100%;">30,892</div>
+            <div class="funnel-pct">100%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Product View</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 58%;">17,917</div>
+            <div class="funnel-pct">58%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Add to Cart</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 12%;">3,707</div>
+            <div class="funnel-pct">20.7%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Checkout Start</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 5.4%;">1,668</div>
+            <div class="funnel-pct">45%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Payment Info</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 2.8%;">865</div>
+            <div class="funnel-pct">51.9%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Purchase</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 1.72%; background: var(--mb-success);">531</div>
+            <div class="funnel-pct">61.4%</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer-hint" style="font-size: 11px; margin-top: 8px;">
+        <span class="drill-icon">●</span> 百分比 = 从上一步留存率(本步用户数 ÷ 上一步用户数);Landing 步骤为起点,固定 100%
+      </div>
+      <div class="drill-bar">
+        <span class="drill-icon">↗</span>
+        <span class="drill-label">Drill</span>
+        <span class="drill-action">Click any funnel stage →</span>
+        <span class="drill-target">See drop-off visitors at that step (records list)</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Returning Visitor Funnel</div>
+          <div class="card-subtitle">Visitors with prior history · User-level · 不受 Attribution View 切换影响</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="funnel">
+        <div class="funnel-row">
+          <div class="funnel-label">Landing Page</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 100%; background: var(--mb-accent1);">11,426</div>
+            <div class="funnel-pct">100%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Product View</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 78%; background: var(--mb-accent1);">8,912</div>
+            <div class="funnel-pct">78%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Add to Cart</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 24%; background: var(--mb-accent1);">2,742</div>
+            <div class="funnel-pct">30.8%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Checkout Start</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 14%; background: var(--mb-accent1);">1,599</div>
+            <div class="funnel-pct">58.3%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Payment Info</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 7.8%; background: var(--mb-accent1);">891</div>
+            <div class="funnel-pct">55.7%</div>
+          </div>
+        </div>
+        <div class="funnel-row">
+          <div class="funnel-label">Purchase</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width: 4.82%; background: var(--mb-success);">551</div>
+            <div class="funnel-pct">61.8%</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer-hint" style="font-size: 11px; margin-top: 8px;">
+        <span class="drill-icon">●</span> 百分比 = 从上一步留存率(本步用户数 ÷ 上一步用户数);Landing 步骤为起点,固定 100%
+      </div>
+      <div class="drill-bar">
+        <span class="drill-icon">↗</span>
+        <span class="drill-label">Drill</span>
+        <span class="drill-action">Click any funnel stage →</span>
+        <span class="drill-target">See drop-off visitors at that step (records list)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== § 3 · Entry Channel · New vs Returning(上下排布,指标对齐 Tab 1 § 1) ===== -->
+  <div class="section-header" style="margin-top: 20px;">
+    <span class="section-num">§ 3</span>
+    <span class="section-title">Entry Channel · New vs Returning</span>
+    <span class="section-sub">新老用户首次入站渠道分布与质量指标 · 指标列与 Tab 1 § 1 First-click Channel Group 一致 · 受 Attribution View 切换影响</span>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">New Visitor Entry Channel</div>
+        <div class="card-subtitle">新用户首次入站渠道分布 + 行为/转化质量指标(对齐 Tab 1 § 1)</div>
+      </div>
+      <div class="card-menu">⋯</div>
+    </div>
+    <div style="overflow-x: auto;">
+    <table class="mb-table">
+      <thead>
+        <tr>
+          <th>Entry Channel</th>
+          <th class="numeric">New Visitors</th>
+          <th class="numeric">Avg Session Duration</th>
+          <th class="numeric">ATC Rate</th>
+          <th class="numeric">Purchase Users</th>
+          <th class="numeric">User Conversion Rate</th>          <th class="numeric">Avg Days to Conversion</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr>
+            <td><span class="channel-tag"><span class="channel-dot ch-paid-social"></span>Paid Social</span></td>
+            <td class="numeric">1,224,500</td>
+            <td class="numeric">92s</td>
+            <td class="numeric">3.6%</td>
+            <td class="numeric">2,449</td>
+            <td class="numeric">0.20%</td>
+            <td class="numeric">4.6</td>
+          </tr>
+          <tr>
+            <td><span class="channel-tag"><span class="channel-dot ch-organic"></span>Organic Search</span></td>
+            <td class="numeric">980,420</td>
+            <td class="numeric">138s</td>
+            <td class="numeric">4.0%</td>
+            <td class="numeric">2,157</td>
+            <td class="numeric">0.22%</td>
+            <td class="numeric">3.4</td>
+          </tr>
+          <tr>
+            <td><span class="channel-tag"><span class="channel-dot ch-paid-search"></span>Paid Search</span></td>
+            <td class="numeric">876,830</td>
+            <td class="numeric">124s</td>
+            <td class="numeric">4.3%</td>
+            <td class="numeric">1,929</td>
+            <td class="numeric">0.22%</td>
+            <td class="numeric">2.9</td>
+          </tr>
+          <tr>
+            <td><span class="channel-tag"><span class="channel-dot ch-referral"></span>Referral</span></td>
+            <td class="numeric">782,180</td>
+            <td class="numeric">82s</td>
+            <td class="numeric">3.0%</td>
+            <td class="numeric">1,721</td>
+            <td class="numeric">0.22%</td>
+            <td class="numeric">6.4</td>
+          </tr>
+          <tr>
+            <td><span class="channel-tag"><span class="channel-dot ch-direct"></span>Direct</span></td>
+            <td class="numeric">298,540</td>
+            <td class="numeric">78s</td>
+            <td class="numeric">4.1%</td>
+            <td class="numeric">627</td>
+            <td class="numeric">0.21%</td>
+            <td class="numeric">2.0</td>
+          </tr>
+          <tr>
+            <td><span class="channel-tag"><span class="channel-dot ch-email"></span>Email</span></td>
+            <td class="numeric">115,420</td>
+            <td class="numeric">88s</td>
+            <td class="numeric">4.5%</td>
+            <td class="numeric">208</td>
+            <td class="numeric">0.18%</td>
+            <td class="numeric">2.2</td>
+          </tr>
+          <tr>
+            <td>Other</td>
+            <td class="numeric">202,440</td>
+            <td class="numeric">70s</td>
+            <td class="numeric">3.2%</td>
+            <td class="numeric">405</td>
+            <td class="numeric">0.20%</td>
+            <td class="numeric">3.8</td>
+          </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td>All New Visitors</td>
+          <td class="numeric">4,480,330</td>
+          <td class="numeric">108s</td>
+          <td class="numeric">3.9%</td>
+          <td class="numeric">9,496</td>
+          <td class="numeric">0.21%</td>
+          <td class="numeric">3.6</td>
+        </tr>
+      </tfoot>
+    </table>
+    </div>
+    <div style="margin-top: 8px; padding: 8px 10px; background: var(--mb-bg-light); font-size: 11px; color: var(--mb-text-medium); line-height: 1.6; border-radius: 3px;">
+      <b style="color: var(--mb-text-dark);">解读维度:</b> 新客主入口为 Paid Social + Organic + Paid Search,共占 68.8%;Organic Search 停留时长 138s 最高,Avg Days 10.2 决策周期最短 — 新客中质量最优渠道
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Returning Visitor Entry Channel</div>
+        <div class="card-subtitle">老用户回访入口渠道分布 + 行为/转化质量指标(对齐 Tab 1 § 1)</div>
+      </div>
+      <div class="card-menu">⋯</div>
+    </div>
+    <div style="overflow-x: auto;">
+    <table class="mb-table">
+      <thead>
+        <tr>
+          <th>Entry Channel</th>
+          <th class="numeric">Returning Visitors</th>
+          <th class="numeric">Avg Session Duration</th>
+          <th class="numeric">ATC Rate</th>
+          <th class="numeric">Purchase Users</th>
+          <th class="numeric">User Conversion Rate</th>          <th class="numeric">Avg Days to Conversion</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr>
+            <td><span class="channel-tag"><span class="channel-dot ch-direct"></span>Direct</span></td>
+            <td class="numeric">4,820</td>
+            <td class="numeric">186s</td>
+            <td class="numeric">12.4%</td>
+            <td class="numeric">330</td>
+            <td class="numeric"><span class="cell-success">6.84%</span></td>
+            <td class="numeric">2.0</td>
+          </tr>
+          <tr>
+            <td><span class="channel-tag"><span class="channel-dot ch-email"></span>Email</span></td>
+            <td class="numeric">2,485</td>
+            <td class="numeric">142s</td>
+            <td class="numeric">10.8%</td>
+            <td class="numeric">147</td>
+            <td class="numeric"><span class="cell-success">5.92%</span></td>
+            <td class="numeric">2.4</td>
+          </tr>
+          <tr>
+            <td><span class="channel-tag"><span class="channel-dot ch-paid-search"></span>Paid Search</span></td>
+            <td class="numeric">1,628</td>
+            <td class="numeric">128s</td>
+            <td class="numeric">8.2%</td>
+            <td class="numeric">67</td>
+            <td class="numeric">4.12%</td>
+            <td class="numeric">2.6</td>
+          </tr>
+          <tr>
+            <td><span class="channel-tag"><span class="channel-dot ch-paid-social"></span>Paid Social (Retargeting)</span></td>
+            <td class="numeric">1,205</td>
+            <td class="numeric">98s</td>
+            <td class="numeric">7.4%</td>
+            <td class="numeric">42</td>
+            <td class="numeric">3.48%</td>
+            <td class="numeric">3.2</td>
+          </tr>
+          <tr>
+            <td><span class="channel-tag"><span class="channel-dot ch-organic"></span>Organic Search</span></td>
+            <td class="numeric">854</td>
+            <td class="numeric">138s</td>
+            <td class="numeric">6.8%</td>
+            <td class="numeric">24</td>
+            <td class="numeric">2.84%</td>
+            <td class="numeric">3.0</td>
+          </tr>
+          <tr>
+            <td><span class="channel-tag"><span class="channel-dot ch-referral"></span>Referral</span></td>
+            <td class="numeric">298</td>
+            <td class="numeric">102s</td>
+            <td class="numeric">5.4%</td>
+            <td class="numeric">7</td>
+            <td class="numeric">2.21%</td>
+            <td class="numeric">4.2</td>
+          </tr>
+          <tr>
+            <td>Other</td>
+            <td class="numeric">136</td>
+            <td class="numeric">75s</td>
+            <td class="numeric">—</td>
+            <td class="numeric">—</td>
+            <td class="numeric">—</td>
+            <td class="numeric">—</td>
+          </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td>All Returning Visitors</td>
+          <td class="numeric">11,426</td>
+          <td class="numeric">156s</td>
+          <td class="numeric">10.2%</td>
+          <td class="numeric">617</td>
+          <td class="numeric">4.82%</td>
+          <td class="numeric">2.4</td>
+        </tr>
+      </tfoot>
+    </table>
+    </div>
+    <div style="margin-top: 8px; padding: 8px 10px; background: var(--mb-bg-light); font-size: 11px; color: var(--mb-text-medium); line-height: 1.6; border-radius: 3px;">
+      <b style="color: var(--mb-text-dark);">解读维度:</b> 42% 老用户通过 Direct 回访(品牌已记忆,CVR 6.84% 最高);Email 唤醒 22%(CVR 5.92%);Paid Social Retargeting 仅 10.5%,投入产出比需结合 Tab 4 综合评估
+    </div>
+  </div>
+
+  <!-- ===== § 4 · Top Channel Paths · New vs Returning(上下排布,指标对齐 Tab 1 § 2) ===== -->
+  <div class="section-header" style="margin-top: 20px;">
+    <span class="section-num">§ 4</span>
+    <span class="section-title">Top Channel Paths · New vs Returning</span>
+    <span class="section-sub">从入站到购买的完整多触点路径 · 已对连续相同渠道去重 · 显示 Top 8 · 指标列与 Tab 1 § 2 一致</span>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">New Visitor Top Channel Paths</div>
+        <div class="card-subtitle">新用户从 First-click 到首购的完整多触点路径 · 已购新用户 12,148 · 受 Attribution View 切换影响</div>
+      </div>
+      <div class="card-menu">⋯</div>
+    </div>
+    <div style="overflow-x: auto;">
+    <table class="mb-table">
+      <thead>
+        <tr>
+          <th class="center">#</th>
+          <th>Channel Path</th>
+          <th class="numeric">Users</th>
+          <th class="numeric">Avg Order Value</th>
+          <th class="numeric">Avg Days to Conversion</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr>
+            <td class="center">1</td>
+            <td>
+              <div class="path-sequence">
+                <span class="path-step step-paid-social">Paid Social</span>
+                <span class="path-arrow">→</span>
+                <span class="path-step step-direct">Direct</span>
+              </div>
+            </td>
+            <td class="numeric">1,505</td>
+            <td class="numeric">$1,920</td>
+            <td class="numeric">8.4</td>
+          </tr>
+          <tr>
+            <td class="center">2</td>
+            <td>
+              <div class="path-sequence">
+                <span class="path-step step-paid-search">Paid Search</span>
+              </div>
+            </td>
+            <td class="numeric">1,194</td>
+            <td class="numeric">$1,820</td>
+            <td class="numeric">2.1</td>
+          </tr>
+          <tr>
+            <td class="center">3</td>
+            <td>
+              <div class="path-sequence">
+                <span class="path-step step-organic-search">Organic Search</span>
+                <span class="path-arrow">→</span>
+                <span class="path-step step-direct">Direct</span>
+              </div>
+            </td>
+            <td class="numeric">879</td>
+            <td class="numeric">$1,890</td>
+            <td class="numeric">9.8</td>
+          </tr>
+          <tr>
+            <td class="center">4</td>
+            <td>
+              <div class="path-sequence">
+                <span class="path-step step-paid-social">Paid Social</span>
+                <span class="path-arrow">→</span>
+                <span class="path-step step-paid-search">Paid Search</span>
+                <span class="path-arrow">→</span>
+                <span class="path-step step-direct">Direct</span>
+              </div>
+            </td>
+            <td class="numeric">704</td>
+            <td class="numeric">$1,950</td>
+            <td class="numeric">12.6</td>
+          </tr>
+          <tr>
+            <td class="center">5</td>
+            <td>
+              <div class="path-sequence">
+                <span class="path-step step-direct">Direct</span>
+              </div>
+            </td>
+            <td class="numeric">611</td>
+            <td class="numeric">$1,915</td>
+            <td class="numeric">3.4</td>
+          </tr>
+          <tr>
+            <td class="center">6</td>
+            <td>
+              <div class="path-sequence">
+                <span class="path-step step-referral">Referral</span>
+                <span class="path-arrow">→</span>
+                <span class="path-step step-organic-search">Organic Search</span>
+                <span class="path-arrow">→</span>
+                <span class="path-step step-direct">Direct</span>
+              </div>
+            </td>
+            <td class="numeric">488</td>
+            <td class="numeric">$2,012</td>
+            <td class="numeric">18.2</td>
+          </tr>
+          <tr>
+            <td class="center">7</td>
+            <td>
+              <div class="path-sequence">
+                <span class="path-step step-paid-social">Paid Social</span>
+                <span class="path-arrow">→</span>
+                <span class="path-step step-organic-search">Organic Search</span>
+                <span class="path-arrow">→</span>
+                <span class="path-step step-direct">Direct</span>
+              </div>
+            </td>
+            <td class="numeric">426</td>
+            <td class="numeric">$1,898</td>
+            <td class="numeric">14.4</td>
+          </tr>
+          <tr>
+            <td class="center">8</td>
+            <td>
+              <div class="path-sequence">
+                <span class="path-step step-email">Email</span>
+                <span class="path-arrow">→</span>
+                <span class="path-step step-direct">Direct</span>
+              </div>
+            </td>
+            <td class="numeric">364</td>
+            <td class="numeric">$2,180</td>
+            <td class="numeric">5.6</td>
+          </tr>
+          <tr>
+            <td colspan="5" style="text-align:center;color:var(--mb-text-light);font-style:italic;font-size:12px;padding:10px;">
+              … Top 8 覆盖 49.6% 已购新用户 · 长尾路径多为 Referral / Paid Social 首触
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Returning Visitor Top Channel Paths</div>
+        <div class="card-subtitle">老用户从回访入站到购买的完整多触点路径 · 已购老用户 551 · 受 Attribution View 切换影响</div>
+      </div>
+      <div class="card-menu">⋯</div>
+    </div>
+    <div style="overflow-x: auto;">
+    <table class="mb-table">
+      <thead>
+        <tr>
+          <th class="center">#</th>
+          <th>Channel Path</th>
+          <th class="numeric">Users</th>
+          <th class="numeric">Avg Order Value</th>
+          <th class="numeric">Avg Days to Conversion</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr>
+            <td class="center">1</td>
+            <td>
+              <div class="path-sequence">
+                <span class="path-step step-email">Email</span>
+                <span class="path-arrow">→</span>
+                <span class="path-step step-direct">Direct</span>
+              </div>
+            </td>
+            <td class="numeric">158</td>
+            <td class="numeric">$2,124</td>
+            <td class="numeric">2.4</td>
+          </tr>
+          <tr>
+            <td class="center">2</td>
+            <td>
+              <div class="path-sequence">
+                <span class="path-step step-direct">Direct</span>
+              </div>
+            </td>
+            <td class="numeric">142</td>
+            <td class="numeric">$1,985</td>
+            <td class="numeric">1.2</td>
+          </tr>
+          <tr>
+            <td class="center">3</td>
+            <td>
+              <div class="path-sequence">
+                <span class="path-step step-paid-search">Paid Search</span>
+                <span class="path-arrow">→</span>
+                <span class="path-step step-direct">Direct</span>
+              </div>
+            </td>
+            <td class="numeric">82</td>
+            <td class="numeric">$1,920</td>
+            <td class="numeric">3.1</td>
+          </tr>
+          <tr>
+            <td class="center">4</td>
+            <td>
+              <div class="path-sequence">
+                <span class="path-step step-paid-social">Paid Social</span>
+                <span class="path-arrow">→</span>
+                <span class="path-step step-direct">Direct</span>
+              </div>
+            </td>
+            <td class="numeric">62</td>
+            <td class="numeric">$1,876</td>
+            <td class="numeric">3.8</td>
+          </tr>
+          <tr>
+            <td class="center">5</td>
+            <td>
+              <div class="path-sequence">
+                <span class="path-step step-email">Email</span>
+              </div>
+            </td>
+            <td class="numeric">38</td>
+            <td class="numeric">$2,145</td>
+            <td class="numeric">0.8</td>
+          </tr>
+          <tr>
+            <td class="center">6</td>
+            <td>
+              <div class="path-sequence">
+                <span class="path-step step-organic-search">Organic Search</span>
+                <span class="path-arrow">→</span>
+                <span class="path-step step-direct">Direct</span>
+              </div>
+            </td>
+            <td class="numeric">24</td>
+            <td class="numeric">$1,902</td>
+            <td class="numeric">4.2</td>
+          </tr>
+          <tr>
+            <td class="center">7</td>
+            <td>
+              <div class="path-sequence">
+                <span class="path-step step-paid-social">Paid Social</span>
+                <span class="path-arrow">→</span>
+                <span class="path-step step-email">Email</span>
+                <span class="path-arrow">→</span>
+                <span class="path-step step-direct">Direct</span>
+              </div>
+            </td>
+            <td class="numeric">18</td>
+            <td class="numeric">$2,012</td>
+            <td class="numeric">6.4</td>
+          </tr>
+          <tr>
+            <td class="center">8</td>
+            <td>
+              <div class="path-sequence">
+                <span class="path-step step-referral">Referral</span>
+                <span class="path-arrow">→</span>
+                <span class="path-step step-direct">Direct</span>
+              </div>
+            </td>
+            <td class="numeric">7</td>
+            <td class="numeric">$2,180</td>
+            <td class="numeric">5.2</td>
+          </tr>
+          <tr>
+            <td colspan="5" style="text-align:center;color:var(--mb-text-light);font-style:italic;font-size:12px;padding:10px;">
+              … Top 8 覆盖 96.6% 已购老用户(总量小,路径集中度高) · Email/Direct 主导回访转化
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="background: var(--mb-bg-light); border: none; padding: 12px 16px; margin-top: 8px;">
+    <div style="font-size: 11px; color: var(--mb-text-medium); line-height: 1.6;">
+      <b style="color: var(--mb-text-dark);">联合解读:</b>
+      新客路径多为 2-3 触点(Paid Social/Search → Direct),Avg Days 8-18 天;老客路径短(多为单触点或 Email → Direct),Avg Days 1-5 天 — 反映品牌教育已成熟后的购买决策加速效应
+    </div>
+  </div>
+</div>
+
+<!-- =========================================== -->
+<!-- ===== Module 5A: 5A Funnel (Cumulative Reach) ===== -->
+<!-- =========================================== -->
+<div class="tab-content" id="m5a">
+
+  <!-- Tab 顶部 callout · 解释独立时间口径 -->
+  <div class="callout-info" style="background: var(--mb-bg-light); border-left: 3px solid var(--mb-brand); padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: var(--mb-text-medium); line-height: 1.6; border-radius: 4px;">
+    <div style="font-weight: 600; color: var(--mb-text-dark); margin-bottom: 4px;">5A · Cumulative Brand Asset View</div>
+    本 Tab 采用 <b>截止快照(Snapshot As-Of)</b> 口径,显示截止指定日期累计达到各 5A 层级的用户数(用户可同时持有多个层级标签)。
+    <br/>
+    <b>不受全局 Date Range / Device 筛选器影响</b> — 5A 是品牌资产存量视角,与主看板的"窗口活跃"口径独立。请使用下方 <b>As-of Date</b> 单日筛选器调整快照日期。
+    <br/>
+    <span style="color: var(--mb-text-light);">数据源:Shopify Pixels · 中台实施中 · 5A 层级划分规则详见 Tab 底部说明</span>
+  </div>
+
+  <!-- Tab 内局部筛选器 · As-of Date 单日 -->
+  <div class="tab-filter-bar">
+    <span class="filter-scope-label">Tab Filters</span>
+    <div class="filter-pill-sm active">
+      <span class="label">As-of Date</span>
+      <span class="value">May 18, 2026</span>
+      <span class="caret">▼</span>
+    </div>
+    <span style="font-size: 11px; color: var(--mb-text-light); margin-left: 14px;">截止该日的累计快照 · 默认今天</span>
+  </div>
+
+  <!-- 5A Transition Funnel Card -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">5A Transition Funnel · Cumulative Reach</div>
+        <div class="card-subtitle">Used for conversion and drop-off diagnosis · Users can appear in multiple reached stages</div>
+      </div>
+      <div class="card-menu">⋯</div>
+    </div>
+
+    <!-- 5A 漏斗主体 -->
+    <div class="funnel5a-wrapper">
+      <!-- Row: Aware -->
+      <div class="funnel5a-row">
+        <div class="funnel5a-stage">Aware reached</div>
+        <div class="funnel5a-bar-wrap">
+          <div class="funnel5a-bar" style="width: 100%; background: #4DA3E0;">
+            <span class="funnel5a-value">42,318</span>
+          </div>
+        </div>
+        <div class="funnel5a-cumpct">100%</div>
+        <div class="funnel5a-droppct"><span style="color: var(--mb-text-light);">—</span></div>
+      </div>
+
+      <!-- Row: Appeal -->
+      <div class="funnel5a-row">
+        <div class="funnel5a-stage">Appeal reached</div>
+        <div class="funnel5a-bar-wrap">
+          <div class="funnel5a-bar" style="width: 63.4%; background: #88BF4D;">
+            <span class="funnel5a-value">26,829</span>
+          </div>
+        </div>
+        <div class="funnel5a-cumpct">63.4%</div>
+        <div class="funnel5a-droppct" style="color: var(--mb-error);">-36.6%</div>
+      </div>
+
+      <!-- Row: Ask -->
+      <div class="funnel5a-row">
+        <div class="funnel5a-stage">Ask reached</div>
+        <div class="funnel5a-bar-wrap" style="position: relative;">
+          <div class="funnel5a-bar" style="width: 15.3%; background: #F2A86F; padding: 0;">
+          </div>
+          <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: 700; font-size: 13px; color: white; white-space: nowrap;">6,488</span>
+        </div>
+        <div class="funnel5a-cumpct">15.3%</div>
+        <div class="funnel5a-droppct" style="color: var(--mb-error);">-75.8%</div>
+      </div>
+
+      <!-- Row: Act -->
+      <div class="funnel5a-row">
+        <div class="funnel5a-stage">Act reached</div>
+        <div class="funnel5a-bar-wrap" style="position: relative;">
+          <div class="funnel5a-bar" style="width: 5.3%; background: #98D279; padding: 0;">
+          </div>
+          <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: 700; font-size: 13px; color: white; white-space: nowrap;">2,230</span>
+        </div>
+        <div class="funnel5a-cumpct">5.3%</div>
+        <div class="funnel5a-droppct" style="color: var(--mb-error);">-65.6%</div>
+      </div>
+
+      <!-- Row: Advocate -->
+      <div class="funnel5a-row">
+        <div class="funnel5a-stage">Advocate reached</div>
+        <div class="funnel5a-bar-wrap" style="position: relative;">
+          <div class="funnel5a-bar" style="width: 0.74%; background: #9F7BB8; min-width: 4px; justify-content: flex-start; padding: 0;">
+          </div>
+          <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: 700; font-size: 13px; color: var(--mb-text-dark);">312</span>
+        </div>
+        <div class="funnel5a-cumpct">0.74%</div>
+        <div class="funnel5a-droppct" style="color: var(--mb-error);">-86.0%</div>
+      </div>
+    </div>
+
+    <!-- 漏斗底部说明 -->
+    <div style="margin-top: 16px; padding: 10px; background: var(--mb-bg-light); border-left: 3px solid var(--mb-brand); font-size: 11px; color: var(--mb-text-medium); line-height: 1.7; border-radius: 3px;">
+      <b style="color: var(--mb-text-dark);">读数方式:</b>
+      Cumulative % = 该层级用户数 ÷ Aware 用户数(占整个流量池的比例) ·
+      Drop % from prev = 1 − (本层级 ÷ 上一层级)(上一层用户中未到达本层的比例)
+      <br/>
+      <b style="color: var(--mb-text-dark);">业务参考:</b>
+      Appeal → Ask 流失率高(75.8%)是耐用品决策周期长的典型特征;Act → Advocate 流失率(86%)反映"已购但未沉淀"的转化机会,可结合 Klaviyo 促订阅
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Tab switching
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      if (tab.classList.contains('disabled')) return;
+      const target = tab.dataset.tab;
+
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+    });
+  });
+
+  // Sankey Granularity Tab switching (Page Path / Page Title / Session)
+  (function () {
+    const tabs = document.querySelectorAll('.sgt-tab');
+    const subtitle = document.getElementById('sankey-subtitle');
+    const viewLabels = {
+      pp: 'Page Path',
+      pt: 'Page Title',
+      ss: 'Session (Event)'
+    };
+    const subtitlePrefix = 'Session-level page flow · Starting from <code>session_start</code> · Top 5 per step + grouped tail + exit drop-off · <b>Granularity:</b> ';
+
+    function applyView(view) {
+      // 更新所有 node label/value
+      document.querySelectorAll('.sankey-node-label[data-pp], .sankey-node-value[data-pp]').forEach(el => {
+        const text = el.getAttribute('data-' + view);
+        if (text !== null) el.textContent = text;
+      });
+      // 更新副标题
+      if (subtitle) subtitle.innerHTML = subtitlePrefix + viewLabels[view];
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        applyView(tab.dataset.view);
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>
