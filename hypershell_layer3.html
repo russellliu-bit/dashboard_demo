@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hypershell Layer 3 · Ad Performance Dashboard (v4)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #F9FBFC;
+    color: #2E353B;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 24px;
+  }
+
+  :root {
+    --mb-brand: #509EE3;
+    --mb-brand-light: #E5F0F8;
+    --mb-success: #84BB4C;
+    --mb-warning: #F9CF48;
+    --mb-error: #ED6E6E;
+    --mb-text-dark: #2E353B;
+    --mb-text-medium: #696E7B;
+    --mb-text-light: #949AAB;
+    --mb-bg-light: #F9FBFC;
+    --mb-bg-white: #FFFFFF;
+    --mb-border: #EDF0F1;
+    --mb-border-strong: #D7DBE0;
+    --mb-meta: #4267B2;
+    --mb-meta-light: #E8EEF6;
+    --mb-google: #DB4437;
+    --mb-google-light: #FBE9E7;
+  }
+
+  /* ===== Dashboard header ===== */
+  .dashboard-header {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    padding: 18px 24px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .dashboard-title { font-size: 20px; font-weight: 700; }
+  .dashboard-meta { font-size: 12px; color: var(--mb-text-light); margin-top: 2px; }
+  .header-actions { display: flex; gap: 8px; }
+  .icon-btn {
+    width: 32px; height: 32px; border-radius: 4px;
+    border: 1px solid var(--mb-border); background: white;
+    color: var(--mb-text-medium);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px;
+  }
+  .icon-btn:hover { background: var(--mb-bg-light); }
+
+  /* ===== Filter bar ===== */
+  .filter-bar {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    padding: 10px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .filter-pill {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 13px;
+    color: var(--mb-text-dark);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .filter-pill:hover { background: var(--mb-bg-light); }
+  .filter-pill.active { background: var(--mb-bg-light); }
+  .filter-pill .label { color: var(--mb-text-medium); font-size: 13px; }
+  .filter-pill .label::after { content: ":"; margin-left: 2px; }
+  .filter-pill .value { color: var(--mb-brand); font-weight: 600; }
+  .filter-pill .caret { color: var(--mb-text-light); font-size: 9px; margin-left: 2px; }
+
+  /* Country group:口径切换器 + 国家筛选器 */
+  .filter-group-country {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px 3px 10px;
+    background: var(--mb-brand-light);
+    border-radius: 4px;
+  }
+  .filter-group-label {
+    font-size: 11px;
+    color: var(--mb-brand);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .country-type-toggle {
+    display: inline-flex;
+    background: white;
+    border-radius: 3px;
+    border: 1px solid var(--mb-border);
+    padding: 1px;
+    gap: 0;
+  }
+  .country-type-btn {
+    padding: 3px 9px;
+    font-size: 11px;
+    color: var(--mb-text-medium);
+    cursor: pointer;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+  .country-type-btn:hover { color: var(--mb-text-dark); }
+  .country-type-btn.active {
+    background: var(--mb-brand);
+    color: white;
+    font-weight: 600;
+  }
+
+  /* ===== Tabs ===== */
+  .tab-bar {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px 6px 0 0;
+    border-bottom: none;
+    display: flex;
+    padding: 0 8px;
+  }
+  .tab {
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--mb-text-medium);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    font-weight: 500;
+  }
+  .tab:hover { color: var(--mb-text-dark); }
+  .tab.active {
+    color: var(--mb-brand);
+    border-bottom-color: var(--mb-brand);
+    font-weight: 600;
+  }
+
+  /* Sub-tabs */
+  .sub-tab-bar {
+    background: var(--mb-bg-light);
+    border: 1px solid var(--mb-border);
+    border-bottom: none;
+    display: none;
+    padding: 0 12px;
+  }
+  .sub-tab-bar.visible { display: flex; }
+  .sub-tab {
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--mb-text-medium);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sub-tab:hover { color: var(--mb-text-dark); }
+  .sub-tab.active {
+    color: var(--mb-brand);
+    border-bottom-color: var(--mb-brand);
+    font-weight: 600;
+  }
+  .sub-tab .channel-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .sub-tab .channel-dot.meta { background: var(--mb-meta); }
+  .sub-tab .channel-dot.google { background: var(--mb-google); }
+
+  /* Tab content */
+  .tab-content {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 0 0 6px 6px;
+    padding: 20px;
+    display: none;
+  }
+  .tab-content.active { display: block; }
+
+  .sub-tab-content { display: none; }
+  .sub-tab-content.active { display: block; }
+
+  /* ===== Grid ===== */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+  /* ===== Section ===== */
+  .section-title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .section-title-text { font-size: 15px; font-weight: 700; }
+  .section-title-meta {
+    font-size: 11px;
+    color: var(--mb-text-light);
+    margin-left: 8px;
+    font-weight: 400;
+  }
+  .section-actions { display: flex; gap: 6px; }
+  .section-action {
+    font-size: 11px;
+    padding: 4px 10px;
+    color: var(--mb-text-medium);
+    background: white;
+    border: 1px solid var(--mb-border);
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .section-action:hover { background: var(--mb-bg-light); }
+
+  /* ===== Card ===== */
+  .card {
+    background: var(--mb-bg-white);
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    padding: 16px;
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .card-title { font-size: 14px; font-weight: 700; line-height: 1.3; }
+  .card-subtitle { font-size: 11px; color: var(--mb-text-light); margin-top: 2px; }
+  .card-menu { color: var(--mb-text-light); font-size: 16px; cursor: pointer; line-height: 1; }
+
+  /* ===== Channel KPI block ===== */
+  .channel-block {
+    background: white;
+    border: 1px solid var(--mb-border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .channel-block-header {
+    padding: 10px 16px;
+    background: var(--mb-bg-light);
+    border-bottom: 1px solid var(--mb-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .channel-block-title {
+    font-size: 13px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .channel-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .channel-dot.meta { background: var(--mb-meta); }
+  .channel-dot.google { background: var(--mb-google); }
+  .channel-block-period { font-size: 11px; color: var(--mb-text-light); }
+
+  /* KPI cells */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--mb-border);
+  }
+  .kpi-cell {
+    background: white;
+    padding: 14px 16px;
+    cursor: pointer;
+  }
+  .kpi-cell:hover { background: var(--mb-bg-light); }
+  .kpi-cell.empty-cell { background: var(--mb-bg-light); cursor: default; }
+  .kpi-label {
+    font-size: 11px;
+    color: var(--mb-text-medium);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 4px;
+  }
+  .kpi-value {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--mb-text-dark);
+    line-height: 1.1;
+  }
+  .kpi-value .unit {
+    font-size: 14px;
+    color: var(--mb-text-medium);
+    font-weight: 700;
+  }
+  .kpi-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  .kpi-delta.up { color: var(--mb-success); }
+  .kpi-delta.down { color: var(--mb-error); }
+  .kpi-delta.inverse-up { color: var(--mb-error); }
+  .kpi-delta.inverse-down { color: var(--mb-success); }
+  .delta-arrow { font-size: 9px; }
+
+  /* ===== Breadcrumb ===== */
+  .breadcrumb {
+    background: var(--mb-bg-light);
+    border: 1px solid var(--mb-border);
+    border-radius: 4px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .breadcrumb-trail {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+  .breadcrumb-item {
+    color: var(--mb-text-medium);
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+  .breadcrumb-item:hover { background: white; color: var(--mb-text-dark); }
+  .breadcrumb-item.current {
+    color: var(--mb-brand);
+    background: white;
+    border: 1px solid var(--mb-brand);
+    font-weight: 600;
+  }
+  .breadcrumb-separator { color: var(--mb-text-light); font-size: 11px; }
+  .breadcrumb-actions { display: flex; align-items: center; gap: 10px; }
+  .level-indicator { font-size: 11px; color: var(--mb-text-medium); }
+  .level-indicator strong { color: var(--mb-brand); font-weight: 700; }
+  .back-btn {
+    font-size: 11px;
+    padding: 4px 10px;
+    background: white;
+    border: 1px solid var(--mb-border);
+    border-radius: 3px;
+    color: var(--mb-text-medium);
+    cursor: pointer;
+  }
+  .back-btn:hover { background: var(--mb-bg-light); color: var(--mb-text-dark); }
+  .back-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ===== Table ===== */
+  .table-container {
+    border: 1px solid var(--mb-border);
+    border-radius: 4px;
+    overflow: auto;
+  }
+  .mb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .mb-table thead tr { background: var(--mb-bg-light); }
+  .mb-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--mb-text-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-bottom: 1px solid var(--mb-border);
+    white-space: nowrap;
+  }
+  .mb-table th.numeric { text-align: right; }
+  .mb-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--mb-border);
+    color: var(--mb-text-dark);
+  }
+  .mb-table td.numeric {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .mb-table tbody tr { cursor: pointer; }
+  .mb-table tbody tr:hover { background: var(--mb-bg-light); }
+  .mb-table tbody tr:last-child td { border-bottom: none; }
+  .mb-table tbody tr.unmapped-row td {
+    background: rgba(148, 154, 171, 0.05);
+    color: var(--mb-text-medium);
+  }
+  .mb-table tbody tr.unmapped-row td.numeric { color: var(--mb-text-dark); }
+  .mb-table tbody tr.unmapped-row td:first-child { font-style: italic; }
+  .mb-table tbody tr.highlight-row td {
+    background: rgba(249, 207, 72, 0.08);
+  }
+
+  /* Drill chevron */
+  .drill-arrow {
+    color: var(--mb-text-light);
+    margin-left: 4px;
+    opacity: 0;
+    font-size: 10px;
+  }
+  .mb-table tbody tr:hover .drill-arrow {
+    opacity: 1;
+    color: var(--mb-brand);
+  }
+
+  /* Channel tags */
+  .channel-tag-inline {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .channel-tag-inline.meta { background: var(--mb-meta-light); color: var(--mb-meta); }
+  .channel-tag-inline.google { background: var(--mb-google-light); color: var(--mb-google); }
+
+  /* Type tags */
+  .type-tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--mb-bg-light);
+    color: var(--mb-text-medium);
+    border: 1px solid var(--mb-border);
+  }
+  .type-tag.pmax {
+    background: rgba(248, 113, 113, 0.1);
+    color: var(--mb-google);
+    border-color: rgba(248, 113, 113, 0.3);
+  }
+  .type-tag.search {
+    background: rgba(132, 187, 76, 0.1);
+    color: var(--mb-success);
+    border-color: rgba(132, 187, 76, 0.3);
+  }
+  .type-tag.video-camp {
+    background: rgba(80, 158, 227, 0.1);
+    color: var(--mb-brand);
+    border-color: rgba(80, 158, 227, 0.3);
+  }
+
+  /* Material thumbnail */
+  .material-thumb {
+    width: 44px;
+    height: 30px;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: white;
+    border: 1px solid var(--mb-border);
+  }
+  .material-thumb.video { background: linear-gradient(135deg, #4267B2, #5b7bc7); }
+  .material-thumb.image { background: linear-gradient(135deg, #F2A86F, #f4b783); }
+  .material-thumb.carousel { background: linear-gradient(135deg, #88BF4D, #a5d162); }
+
+  /* Empty cell */
+  .empty-val { color: var(--mb-text-light); font-style: italic; font-size: 12px; }
+
+  /* Handle text */
+  .handle-text {
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 11px;
+    color: var(--mb-text-light);
+  }
+
+  /* Card channel strip */
+  .card-channel-strip {
+    height: 3px;
+    margin: -16px -16px 12px -16px;
+    border-radius: 6px 6px 0 0;
+  }
+  .card-channel-strip.meta { background: var(--mb-meta); }
+  .card-channel-strip.google { background: var(--mb-google); }
+
+  /* Footnote */
+  .table-footnote {
+    font-size: 11px;
+    color: var(--mb-text-light);
+    margin-top: 8px;
+    line-height: 1.6;
+    font-style: italic;
+    padding: 0 4px;
+  }
+  .table-footnote strong { color: var(--mb-text-medium); font-style: normal; }
+
+  /* Module spacing */
+  .module-block { margin-bottom: 28px; }
+  .module-block:last-child { margin-bottom: 0; }
+
+  /* PMax terminal hint */
+  .pmax-terminal-hint {
+    padding: 20px;
+    background: var(--mb-bg-light);
+    border: 1px dashed var(--mb-border-strong);
+    border-radius: 4px;
+    text-align: center;
+    color: var(--mb-text-medium);
+    font-size: 13px;
+  }
+  .pmax-terminal-hint strong {
+    color: var(--mb-google);
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+  }
+
+  /* Column group header for sub-tables (visual separator) */
+  .col-group-meta-bg {
+    background: rgba(66, 103, 178, 0.04) !important;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Dashboard Header ===== -->
+<div class="dashboard-header">
+  <div>
+    <div class="dashboard-title">Layer 3 · Ad Performance Dashboard</div>
+    <div class="dashboard-meta">Hypershell · Updated 12 min ago · Mina Li</div>
+  </div>
+  <div class="header-actions">
+    <div class="icon-btn">🔖</div>
+    <div class="icon-btn">⋮</div>
+    <div class="icon-btn">✎</div>
+  </div>
+</div>
+
+<!-- ===== Global Filters ===== -->
+<div class="filter-bar">
+  <div class="filter-pill active">
+    <span class="label">Date</span>
+    <span class="value">Past 3 Months</span>
+    <span class="caret">▼</span>
+  </div>
+  <div class="filter-pill active">
+    <span class="label">Project</span>
+    <span class="value">HYPERSHELL</span>
+    <span class="caret">▼</span>
+  </div>
+  <div class="filter-pill">
+    <span class="label">Channel</span>
+    <span class="value">All</span>
+    <span class="caret">▼</span>
+  </div>
+  <div class="filter-pill">
+    <span class="label">Campaign</span>
+    <span class="value">All</span>
+    <span class="caret">▼</span>
+  </div>
+  <div class="filter-pill">
+    <span class="label">Funnel Type</span>
+    <span class="value">All</span>
+    <span class="caret">▼</span>
+  </div>
+  <div class="filter-pill">
+    <span class="label">Adgroup</span>
+    <span class="value">All</span>
+    <span class="caret">▼</span>
+  </div>
+  <div class="filter-pill">
+    <span class="label">Ad Name</span>
+    <span class="value">All</span>
+    <span class="caret">▼</span>
+  </div>
+
+  <!-- Country group: type 切换器 + 国家筛选器 -->
+  <div class="filter-group-country">
+    <span class="filter-group-label">Country</span>
+    <div class="country-type-toggle">
+      <span class="country-type-btn active">Target</span>
+      <span class="country-type-btn">IP</span>
+      <span class="country-type-btn">Geographic</span>
+    </div>
+    <div class="filter-pill" style="background: white; border: 1px solid var(--mb-border);">
+      <span class="value">All Countries</span>
+      <span class="caret">▼</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Primary Tabs ===== -->
+<div class="tab-bar">
+  <div class="tab active" data-tab="overview">Performance Overview</div>
+  <div class="tab" data-tab="creative">Creative Performance</div>
+  <div class="tab" data-tab="product">Product Attribution</div>
+</div>
+
+<!-- Sub-tabs for Tab 2 -->
+<div class="sub-tab-bar" id="creative-subtabs">
+  <div class="sub-tab active" data-subtab="meta">
+    <span class="channel-dot meta"></span>
+    Meta Creatives
+  </div>
+  <div class="sub-tab" data-subtab="google">
+    <span class="channel-dot google"></span>
+    Google Creatives
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- ===== Tab 1: Performance Overview ===== -->
+<!-- ============================================================= -->
+<div class="tab-content active" id="overview">
+
+  <!-- M1.1 Channel Overview · Dual Channel KPI -->
+  <div class="module-block">
+    <div class="section-title-row">
+      <div>
+        <span class="section-title-text">Channel Overview</span>
+        <span class="section-title-meta">M1.1 · Dual-Channel KPI · vs Previous Period (Date filter)</span>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- GOOGLE -->
+      <div class="channel-block">
+        <div class="channel-block-header">
+          <div class="channel-block-title">
+            <span class="channel-dot google"></span>
+            Google
+          </div>
+          <div class="channel-block-period">Past 3 Months</div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-cell"><div class="kpi-label">ROAS</div><div class="kpi-value">6.05<span class="unit">x</span></div><div class="kpi-delta down"><span class="delta-arrow">▼</span>0.42x</div></div>
+          <div class="kpi-cell"><div class="kpi-label">Sales</div><div class="kpi-value">$1.4<span class="unit">M</span></div><div class="kpi-delta up"><span class="delta-arrow">▲</span>8.2%</div></div>
+          <div class="kpi-cell"><div class="kpi-label">Spend</div><div class="kpi-value">$235<span class="unit">K</span></div><div class="kpi-delta up"><span class="delta-arrow">▲</span>14.1%</div></div>
+          <div class="kpi-cell"><div class="kpi-label">ATC</div><div class="kpi-value">13.1<span class="unit">K</span></div><div class="kpi-delta up"><span class="delta-arrow">▲</span>6.4%</div></div>
+          <div class="kpi-cell"><div class="kpi-label">Purchase</div><div class="kpi-value">1,209</div><div class="kpi-delta up"><span class="delta-arrow">▲</span>3.8%</div></div>
+          <div class="kpi-cell"><div class="kpi-label">CPP</div><div class="kpi-value">$199</div><div class="kpi-delta inverse-up"><span class="delta-arrow">▲</span>9.6%</div></div>
+          <div class="kpi-cell"><div class="kpi-label">CTR</div><div class="kpi-value">2.41<span class="unit">%</span></div><div class="kpi-delta up"><span class="delta-arrow">▲</span>0.12pt</div></div>
+          <div class="kpi-cell"><div class="kpi-label">CVR</div><div class="kpi-value">0.23<span class="unit">%</span></div><div class="kpi-delta down"><span class="delta-arrow">▼</span>0.02pt</div></div>
+          <div class="kpi-cell"><div class="kpi-label">CPM</div><div class="kpi-value">$10.84</div><div class="kpi-delta inverse-up"><span class="delta-arrow">▲</span>4.1%</div></div>
+          <div class="kpi-cell"><div class="kpi-label">CPC</div><div class="kpi-value">$0.45</div><div class="kpi-delta inverse-up"><span class="delta-arrow">▲</span>2.8%</div></div>
+          <div class="kpi-cell"><div class="kpi-label">CPATC</div><div class="kpi-value">$17.99</div><div class="kpi-delta inverse-up"><span class="delta-arrow">▲</span>5.2%</div></div>
+          <div class="kpi-cell empty-cell"></div>
+        </div>
+      </div>
+
+      <!-- META -->
+      <div class="channel-block">
+        <div class="channel-block-header">
+          <div class="channel-block-title">
+            <span class="channel-dot meta"></span>
+            Meta
+          </div>
+          <div class="channel-block-period">Past 3 Months</div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-cell"><div class="kpi-label">ROAS</div><div class="kpi-value">7.17<span class="unit">x</span></div><div class="kpi-delta down"><span class="delta-arrow">▼</span>0.28x</div></div>
+          <div class="kpi-cell"><div class="kpi-label">Sales</div><div class="kpi-value">$1.1<span class="unit">M</span></div><div class="kpi-delta up"><span class="delta-arrow">▲</span>11.4%</div></div>
+          <div class="kpi-cell"><div class="kpi-label">Spend</div><div class="kpi-value">$151.8<span class="unit">K</span></div><div class="kpi-delta up"><span class="delta-arrow">▲</span>15.7%</div></div>
+          <div class="kpi-cell"><div class="kpi-label">ATC</div><div class="kpi-value">14.1<span class="unit">K</span></div><div class="kpi-delta up"><span class="delta-arrow">▲</span>9.8%</div></div>
+          <div class="kpi-cell"><div class="kpi-label">Purchase</div><div class="kpi-value">908</div><div class="kpi-delta up"><span class="delta-arrow">▲</span>4.2%</div></div>
+          <div class="kpi-cell"><div class="kpi-label">CPP</div><div class="kpi-value">$167</div><div class="kpi-delta inverse-up"><span class="delta-arrow">▲</span>11.0%</div></div>
+          <div class="kpi-cell"><div class="kpi-label">CTR</div><div class="kpi-value">5.08<span class="unit">%</span></div><div class="kpi-delta up"><span class="delta-arrow">▲</span>0.38pt</div></div>
+          <div class="kpi-cell"><div class="kpi-label">CVR</div><div class="kpi-value">0.12<span class="unit">%</span></div><div class="kpi-delta down"><span class="delta-arrow">▼</span>0.01pt</div></div>
+          <div class="kpi-cell"><div class="kpi-label">CPM</div><div class="kpi-value">$10.41</div><div class="kpi-delta inverse-up"><span class="delta-arrow">▲</span>3.7%</div></div>
+          <div class="kpi-cell"><div class="kpi-label">CPC</div><div class="kpi-value">$0.20</div><div class="kpi-delta inverse-down"><span class="delta-arrow">▼</span>1.2%</div></div>
+          <div class="kpi-cell"><div class="kpi-label">CPATC</div><div class="kpi-value">$10.75</div><div class="kpi-delta inverse-up"><span class="delta-arrow">▲</span>5.4%</div></div>
+          <div class="kpi-cell empty-cell"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- M1.2 Five-Level Drilldown -->
+  <div class="module-block">
+    <div class="section-title-row">
+      <div>
+        <span class="section-title-text">Five-Level Drilldown</span>
+        <span class="section-title-meta">M1.2 · Country → Channel → Campaign → Ad Set / Ad Group → Ad</span>
+      </div>
+      <div class="section-actions">
+        <span class="section-action" id="reset-drill-btn">Reset Path</span>
+        <span class="section-action">Export CSV</span>
+      </div>
+    </div>
+
+    <div class="breadcrumb">
+      <div class="breadcrumb-trail" id="drill-breadcrumb">
+        <span class="breadcrumb-item current" data-level="0">All Countries</span>
+      </div>
+      <div class="breadcrumb-actions">
+        <span class="level-indicator">Current Level: <strong id="current-level-name">Country</strong> (<span id="current-level-num">1</span> of 5)</span>
+        <button class="back-btn" id="back-drill-btn" disabled>← Back</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title" id="drill-card-title">Country Performance</div>
+          <div class="card-subtitle" id="drill-card-subtitle">All countries · Past 3 Months · Click any row to drill into Channel level</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+
+      <div class="table-container" id="drill-table-container">
+        <table class="mb-table" id="drill-table">
+          <thead>
+            <tr>
+              <th>Country</th>
+              <th class="numeric">ROAS</th>
+              <th class="numeric">Sales</th>
+              <th class="numeric">Spend</th>
+              <th class="numeric">Spend Share</th>
+              <th class="numeric">ATC</th>
+              <th class="numeric">Purchase</th>
+              <th class="numeric">CPP</th>
+              <th class="numeric">CTR</th>
+              <th class="numeric">CVR</th>
+              <th class="numeric">CPM</th>
+              <th class="numeric">CPC</th>
+              <th class="numeric">CPATC</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-drill-key="US" data-drill-label="🇺🇸 United States">
+              <td>🇺🇸 United States<span class="drill-arrow">›</span></td>
+              <td class="numeric">2.68x</td><td class="numeric">$49,365</td><td class="numeric">$18,420</td><td class="numeric">38.2%</td>
+              <td class="numeric">2,184</td><td class="numeric">152</td><td class="numeric">$121</td>
+              <td class="numeric">1.77%</td><td class="numeric">0.27%</td><td class="numeric">$16.45</td><td class="numeric">$0.93</td><td class="numeric">$8.43</td>
+            </tr>
+            <tr data-drill-key="DE" data-drill-label="🇩🇪 Germany">
+              <td>🇩🇪 Germany<span class="drill-arrow">›</span></td>
+              <td class="numeric">3.12x</td><td class="numeric">$28,642</td><td class="numeric">$9,180</td><td class="numeric">19.0%</td>
+              <td class="numeric">1,124</td><td class="numeric">94</td><td class="numeric">$98</td>
+              <td class="numeric">1.93%</td><td class="numeric">0.31%</td><td class="numeric">$15.83</td><td class="numeric">$0.82</td><td class="numeric">$8.17</td>
+            </tr>
+            <tr data-drill-key="UK" data-drill-label="🇬🇧 United Kingdom">
+              <td>🇬🇧 United Kingdom<span class="drill-arrow">›</span></td>
+              <td class="numeric">2.45x</td><td class="numeric">$16,758</td><td class="numeric">$6,840</td><td class="numeric">14.2%</td>
+              <td class="numeric">812</td><td class="numeric">61</td><td class="numeric">$112</td>
+              <td class="numeric">1.87%</td><td class="numeric">0.26%</td><td class="numeric">$16.29</td><td class="numeric">$0.87</td><td class="numeric">$8.42</td>
+            </tr>
+            <tr data-drill-key="JP" data-drill-label="🇯🇵 Japan">
+              <td>🇯🇵 Japan<span class="drill-arrow">›</span></td>
+              <td class="numeric">2.18x</td><td class="numeric">$11,358</td><td class="numeric">$5,210</td><td class="numeric">10.8%</td>
+              <td class="numeric">562</td><td class="numeric">38</td><td class="numeric">$137</td>
+              <td class="numeric">1.66%</td><td class="numeric">0.23%</td><td class="numeric">$16.70</td><td class="numeric">$1.01</td><td class="numeric">$9.27</td>
+            </tr>
+            <tr data-drill-key="FR" data-drill-label="🇫🇷 France">
+              <td>🇫🇷 France<span class="drill-arrow">›</span></td>
+              <td class="numeric">2.05x</td><td class="numeric">$7,975</td><td class="numeric">$3,890</td><td class="numeric">8.1%</td>
+              <td class="numeric">418</td><td class="numeric">29</td><td class="numeric">$134</td>
+              <td class="numeric">1.72%</td><td class="numeric">0.22%</td><td class="numeric">$16.42</td><td class="numeric">$0.95</td><td class="numeric">$9.31</td>
+            </tr>
+            <tr data-drill-key="CA" data-drill-label="🇨🇦 Canada">
+              <td>🇨🇦 Canada<span class="drill-arrow">›</span></td>
+              <td class="numeric">2.51x</td><td class="numeric">$6,551</td><td class="numeric">$2,610</td><td class="numeric">5.4%</td>
+              <td class="numeric">298</td><td class="numeric">22</td><td class="numeric">$119</td>
+              <td class="numeric">1.81%</td><td class="numeric">0.25%</td><td class="numeric">$15.94</td><td class="numeric">$0.88</td><td class="numeric">$8.76</td>
+            </tr>
+            <tr data-drill-key="OTHER" data-drill-label="Other 12 countries">
+              <td>Other 12 countries<span class="drill-arrow">›</span></td>
+              <td class="numeric">2.21x</td><td class="numeric">$4,530</td><td class="numeric">$2,050</td><td class="numeric">4.3%</td>
+              <td class="numeric">218</td><td class="numeric">16</td><td class="numeric">$128</td>
+              <td class="numeric">1.74%</td><td class="numeric">0.23%</td><td class="numeric">$16.18</td><td class="numeric">$0.92</td><td class="numeric">$9.40</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-footnote">
+        ※ Click any row to drill into the next level. Click breadcrumb to jump back. Level-specific columns: <strong>Spend Share</strong> at Country, <strong>Campaign Type</strong> at Campaign, <strong>Ad Set / Ad Group + Audience Type</strong> at L4, <strong>Ad Name + Material Preview</strong> at L5. PMax-type campaigns terminate at L4 (no Ad level).
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================= -->
+<!-- ===== Tab 2: Creative Performance ===== -->
+<!-- ============================================================= -->
+<div class="tab-content" id="creative">
+
+  <!-- Meta Creatives -->
+  <div class="sub-tab-content active" id="creative-meta">
+    <div class="card">
+      <div class="card-channel-strip meta"></div>
+      <div class="card-header">
+        <div>
+          <div class="card-title">
+            <span class="channel-dot meta" style="display:inline-block; margin-right:6px;"></span>
+            Meta Creatives Performance
+          </div>
+          <div class="card-subtitle">5 attribute columns + 11 core metrics + 7 video metrics · Sorted by Spend</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+
+      <div class="table-container">
+        <table class="mb-table">
+          <thead>
+            <tr>
+              <th>Preview</th>
+              <th style="width: 16%;">Ad Name</th>
+              <th>Ad Type</th>
+              <th>Funnel</th>
+              <th>Campaign</th>
+              <th class="numeric">ROAS</th>
+              <th class="numeric">Sales</th>
+              <th class="numeric">Spend</th>
+              <th class="numeric">ATC</th>
+              <th class="numeric">Purchase</th>
+              <th class="numeric">CPP</th>
+              <th class="numeric">CTR</th>
+              <th class="numeric">CVR</th>
+              <th class="numeric">CPM</th>
+              <th class="numeric">CPC</th>
+              <th class="numeric">CPATC</th>
+              <th class="numeric">Video Plays</th>
+              <th class="numeric">Avg Dur.</th>
+              <th class="numeric">3s View %</th>
+              <th class="numeric">3s Plays (Users)</th>
+              <th class="numeric">Likes</th>
+              <th class="numeric">Shares</th>
+              <th class="numeric">Comments</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="material-thumb video">VID</div></td>
+              <td>US_Cold_CarbonXPro_Winter_v3</td>
+              <td><span class="type-tag">Video</span></td>
+              <td><span class="type-tag">CONV</span></td>
+              <td style="font-size:11px; color:var(--mb-text-medium);">Carbon X Pro · Cold Audience</td>
+              <td class="numeric">3.84x</td><td class="numeric">$10,906</td><td class="numeric">$2,840</td>
+              <td class="numeric">412</td><td class="numeric">38</td><td class="numeric">$75</td>
+              <td class="numeric">2.14%</td><td class="numeric">0.42%</td>
+              <td class="numeric">$15.94</td><td class="numeric">$0.74</td><td class="numeric">$6.89</td>
+              <td class="numeric">28,420</td><td class="numeric">12.4s</td><td class="numeric">28.4%</td><td class="numeric">8,064</td>
+              <td class="numeric">421</td><td class="numeric">82</td><td class="numeric">34</td>
+            </tr>
+            <tr class="highlight-row">
+              <td><div class="material-thumb video">VID</div></td>
+              <td>US_Cold_CarbonXPro_Demo_v2</td>
+              <td><span class="type-tag">Video</span></td>
+              <td><span class="type-tag">CONV</span></td>
+              <td style="font-size:11px; color:var(--mb-text-medium);">Carbon X Pro · Cold Audience</td>
+              <td class="numeric">1.42x</td><td class="numeric">$2,755</td><td class="numeric">$1,940</td>
+              <td class="numeric">218</td><td class="numeric">14</td><td class="numeric">$139</td>
+              <td class="numeric">2.04%</td><td class="numeric">0.18%</td>
+              <td class="numeric">$16.42</td><td class="numeric">$0.81</td><td class="numeric">$8.90</td>
+              <td class="numeric">19,840</td><td class="numeric">18.6s</td><td class="numeric">38.2%</td><td class="numeric">7,580</td>
+              <td class="numeric">612</td><td class="numeric">128</td><td class="numeric">52</td>
+            </tr>
+            <tr>
+              <td><div class="material-thumb image">IMG</div></td>
+              <td>US_LAL_CarbonXPro_Specs_v1</td>
+              <td><span class="type-tag">Image</span></td>
+              <td><span class="type-tag">CONS</span></td>
+              <td style="font-size:11px; color:var(--mb-text-medium);">Carbon Series · LAL 1%</td>
+              <td class="numeric">2.68x</td><td class="numeric">$4,342</td><td class="numeric">$1,620</td>
+              <td class="numeric">228</td><td class="numeric">22</td><td class="numeric">$74</td>
+              <td class="numeric">1.78%</td><td class="numeric">0.34%</td>
+              <td class="numeric">$16.84</td><td class="numeric">$0.78</td><td class="numeric">$7.11</td>
+              <td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td>
+              <td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td>
+            </tr>
+            <tr>
+              <td><div class="material-thumb video">VID</div></td>
+              <td>US_AWR_KOL_Johnny_v1</td>
+              <td><span class="type-tag">Video</span></td>
+              <td><span class="type-tag">AWR</span></td>
+              <td style="font-size:11px; color:var(--mb-text-medium);">Pro Series · Awareness</td>
+              <td class="numeric">2.18x</td><td class="numeric">$3,096</td><td class="numeric">$1,420</td>
+              <td class="numeric">194</td><td class="numeric">19</td><td class="numeric">$75</td>
+              <td class="numeric">2.42%</td><td class="numeric">0.29%</td>
+              <td class="numeric">$15.32</td><td class="numeric">$0.71</td><td class="numeric">$7.32</td>
+              <td class="numeric">15,820</td><td class="numeric">9.8s</td><td class="numeric">22.1%</td><td class="numeric">3,498</td>
+              <td class="numeric">284</td><td class="numeric">54</td><td class="numeric">21</td>
+            </tr>
+            <tr>
+              <td><div class="material-thumb carousel">CAR</div></td>
+              <td>US_CONS_Lineup_v2</td>
+              <td><span class="type-tag">Carousel</span></td>
+              <td><span class="type-tag">CONS</span></td>
+              <td style="font-size:11px; color:var(--mb-text-medium);">Carbon Series · LAL 1%</td>
+              <td class="numeric">2.94x</td><td class="numeric">$3,763</td><td class="numeric">$1,280</td>
+              <td class="numeric">186</td><td class="numeric">18</td><td class="numeric">$71</td>
+              <td class="numeric">1.92%</td><td class="numeric">0.31%</td>
+              <td class="numeric">$16.74</td><td class="numeric">$0.84</td><td class="numeric">$6.88</td>
+              <td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td>
+              <td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td>
+            </tr>
+            <tr>
+              <td><div class="material-thumb image">IMG</div></td>
+              <td>US_Retarget_ProSeries_Hero_v3</td>
+              <td><span class="type-tag">Image</span></td>
+              <td><span class="type-tag">CONV</span></td>
+              <td style="font-size:11px; color:var(--mb-text-medium);">Brand Search Retarget</td>
+              <td class="numeric">2.12x</td><td class="numeric">$2,502</td><td class="numeric">$1,180</td>
+              <td class="numeric">164</td><td class="numeric">14</td><td class="numeric">$84</td>
+              <td class="numeric">1.64%</td><td class="numeric">0.24%</td>
+              <td class="numeric">$16.34</td><td class="numeric">$0.98</td><td class="numeric">$7.20</td>
+              <td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td>
+              <td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td>
+            </tr>
+            <tr>
+              <td><div class="material-thumb video">VID</div></td>
+              <td>US_AWR_Unboxing_v4</td>
+              <td><span class="type-tag">Video</span></td>
+              <td><span class="type-tag">AWR</span></td>
+              <td style="font-size:11px; color:var(--mb-text-medium);">Pro Series · Awareness</td>
+              <td class="numeric">2.51x</td><td class="numeric">$2,410</td><td class="numeric">$960</td>
+              <td class="numeric">142</td><td class="numeric">12</td><td class="numeric">$80</td>
+              <td class="numeric">2.18%</td><td class="numeric">0.28%</td>
+              <td class="numeric">$16.12</td><td class="numeric">$0.82</td><td class="numeric">$6.76</td>
+              <td class="numeric">12,420</td><td class="numeric">14.2s</td><td class="numeric">31.4%</td><td class="numeric">3,900</td>
+              <td class="numeric">348</td><td class="numeric">71</td><td class="numeric">29</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-footnote">
+        ※ <strong>Highlighted rows</strong>: high view rate but low ROAS — suspected "engaged but didn't convert" creatives. Empty cells (—) on image/carousel rows are by design (no video metrics).
+      </div>
+    </div>
+  </div>
+
+  <!-- Google Creatives -->
+  <div class="sub-tab-content" id="creative-google">
+    <div class="card">
+      <div class="card-channel-strip google"></div>
+      <div class="card-header">
+        <div>
+          <div class="card-title">
+            <span class="channel-dot google" style="display:inline-block; margin-right:6px;"></span>
+            Google Creatives Performance
+          </div>
+          <div class="card-subtitle">5 attribute columns + 11 core metrics + 2 cross-platform video metrics · Sorted by Spend</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+
+      <div class="table-container">
+        <table class="mb-table">
+          <thead>
+            <tr>
+              <th>Preview</th>
+              <th style="width: 18%;">Ad Name</th>
+              <th>Ad Type</th>
+              <th>Funnel</th>
+              <th>Campaign Type</th>
+              <th class="numeric">ROAS</th>
+              <th class="numeric">Sales</th>
+              <th class="numeric">Spend</th>
+              <th class="numeric">ATC</th>
+              <th class="numeric">Purchase</th>
+              <th class="numeric">CPP</th>
+              <th class="numeric">CTR</th>
+              <th class="numeric">CVR</th>
+              <th class="numeric">CPM</th>
+              <th class="numeric">CPC</th>
+              <th class="numeric">CPATC</th>
+              <th class="numeric">Video Plays</th>
+              <th class="numeric">Avg Dur.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="material-thumb image">IMG</div></td>
+              <td>SEARCH_BrandKW_RSA_v2</td>
+              <td><span class="type-tag">Image</span></td>
+              <td><span class="type-tag">CONV</span></td>
+              <td><span class="type-tag search">Search</span></td>
+              <td class="numeric">5.18x</td><td class="numeric">$8,288</td><td class="numeric">$1,600</td>
+              <td class="numeric">242</td><td class="numeric">28</td><td class="numeric">$57</td>
+              <td class="numeric">2.04%</td><td class="numeric">0.42%</td>
+              <td class="numeric">$14.21</td><td class="numeric">$0.71</td><td class="numeric">$6.61</td>
+              <td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td>
+            </tr>
+            <tr>
+              <td><div class="material-thumb image">IMG</div></td>
+              <td>PMAX_CarbonSeries_AssetGroup_A</td>
+              <td><span class="type-tag">Image</span></td>
+              <td><span class="type-tag">CONV</span></td>
+              <td><span class="type-tag pmax">PMax</span></td>
+              <td class="numeric">2.12x</td><td class="numeric">$5,724</td><td class="numeric">$2,700</td>
+              <td class="numeric">312</td><td class="numeric">20</td><td class="numeric">$135</td>
+              <td class="numeric">1.58%</td><td class="numeric">0.21%</td>
+              <td class="numeric">$16.84</td><td class="numeric">$1.04</td><td class="numeric">$8.65</td>
+              <td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td>
+            </tr>
+            <tr>
+              <td><div class="material-thumb video">VID</div></td>
+              <td>YOUTUBE_ProSeries_Awareness_v1</td>
+              <td><span class="type-tag">Video</span></td>
+              <td><span class="type-tag">AWR</span></td>
+              <td><span class="type-tag video-camp">Video</span></td>
+              <td class="numeric">1.68x</td><td class="numeric">$4,605</td><td class="numeric">$2,870</td>
+              <td class="numeric">218</td><td class="numeric">10</td><td class="numeric">$287</td>
+              <td class="numeric">1.42%</td><td class="numeric">0.10%</td>
+              <td class="numeric">$17.42</td><td class="numeric">$1.18</td><td class="numeric">$13.17</td>
+              <td class="numeric">11,840</td><td class="numeric">11.2s</td>
+            </tr>
+            <tr>
+              <td><div class="material-thumb video">VID</div></td>
+              <td>PMAX_ProSeries_AssetGroup_B</td>
+              <td><span class="type-tag">Video</span></td>
+              <td><span class="type-tag">CONV</span></td>
+              <td><span class="type-tag pmax">PMax</span></td>
+              <td class="numeric">2.45x</td><td class="numeric">$3,234</td><td class="numeric">$1,320</td>
+              <td class="numeric">148</td><td class="numeric">12</td><td class="numeric">$110</td>
+              <td class="numeric">1.72%</td><td class="numeric">0.24%</td>
+              <td class="numeric">$15.82</td><td class="numeric">$0.92</td><td class="numeric">$8.92</td>
+              <td class="numeric">8,420</td><td class="numeric">9.4s</td>
+            </tr>
+            <tr>
+              <td><div class="material-thumb image">IMG</div></td>
+              <td>DISPLAY_CarbonX_Retarget_v1</td>
+              <td><span class="type-tag">Image</span></td>
+              <td><span class="type-tag">CONV</span></td>
+              <td><span class="type-tag">Display</span></td>
+              <td class="numeric">1.94x</td><td class="numeric">$1,824</td><td class="numeric">$940</td>
+              <td class="numeric">98</td><td class="numeric">8</td><td class="numeric">$118</td>
+              <td class="numeric">1.42%</td><td class="numeric">0.19%</td>
+              <td class="numeric">$17.04</td><td class="numeric">$1.20</td><td class="numeric">$9.59</td>
+              <td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-footnote">
+        ※ <strong>Video Plays</strong> on Google = TrueView views (≥30s or completed). Not strictly comparable to Meta's impression-based Video Plays — use for directional reference only. PMax campaigns are listed with asset-level performance (Asset Group attribution).
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================= -->
+<!-- ===== Tab 3: Product Attribution ===== -->
+<!-- ============================================================= -->
+<div class="tab-content" id="product">
+
+  <!-- M3.1 Product Performance -->
+  <div class="module-block">
+    <div class="section-title-row">
+      <div>
+        <span class="section-title-text">Product Performance</span>
+        <span class="section-title-meta">M3.1 · By SPU · Meta + Google Combined</span>
+      </div>
+      <div class="section-actions">
+        <span class="section-action">Export CSV</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">SPU-Level Performance</div>
+          <div class="card-subtitle">Based on Landing Page URL → handle → dim_spu mapping · Sorted by Spend</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+
+      <div class="table-container">
+        <table class="mb-table">
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>Handle</th>
+              <th class="numeric">Spend Share</th>
+              <th class="numeric">ROAS</th>
+              <th class="numeric">Sales</th>
+              <th class="numeric">Spend</th>
+              <th class="numeric">ATC</th>
+              <th class="numeric">Purchase</th>
+              <th class="numeric">CPP</th>
+              <th class="numeric">CTR</th>
+              <th class="numeric">CVR</th>
+              <th class="numeric">CPM</th>
+              <th class="numeric">CPC</th>
+              <th class="numeric">CPATC</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Carbon X Pro<span class="drill-arrow">›</span></td>
+              <td><span class="handle-text">carbon-x-pro</span></td>
+              <td class="numeric">38.2%</td><td class="numeric">3.42x</td><td class="numeric">$62,996</td><td class="numeric">$18,420</td>
+              <td class="numeric">1,842</td><td class="numeric">156</td><td class="numeric">$118</td>
+              <td class="numeric">2.18%</td><td class="numeric">0.32%</td><td class="numeric">$11.42</td><td class="numeric">$0.42</td><td class="numeric">$10.00</td>
+            </tr>
+            <tr>
+              <td>Carbon X<span class="drill-arrow">›</span></td>
+              <td><span class="handle-text">carbon-x</span></td>
+              <td class="numeric">26.6%</td><td class="numeric">2.68x</td><td class="numeric">$34,411</td><td class="numeric">$12,840</td>
+              <td class="numeric">1,284</td><td class="numeric">98</td><td class="numeric">$131</td>
+              <td class="numeric">1.94%</td><td class="numeric">0.28%</td><td class="numeric">$12.18</td><td class="numeric">$0.48</td><td class="numeric">$10.00</td>
+            </tr>
+            <tr>
+              <td>Pro Series<span class="drill-arrow">›</span></td>
+              <td><span class="handle-text">pro-series</span></td>
+              <td class="numeric">17.6%</td><td class="numeric">2.14x</td><td class="numeric">$18,168</td><td class="numeric">$8,490</td>
+              <td class="numeric">849</td><td class="numeric">62</td><td class="numeric">$137</td>
+              <td class="numeric">1.78%</td><td class="numeric">0.24%</td><td class="numeric">$12.85</td><td class="numeric">$0.51</td><td class="numeric">$10.00</td>
+            </tr>
+            <tr class="unmapped-row">
+              <td>Unmapped</td>
+              <td><span class="handle-text">— non-PDP pages —</span></td>
+              <td class="numeric">17.6%</td><td class="numeric">2.05x</td><td class="numeric">$17,405</td><td class="numeric">$8,490</td>
+              <td class="numeric">782</td><td class="numeric">82</td><td class="numeric">$104</td>
+              <td class="numeric">1.84%</td><td class="numeric">0.30%</td><td class="numeric">$11.94</td><td class="numeric">$0.44</td><td class="numeric">$10.86</td>
+            </tr>
+            <tr>
+              <td>Carbon Lite<span class="drill-arrow">›</span></td>
+              <td><span class="handle-text">carbon-lite</span></td>
+              <td class="numeric">0.0%</td><td class="numeric"><span class="empty-val">—</span></td><td class="numeric">$0</td><td class="numeric">$0</td>
+              <td class="numeric">0</td><td class="numeric">0</td><td class="numeric"><span class="empty-val">—</span></td>
+              <td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td><td class="numeric"><span class="empty-val">—</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-footnote">
+        ※ <strong>Unmapped row</strong>: spend on ads with non-PDP landing pages (home, collection, custom). &lt;15% normal · 15-30% review · &gt;30% optimize landing pages. CTR/CPM/CPC at SPU level are directional only — aggregation precision is limited. Based on Landing Page URL auto-mapping, differs from legacy Tactics dimension.
+      </div>
+    </div>
+  </div>
+
+  <!-- M3.2 Product × Channel · Three Stacked Tables -->
+  <div class="module-block">
+    <div class="section-title-row">
+      <div>
+        <span class="section-title-text">Product × Channel Matrix</span>
+        <span class="section-title-meta">M3.2 · Three stacked tables: Meta / Google / Total</span>
+      </div>
+      <div class="section-actions">
+        <span class="section-action">Export CSV</span>
+      </div>
+    </div>
+
+    <!-- Meta sub-table -->
+    <div class="card" style="margin-bottom: 12px;">
+      <div class="card-channel-strip meta"></div>
+      <div class="card-header">
+        <div>
+          <div class="card-title">
+            <span class="channel-dot meta" style="display:inline-block; margin-right:6px;"></span>
+            Meta · Performance by SPU
+          </div>
+          <div class="card-subtitle">Meta-only spend and returns per product · Sorted by Spend</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="table-container">
+        <table class="mb-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="numeric">Spend</th>
+              <th class="numeric">Spend Share (Meta)</th>
+              <th class="numeric">ROAS</th>
+              <th class="numeric">Sales</th>
+              <th class="numeric">Purchase</th>
+              <th class="numeric">CPP</th>
+              <th class="numeric">CTR</th>
+              <th class="numeric">CVR</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Carbon X Pro</td><td class="numeric">$11,240</td><td class="numeric">37.0%</td><td class="numeric">3.21x</td><td class="numeric">$36,080</td><td class="numeric">91</td><td class="numeric">$124</td><td class="numeric">2.18%</td><td class="numeric">0.32%</td></tr>
+            <tr><td>Carbon X</td><td class="numeric">$8,420</td><td class="numeric">27.7%</td><td class="numeric">2.51x</td><td class="numeric">$21,134</td><td class="numeric">60</td><td class="numeric">$140</td><td class="numeric">1.94%</td><td class="numeric">0.28%</td></tr>
+            <tr><td>Pro Series</td><td class="numeric">$5,610</td><td class="numeric">18.5%</td><td class="numeric">2.08x</td><td class="numeric">$11,669</td><td class="numeric">40</td><td class="numeric">$142</td><td class="numeric">1.78%</td><td class="numeric">0.24%</td></tr>
+            <tr class="unmapped-row"><td>Unmapped</td><td class="numeric">$5,420</td><td class="numeric">17.8%</td><td class="numeric">2.01x</td><td class="numeric">$10,894</td><td class="numeric">50</td><td class="numeric">$108</td><td class="numeric">1.84%</td><td class="numeric">0.30%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Google sub-table -->
+    <div class="card" style="margin-bottom: 12px;">
+      <div class="card-channel-strip google"></div>
+      <div class="card-header">
+        <div>
+          <div class="card-title">
+            <span class="channel-dot google" style="display:inline-block; margin-right:6px;"></span>
+            Google · Performance by SPU
+          </div>
+          <div class="card-subtitle">Google-only spend and returns per product · Sorted by Spend</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="table-container">
+        <table class="mb-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="numeric">Spend</th>
+              <th class="numeric">Spend Share (Google)</th>
+              <th class="numeric">ROAS</th>
+              <th class="numeric">Sales</th>
+              <th class="numeric">Purchase</th>
+              <th class="numeric">CPP</th>
+              <th class="numeric">CTR</th>
+              <th class="numeric">CVR</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Carbon X Pro</td><td class="numeric">$7,180</td><td class="numeric">42.0%</td><td class="numeric">3.74x</td><td class="numeric">$26,853</td><td class="numeric">65</td><td class="numeric">$110</td><td class="numeric">2.18%</td><td class="numeric">0.32%</td></tr>
+            <tr><td>Carbon X</td><td class="numeric">$4,420</td><td class="numeric">25.9%</td><td class="numeric">2.99x</td><td class="numeric">$13,216</td><td class="numeric">38</td><td class="numeric">$115</td><td class="numeric">1.94%</td><td class="numeric">0.28%</td></tr>
+            <tr><td>Pro Series</td><td class="numeric">$2,880</td><td class="numeric">16.8%</td><td class="numeric">2.25x</td><td class="numeric">$6,480</td><td class="numeric">22</td><td class="numeric">$128</td><td class="numeric">1.78%</td><td class="numeric">0.24%</td></tr>
+            <tr class="unmapped-row"><td>Unmapped</td><td class="numeric">$3,070</td><td class="numeric">17.9%</td><td class="numeric">2.12x</td><td class="numeric">$6,508</td><td class="numeric">32</td><td class="numeric">$99</td><td class="numeric">1.84%</td><td class="numeric">0.30%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Total + Channel Bias sub-table -->
+    <div class="card">
+      <div class="card-channel-strip" style="background: var(--mb-success);"></div>
+      <div class="card-header">
+        <div>
+          <div class="card-title">
+            <span class="channel-dot" style="display:inline-block; margin-right:6px; background: var(--mb-success);"></span>
+            Total · Combined Performance &amp; Channel Bias
+          </div>
+          <div class="card-subtitle">Meta + Google combined · Channel Bias = max(Meta/Google, Google/Meta) · ROAS Variance &gt;15% rows highlighted</div>
+        </div>
+        <div class="card-menu">⋯</div>
+      </div>
+      <div class="table-container">
+        <table class="mb-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="numeric">Total Spend</th>
+              <th class="numeric">Total Sales</th>
+              <th class="numeric">Blended ROAS</th>
+              <th class="numeric">Total Purchase</th>
+              <th class="numeric">Blended CPP</th>
+              <th class="numeric">Channel Bias</th>
+              <th class="numeric">ROAS Variance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="highlight-row">
+              <td>Carbon X Pro</td>
+              <td class="numeric">$18,420</td><td class="numeric">$62,933</td><td class="numeric">3.42x</td>
+              <td class="numeric">156</td><td class="numeric">$118</td>
+              <td class="numeric">1.57x (Meta)</td>
+              <td class="numeric" style="color: var(--mb-error);">+16.5%</td>
+            </tr>
+            <tr>
+              <td>Carbon X</td>
+              <td class="numeric">$12,840</td><td class="numeric">$34,350</td><td class="numeric">2.68x</td>
+              <td class="numeric">98</td><td class="numeric">$131</td>
+              <td class="numeric">1.91x (Meta)</td>
+              <td class="numeric">+19.1%</td>
+            </tr>
+            <tr>
+              <td>Pro Series</td>
+              <td class="numeric">$8,490</td><td class="numeric">$18,149</td><td class="numeric">2.14x</td>
+              <td class="numeric">62</td><td class="numeric">$137</td>
+              <td class="numeric">1.95x (Meta)</td>
+              <td class="numeric">+8.2%</td>
+            </tr>
+            <tr class="unmapped-row">
+              <td>Unmapped</td>
+              <td class="numeric">$8,490</td><td class="numeric">$17,402</td><td class="numeric">2.05x</td>
+              <td class="numeric">82</td><td class="numeric">$104</td>
+              <td class="numeric">1.77x (Meta)</td>
+              <td class="numeric">+5.5%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footnote">
+        ※ <strong>Highlighted rows</strong>: Meta vs Google ROAS variance &gt;15% — candidate for channel-product reallocation. Based on Landing Page URL auto-mapping, may not reconcile with legacy Tactics dimension.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Primary Tab
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+
+      const subtabs = document.getElementById('creative-subtabs');
+      if (target === 'creative') {
+        subtabs.classList.add('visible');
+      } else {
+        subtabs.classList.remove('visible');
+      }
+    });
+  });
+
+  // Sub-tab
+  document.querySelectorAll('.sub-tab').forEach(subtab => {
+    subtab.addEventListener('click', () => {
+      const target = subtab.dataset.subtab;
+      document.querySelectorAll('.sub-tab').forEach(s => s.classList.remove('active'));
+      subtab.classList.add('active');
+      document.querySelectorAll('.sub-tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('creative-' + target).classList.add('active');
+    });
+  });
+
+  // Country type toggle
+  document.querySelectorAll('.country-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.country-type-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // ===== Five-Level Drilldown (interactive) =====
+  (function() {
+    const LEVELS = ['Country', 'Channel', 'Campaign', 'Ad Set / Ad Group', 'Ad'];
+    const path = [{ label: 'All Countries', level: 0 }];
+
+    const LEVEL_DATA = {
+      channel: {
+        US: {
+          title: 'Channel Performance',
+          subtitle: 'Channels active in 🇺🇸 United States · Click any row to drill into Campaign level',
+          headers: ['Channel', 'ROAS', 'Sales', 'Spend', 'ATC', 'Purchase', 'CPP', 'CTR', 'CVR', 'CPM', 'CPC', 'CPATC'],
+          rows: [
+            { key: 'Meta', label: 'Meta', tag: 'meta', values: ['2.74x', '$30,748', '$11,250', '1,318', '94', '$120', '1.83%', '0.28%', '$16.54', '$0.91', '$8.54'] },
+            { key: 'Google', label: 'Google', tag: 'google', values: ['2.58x', '$18,617', '$7,170', '866', '58', '$124', '1.69%', '0.26%', '$16.30', '$0.97', '$8.28'] }
+          ]
+        },
+        DE: {
+          title: 'Channel Performance',
+          subtitle: 'Channels active in 🇩🇪 Germany · Click any row to drill into Campaign level',
+          headers: ['Channel', 'ROAS', 'Sales', 'Spend', 'ATC', 'Purchase', 'CPP', 'CTR', 'CVR', 'CPM', 'CPC', 'CPATC'],
+          rows: [
+            { key: 'Meta', label: 'Meta', tag: 'meta', values: ['3.28x', '$17,704', '$5,398', '684', '56', '$96', '2.04%', '0.32%', '$15.42', '$0.79', '$7.89'] },
+            { key: 'Google', label: 'Google', tag: 'google', values: ['2.88x', '$10,938', '$3,782', '440', '38', '$100', '1.82%', '0.28%', '$16.24', '$0.85', '$8.60'] }
+          ]
+        }
+      },
+
+      campaign: {
+        'US/Meta': {
+          title: 'Campaign Performance',
+          subtitle: 'Campaigns under 🇺🇸 US × Meta · Click any row to drill into Ad Set / Ad Group level',
+          headers: ['Campaign Name', 'Campaign Type', 'Funnel', 'ROAS', 'Sales', 'Spend', 'ATC', 'Purchase', 'CPP', 'CTR', 'CVR', 'CPM', 'CPC', 'CPATC'],
+          rows: [
+            { key: 'CMP_001', label: 'Carbon X Pro · Cold Audience', campType: 'Meta Sales', campTypeClass: 'meta', funnel: 'CONV', values: ['2.31x', '$13,438', '$5,820', '532', '42', '$139', '1.74%', '0.21%', '$16.53', '$0.95', '$10.94'] },
+            { key: 'CMP_002', label: 'Carbon Series · Lookalike 1%', campType: 'Meta Sales', campTypeClass: 'meta', funnel: 'CONV', values: ['1.84x', '$6,698', '$3,640', '412', '22', '$165', '1.88%', '0.18%', '$17.50', '$0.93', '$8.83'] },
+            { key: 'CMP_003', label: 'Brand Search Retarget', campType: 'Meta Sales', campTypeClass: 'meta', funnel: 'CONV', values: ['4.21x', '$7,538', '$1,790', '298', '30', '$60', '1.97%', '0.39%', '$14.92', '$0.76', '$6.01'] },
+            { key: 'CMP_004', label: 'Pro Series · Awareness', campType: 'Awareness', campTypeClass: 'video-camp', funnel: 'AWR', values: ['1.42x', '$2,838', '$2,000', '186', '14', '$143', '2.12%', '0.14%', '$15.81', '$0.84', '$11.34'] }
+          ]
+        },
+        'US/Google': {
+          title: 'Campaign Performance',
+          subtitle: 'Campaigns under 🇺🇸 US × Google · Click any row to drill into Ad Set / Ad Group level',
+          headers: ['Campaign Name', 'Campaign Type', 'Funnel', 'ROAS', 'Sales', 'Spend', 'ATC', 'Purchase', 'CPP', 'CTR', 'CVR', 'CPM', 'CPC', 'CPATC'],
+          rows: [
+            { key: 'CMP_G01', label: 'Brand Search Generic', campType: 'Search', campTypeClass: 'search', funnel: 'CONV', values: ['5.18x', '$8,288', '$1,600', '264', '28', '$57', '2.04%', '0.42%', '$14.21', '$0.71', '$6.06'] },
+            { key: 'CMP_G02', label: 'PMax · Carbon Series', campType: 'Performance Max', campTypeClass: 'pmax', funnel: 'CONV', isPmax: true, values: ['2.12x', '$5,724', '$2,700', '342', '20', '$135', '1.58%', '0.21%', '$16.84', '$1.04', '$7.89'] },
+            { key: 'CMP_G03', label: 'YouTube · Pro Series Awareness', campType: 'Video', campTypeClass: 'video-camp', funnel: 'AWR', values: ['1.68x', '$4,605', '$2,870', '260', '10', '$287', '1.42%', '0.10%', '$17.42', '$1.18', '$11.04'] }
+          ]
+        }
+      },
+
+      adset: {
+        'US/Meta/CMP_001': {
+          title: 'Ad Set / Ad Group Performance',
+          subtitle: 'Ad Sets under Carbon X Pro · Cold Audience (Meta) · Click any row to drill into Ad level',
+          headers: ['Ad Set / Ad Group', 'Audience Type', 'ROAS', 'Sales', 'Spend', 'ATC', 'Purchase', 'CPP', 'CTR', 'CVR', 'CPM', 'CPC', 'CPATC'],
+          rows: [
+            { key: 'AG_01', label: 'Outdoor Tech Enthusiast', audience: 'Interest', values: ['2.45x', '$5,145', '$2,100', '198', '16', '$131', '1.84%', '0.22%', '$16.12', '$0.92', '$10.61'] },
+            { key: 'AG_02', label: 'Wearable Tech LAL 1%', audience: 'Lookalike', values: ['2.18x', '$4,142', '$1,900', '178', '14', '$136', '1.78%', '0.19%', '$16.84', '$0.94', '$10.67'] },
+            { key: 'AG_03', label: 'US Male 25-44 Retarget', audience: 'Retarget', values: ['2.31x', '$4,158', '$1,800', '154', '12', '$150', '1.72%', '0.20%', '$16.71', '$0.99', '$11.69'] }
+          ]
+        },
+        'US/Google/CMP_G02': {
+          title: 'Asset Group Performance (PMax)',
+          subtitle: 'Asset Groups under PMax · Carbon Series · PMax campaigns terminate at this level (no Ad layer)',
+          headers: ['Asset Group', 'Audience Signal', 'ROAS', 'Sales', 'Spend', 'ATC', 'Purchase', 'CPP', 'CTR', 'CVR', 'CPM', 'CPC', 'CPATC'],
+          rows: [
+            { key: 'ASG_01', label: 'Carbon Series Premium', audience: 'Custom Audience', isPmaxTerminal: true, values: ['2.45x', '$3,234', '$1,320', '184', '12', '$110', '1.72%', '0.24%', '$15.82', '$0.92', '$7.17'] },
+            { key: 'ASG_02', label: 'Carbon Series Budget', audience: 'Affinity', isPmaxTerminal: true, values: ['1.84x', '$2,490', '$1,380', '158', '8', '$172', '1.42%', '0.18%', '$17.94', '$1.16', '$8.73'] }
+          ]
+        }
+      },
+
+      ad: {
+        'US/Meta/CMP_001/AG_01': {
+          title: 'Ad Performance',
+          subtitle: 'Ads under Outdoor Tech Enthusiast · Final level (no further drill)',
+          headers: ['Preview', 'Ad Name', 'Ad Type', 'ROAS', 'Sales', 'Spend', 'ATC', 'Purchase', 'CPP', 'CTR', 'CVR', 'CPM', 'CPC', 'CPATC'],
+          rows: [
+            { key: 'AD_01', label: 'US_Cold_CarbonXPro_Winter_v3', type: 'Video', preview: 'video', values: ['2.84x', '$2,396', '$844', '78', '8', '$106', '2.14%', '0.28%', '$15.94', '$0.84', '$10.82'] },
+            { key: 'AD_02', label: 'US_Cold_CarbonXPro_Specs_v1', type: 'Image', preview: 'image', values: ['2.18x', '$1,439', '$660', '64', '5', '$132', '1.78%', '0.21%', '$16.32', '$0.95', '$10.31'] },
+            { key: 'AD_03', label: 'US_Cold_CarbonXPro_Lineup_v2', type: 'Carousel', preview: 'carousel', values: ['2.31x', '$1,310', '$566', '56', '3', '$189', '1.72%', '0.18%', '$16.84', '$1.02', '$10.11'] }
+          ],
+          isAd: true
+        }
+      }
+    };
+
+    const tableEl = document.getElementById('drill-table');
+    const tableContainer = document.getElementById('drill-table-container');
+    const breadcrumb = document.getElementById('drill-breadcrumb');
+    const titleEl = document.getElementById('drill-card-title');
+    const subtitleEl = document.getElementById('drill-card-subtitle');
+    const levelNameEl = document.getElementById('current-level-name');
+    const levelNumEl = document.getElementById('current-level-num');
+    const backBtn = document.getElementById('back-drill-btn');
+    const resetBtn = document.getElementById('reset-drill-btn');
+
+    function buildDrillKey(levelIdx) {
+      return path.slice(1, levelIdx + 1).map(p => p.key).join('/');
+    }
+
+    function renderBreadcrumb() {
+      breadcrumb.innerHTML = '';
+      path.forEach((seg, idx) => {
+        if (idx > 0) {
+          const sep = document.createElement('span');
+          sep.className = 'breadcrumb-separator';
+          sep.textContent = '›';
+          breadcrumb.appendChild(sep);
+        }
+        const item = document.createElement('span');
+        item.className = 'breadcrumb-item' + (idx === path.length - 1 ? ' current' : '');
+        item.textContent = seg.label;
+        item.addEventListener('click', () => {
+          if (idx < path.length - 1) jumpToLevel(idx);
+        });
+        breadcrumb.appendChild(item);
+      });
+    }
+
+    function renderLevelIndicator() {
+      const currentLevel = path.length - 1;
+      levelNameEl.textContent = LEVELS[currentLevel];
+      levelNumEl.textContent = currentLevel + 1;
+      backBtn.disabled = currentLevel === 0;
+    }
+
+    function showPmaxTerminal(parentLabel) {
+      tableContainer.innerHTML = `
+        <div class="pmax-terminal-hint">
+          <strong>⚠ Performance Max Campaign · No Ad-Level Data</strong>
+          PMax campaigns are managed at Asset Group level by Google's algorithm. No individual Ad creative drilldown is available. Asset Group attribution shown above is the final level for "${parentLabel}".
+        </div>`;
+    }
+
+    function renderTable(levelIdx) {
+      if (levelIdx === 0) {
+        // Reload country level
+        location.hash = '';
+        // Re-render original country table via reset
+        renderCountryTable();
+        titleEl.textContent = 'Country Performance';
+        subtitleEl.textContent = 'All countries · Past 3 Months · Click any row to drill into Channel level';
+        return;
+      }
+
+      let data;
+      const dataKey = buildDrillKey(levelIdx);
+      if (levelIdx === 1) data = LEVEL_DATA.channel[dataKey];
+      else if (levelIdx === 2) data = LEVEL_DATA.campaign[dataKey];
+      else if (levelIdx === 3) data = LEVEL_DATA.adset[dataKey];
+      else if (levelIdx === 4) data = LEVEL_DATA.ad[dataKey];
+
+      // Check if parent was PMax and we're trying to drill to L5
+      if (levelIdx === 4 && !data) {
+        const parentLabel = path[3] ? path[3].label : 'this campaign';
+        // Check if parent in path[2] was PMax campaign
+        const campaignKey = buildDrillKey(2);
+        const campaignData = LEVEL_DATA.campaign[campaignKey];
+        if (campaignData) {
+          const parentRow = campaignData.rows.find(r => r.key === path[2].key);
+          if (parentRow && parentRow.isPmax) {
+            titleEl.textContent = 'PMax · No Ad Level';
+            subtitleEl.textContent = `Performance Max campaigns terminate at Asset Group level`;
+            showPmaxTerminal(path[3].label);
+            return;
+          }
+        }
+      }
+
+      if (!data) {
+        titleEl.textContent = LEVELS[levelIdx] + ' Performance';
+        subtitleEl.textContent = 'Demo data not seeded for this path';
+        tableContainer.innerHTML = `
+          <div class="pmax-terminal-hint">
+            <strong>Demo path not seeded</strong>
+            Try: 🇺🇸 US → Meta → Carbon X Pro · Cold Audience → Outdoor Tech Enthusiast (full 5-level path),
+            or 🇺🇸 US → Google → PMax · Carbon Series (PMax terminal path)
+          </div>`;
+        return;
+      }
+
+      titleEl.textContent = data.title;
+      subtitleEl.textContent = data.subtitle;
+
+      let html = '<table class="mb-table"><thead><tr>';
+      data.headers.forEach((h, i) => {
+        const isNumeric = i >= (data.headers.length - 11);
+        html += `<th${isNumeric ? ' class="numeric"' : ''}>${h}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+
+      data.rows.forEach(row => {
+        const isClickable = !data.isAd && !row.isPmaxTerminal;
+        html += `<tr ${isClickable ? `data-drill-key="${row.key}" data-drill-label="${row.label}"` : 'style="cursor:default;"'}>`;
+
+        if (levelIdx === 4 && row.preview) {
+          // Ad level
+          html += `<td><div class="material-thumb ${row.preview}">${row.preview === 'video' ? 'VID' : row.preview === 'image' ? 'IMG' : 'CAR'}</div></td>`;
+          html += `<td>${row.label}</td>`;
+          html += `<td><span class="type-tag">${row.type}</span></td>`;
+        } else if (levelIdx === 1) {
+          html += `<td><span class="channel-tag-inline ${row.tag}">${row.label}</span>${isClickable ? '<span class="drill-arrow">›</span>' : ''}</td>`;
+        } else if (levelIdx === 2) {
+          html += `<td>${row.label}${isClickable ? '<span class="drill-arrow">›</span>' : ''}</td>`;
+          html += `<td><span class="type-tag ${row.campTypeClass || ''}">${row.campType}</span></td>`;
+          html += `<td><span class="type-tag">${row.funnel}</span></td>`;
+        } else if (levelIdx === 3) {
+          html += `<td>${row.label}${isClickable ? '<span class="drill-arrow">›</span>' : ''}</td>`;
+          html += `<td><span class="type-tag">${row.audience}</span></td>`;
+        }
+
+        row.values.forEach(v => { html += `<td class="numeric">${v}</td>`; });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      tableContainer.innerHTML = html;
+      attachRowHandlers(levelIdx);
+    }
+
+    function renderCountryTable() {
+      tableContainer.innerHTML = `
+        <table class="mb-table">
+          <thead><tr>
+            <th>Country</th><th class="numeric">ROAS</th><th class="numeric">Sales</th><th class="numeric">Spend</th><th class="numeric">Spend Share</th>
+            <th class="numeric">ATC</th><th class="numeric">Purchase</th><th class="numeric">CPP</th>
+            <th class="numeric">CTR</th><th class="numeric">CVR</th><th class="numeric">CPM</th><th class="numeric">CPC</th><th class="numeric">CPATC</th>
+          </tr></thead>
+          <tbody>
+            <tr data-drill-key="US" data-drill-label="🇺🇸 United States"><td>🇺🇸 United States<span class="drill-arrow">›</span></td><td class="numeric">2.68x</td><td class="numeric">$49,365</td><td class="numeric">$18,420</td><td class="numeric">38.2%</td><td class="numeric">2,184</td><td class="numeric">152</td><td class="numeric">$121</td><td class="numeric">1.77%</td><td class="numeric">0.27%</td><td class="numeric">$16.45</td><td class="numeric">$0.93</td><td class="numeric">$8.43</td></tr>
+            <tr data-drill-key="DE" data-drill-label="🇩🇪 Germany"><td>🇩🇪 Germany<span class="drill-arrow">›</span></td><td class="numeric">3.12x</td><td class="numeric">$28,642</td><td class="numeric">$9,180</td><td class="numeric">19.0%</td><td class="numeric">1,124</td><td class="numeric">94</td><td class="numeric">$98</td><td class="numeric">1.93%</td><td class="numeric">0.31%</td><td class="numeric">$15.83</td><td class="numeric">$0.82</td><td class="numeric">$8.17</td></tr>
+            <tr data-drill-key="UK" data-drill-label="🇬🇧 United Kingdom"><td>🇬🇧 United Kingdom<span class="drill-arrow">›</span></td><td class="numeric">2.45x</td><td class="numeric">$16,758</td><td class="numeric">$6,840</td><td class="numeric">14.2%</td><td class="numeric">812</td><td class="numeric">61</td><td class="numeric">$112</td><td class="numeric">1.87%</td><td class="numeric">0.26%</td><td class="numeric">$16.29</td><td class="numeric">$0.87</td><td class="numeric">$8.42</td></tr>
+            <tr data-drill-key="JP" data-drill-label="🇯🇵 Japan"><td>🇯🇵 Japan<span class="drill-arrow">›</span></td><td class="numeric">2.18x</td><td class="numeric">$11,358</td><td class="numeric">$5,210</td><td class="numeric">10.8%</td><td class="numeric">562</td><td class="numeric">38</td><td class="numeric">$137</td><td class="numeric">1.66%</td><td class="numeric">0.23%</td><td class="numeric">$16.70</td><td class="numeric">$1.01</td><td class="numeric">$9.27</td></tr>
+            <tr data-drill-key="FR" data-drill-label="🇫🇷 France"><td>🇫🇷 France<span class="drill-arrow">›</span></td><td class="numeric">2.05x</td><td class="numeric">$7,975</td><td class="numeric">$3,890</td><td class="numeric">8.1%</td><td class="numeric">418</td><td class="numeric">29</td><td class="numeric">$134</td><td class="numeric">1.72%</td><td class="numeric">0.22%</td><td class="numeric">$16.42</td><td class="numeric">$0.95</td><td class="numeric">$9.31</td></tr>
+            <tr data-drill-key="CA" data-drill-label="🇨🇦 Canada"><td>🇨🇦 Canada<span class="drill-arrow">›</span></td><td class="numeric">2.51x</td><td class="numeric">$6,551</td><td class="numeric">$2,610</td><td class="numeric">5.4%</td><td class="numeric">298</td><td class="numeric">22</td><td class="numeric">$119</td><td class="numeric">1.81%</td><td class="numeric">0.25%</td><td class="numeric">$15.94</td><td class="numeric">$0.88</td><td class="numeric">$8.76</td></tr>
+            <tr data-drill-key="OTHER" data-drill-label="Other 12 countries"><td>Other 12 countries<span class="drill-arrow">›</span></td><td class="numeric">2.21x</td><td class="numeric">$4,530</td><td class="numeric">$2,050</td><td class="numeric">4.3%</td><td class="numeric">218</td><td class="numeric">16</td><td class="numeric">$128</td><td class="numeric">1.74%</td><td class="numeric">0.23%</td><td class="numeric">$16.18</td><td class="numeric">$0.92</td><td class="numeric">$9.40</td></tr>
+          </tbody>
+        </table>`;
+      attachRowHandlers(0);
+    }
+
+    function attachRowHandlers(levelIdx) {
+      if (levelIdx === 4) return;
+      tableContainer.querySelectorAll('tbody tr[data-drill-key]').forEach(row => {
+        row.addEventListener('click', () => {
+          path.push({ level: levelIdx + 1, key: row.dataset.drillKey, label: row.dataset.drillLabel });
+          renderAll();
+        });
+      });
+    }
+
+    function jumpToLevel(targetIdx) {
+      path.length = targetIdx + 1;
+      renderAll();
+    }
+
+    function renderAll() {
+      renderBreadcrumb();
+      renderLevelIndicator();
+      renderTable(path.length - 1);
+    }
+
+    backBtn.addEventListener('click', () => {
+      if (path.length > 1) {
+        path.pop();
+        renderAll();
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      path.length = 1;
+      renderAll();
+    });
+
+    attachRowHandlers(0);
+  })();
+</script>
+
+</body>
+</html>
