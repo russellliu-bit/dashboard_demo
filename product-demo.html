@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day · Product Board Demo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config={theme:{extend:{
+    colors:{background:"var(--background)",foreground:"var(--foreground)",card:"var(--card)",primary:"var(--primary)","primary-foreground":"var(--primary-foreground)",secondary:"var(--secondary)",muted:"var(--muted)","muted-foreground":"var(--muted-foreground)",accent:"var(--accent)","accent-foreground":"var(--accent-foreground)",border:"var(--border)",sidebar:"var(--sidebar)"},
+    borderRadius:{lg:"var(--radius)",md:"calc(var(--radius) - 2px)",sm:"calc(var(--radius) - 4px)"},
+  }}};
+</script>
+<style>
+  :root{--background:oklch(1 0 0);--foreground:oklch(0.145 0 0);--card:oklch(1 0 0);--primary:oklch(0.205 0 0);--primary-foreground:oklch(0.985 0 0);--secondary:oklch(0.97 0 0);--muted:oklch(0.97 0 0);--muted-foreground:oklch(0.556 0 0);--accent:oklch(0.94 0 0);--accent-foreground:oklch(0.205 0 0);--border:oklch(0.922 0 0);--sidebar:oklch(0.985 0 0);--radius:0.375rem;--font-sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;}
+  html,body{background:var(--background);color:var(--foreground);font-family:var(--font-sans);}
+  *{border-color:var(--border);}
+  .no-scrollbar::-webkit-scrollbar{display:none;} .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none;}
+  [data-tab-btn].active{background:var(--background);color:var(--foreground);box-shadow:0 1px 3px 0 hsl(0 0% 0% / .1),0 1px 2px -1px hsl(0 0% 0% / .1);}
+  [data-tab-btn]{color:var(--muted-foreground);}
+  .tabular{font-variant-numeric:tabular-nums;}
+</style>
+</head>
+<body class="text-[13px]">
+<div class="flex h-screen w-full overflow-hidden">
+
+  <aside class="hidden md:flex w-56 shrink-0 flex-col border-r bg-sidebar">
+    <div class="flex h-14 items-center gap-2 border-b px-4"><div class="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs font-bold">D</div><span class="text-sm font-semibold">Day</span></div>
+    <div class="flex items-center gap-2 border-b px-4 py-3"><div class="flex size-7 items-center justify-center rounded-md bg-red-600 text-white text-[11px] font-bold">RM</div><div class="min-w-0"><div class="truncate text-xs font-medium">REDMAGIC</div><div class="truncate text-[10px] text-muted-foreground">Brand workspace</div></div></div>
+    <nav class="flex-1 overflow-y-auto p-2 no-scrollbar">
+      <div class="space-y-0.5"><div class="rounded-md px-2 py-1.5 text-muted-foreground">Dashboard</div><div class="rounded-md px-2 py-1.5 text-muted-foreground">AI Workspace</div><div class="rounded-md px-2 py-1.5 text-muted-foreground">Brand Kit</div><div class="rounded-md px-2 py-1.5 text-muted-foreground">Marketing</div></div>
+      <div class="mt-3"><div class="px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Intelligence</div>
+      <div class="space-y-0.5"><div class="rounded-md px-2 py-1.5 text-muted-foreground">Social</div><div class="rounded-md px-2 py-1.5 text-muted-foreground">News</div><div class="rounded-md px-2 py-1.5 text-muted-foreground">Discussion</div><div class="rounded-md bg-accent px-2 py-1.5 font-medium text-accent-foreground">Product</div></div></div>
+    </nav>
+    <div class="border-t p-3 text-[10px] text-muted-foreground">Demo · mock data · aligned to day-demo</div>
+  </aside>
+
+  <main class="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+    <header class="flex h-14 shrink-0 items-center justify-between border-b px-6">
+      <div class="flex items-center gap-1.5 text-sm"><span class="text-muted-foreground">Brands</span><span class="text-muted-foreground/40">/</span><span class="text-muted-foreground">REDMAGIC</span><span class="text-muted-foreground/40">/</span><span class="font-medium">Product</span></div>
+      <div class="flex items-center gap-1">
+        <button data-act="sync" class="flex size-8 items-center justify-center rounded-md hover:bg-accent" title="Sync Now">⟳</button>
+        <button data-act="discover" class="flex size-8 items-center justify-center rounded-md hover:bg-accent" title="Discover Now">◎</button>
+        <button data-act="settings" class="flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs hover:bg-accent" title="Settings"><span>⚙</span>Settings</button>
+      </div>
+    </header>
+
+    <div class="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between gap-2 border-b bg-background px-6">
+      <div class="flex items-center gap-1 overflow-x-auto no-scrollbar rounded-lg bg-muted p-0.5" id="tabbar"></div>
+      <div class="flex shrink-0 items-center gap-2">
+        <select id="platform" class="h-8 rounded-md border bg-background px-2 text-xs"><option value="all">All Platforms</option><option value="amazon">Amazon</option></select>
+        <div class="flex items-center rounded-md border p-0.5" id="period"></div>
+      </div>
+    </div>
+
+    <div id="content" class="flex-1 overflow-y-auto p-6"></div>
+  </main>
+
+  <div id="detailOverlay" class="fixed inset-0 z-30 hidden bg-black/20"></div>
+  <aside id="detailPanel" class="fixed right-0 top-0 z-40 hidden h-full w-full max-w-md flex-col border-l bg-background shadow-xl sm:flex" style="transform:translateX(100%);transition:transform .2s">
+    <div class="flex h-14 shrink-0 items-center justify-between border-b px-4"><div id="detailHeader" class="min-w-0 flex items-center gap-2"></div><button data-act="closeDetail" class="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent">✕</button></div>
+    <div id="detailBody" class="flex-1 overflow-y-auto p-4"></div>
+  </aside>
+
+  <div id="monOverlay" class="fixed inset-0 z-30 hidden bg-black/20"></div>
+  <aside id="monPanel" class="fixed right-0 top-0 z-40 hidden h-full w-full max-w-sm flex-col border-l bg-background shadow-xl sm:flex" style="transform:translateX(100%);transition:transform .2s">
+    <div class="flex items-start justify-between border-b px-4 py-3"><div><div class="text-sm font-semibold">Settings</div><div class="text-xs text-muted-foreground">Coverage · monitoring · notifications</div></div><button data-act="closeMon" class="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent">✕</button></div>
+    <div id="monBody" class="flex-1 overflow-y-auto"></div>
+  </aside>
+
+  <div id="toast" class="fixed bottom-4 left-1/2 z-50 hidden -translate-x-1/2 rounded-md bg-primary px-4 py-2 text-xs text-primary-foreground shadow-lg"></div>
+</div>
+
+<script>
+/* ================= DATA ================= */
+const OWN="own",COMP="competitor";
+const OWN_SET=new Set(["REDMAGIC 11 Pro","REDMAGIC 11S Pro"]);
+const MARKETS=["amazon.com","amazon.de"];
+
+const listings=[
+  {id:"l1",name:"REDMAGIC 11 Pro 5G Gaming Phone 12GB+256GB",asin:"B0RM11PRO",type:OWN,product:"REDMAGIC 11 Pro",marketplace:"amazon.com",price:749,currency:"$",rating:4.4,bsr:142,bsrCat:"Cell Phones",reviews:1203,stock:true,coupon:"$50",
+    review:{score:0.42,dist:{positive:58,neutral:14,mixed:11,negative:17},topics:["Performance","Cooling","Battery","Display","Build"],features:[{f:"Gaming Performance",s:"positive",m:214},{f:"Cooling Fan",s:"mixed",m:98},{f:"Battery",s:"negative",m:76},{f:"Camera",s:"negative",m:61}],issues:["Noticeable heat under heavy load","Mediocre camera quality","ROM bugs with some apps"],highlights:["Rock-solid frame rates","The cooling fan actually works","Charges incredibly fast"],competitors:["ROG Phone 9","Nubia Z70"]},
+    specs:{"Display":"6.85\" AMOLED 144Hz","Chipset":"Snapdragon 8 Elite","Battery":"7000mAh","Cooling":"Built-in fan"},variants:["12+256 Night","16+512 Transparent"],buybox:[{s:"ZTE Official",p:749},{s:"TechDeals",p:769}]},
+  {id:"l2",name:"REDMAGIC 11 Pro 5G Gaming Smartphone",asin:"B0RM11DE",type:OWN,product:"REDMAGIC 11 Pro",marketplace:"amazon.de",price:799,currency:"€",rating:4.3,bsr:210,bsrCat:"Smartphones",reviews:340,stock:true,coupon:null,
+    review:{score:0.35,dist:{positive:50,neutral:18,mixed:13,negative:19},topics:["Performance","Cooling","Battery"],features:[{f:"Performance",s:"positive",m:88},{f:"Camera",s:"negative",m:34}],issues:["Weak camera at night","No Google Wallet"],highlights:["Very fast","Good display"],competitors:["ROG Phone 9"]}},
+  {id:"l3",name:"REDMAGIC 11S Pro Titanium Edition 16GB+512GB",asin:"B0RM11SPRO",type:OWN,product:"REDMAGIC 11S Pro",marketplace:"amazon.com",price:899,currency:"$",rating:4.5,bsr:98,bsrCat:"Cell Phones",reviews:512,stock:true,coupon:"$80",
+    review:{score:0.51,dist:{positive:66,neutral:12,mixed:9,negative:13},topics:["Performance","Cooling","Display","Design"],features:[{f:"Gaming Performance",s:"positive",m:142},{f:"Cooling",s:"positive",m:88},{f:"Battery",s:"mixed",m:41}],issues:["Bulky and heavy","Night photos are average"],highlights:["Peak flagship performance","Unbeatable cooling"],competitors:["ROG Phone 9"]}},
+  {id:"l4",name:"ASUS ROG Phone 9 Pro 5G Gaming Phone",asin:"B0ROG9PRO",type:COMP,product:"ASUS ROG Phone 9",marketplace:"amazon.com",price:1099,currency:"$",rating:4.3,bsr:76,bsrCat:"Cell Phones",reviews:2110,stock:true,coupon:null,
+    review:{score:0.38,dist:{positive:55,neutral:15,mixed:12,negative:18},topics:["Performance","Accessories","Price"],features:[{f:"Performance",s:"positive",m:320},{f:"Price",s:"negative",m:140}],issues:["Expensive","Accessories sold separately"],highlights:["Rich accessory ecosystem"],competitors:["REDMAGIC"]}},
+  {id:"l5",name:"Nubia Z70 Ultra 5G Bezel-less Flagship",asin:"B0NUBZ70",type:COMP,product:"Nubia Z70 Ultra",marketplace:"amazon.com",price:699,currency:"$",rating:4.2,bsr:180,bsrCat:"Cell Phones",reviews:640,stock:true,coupon:"$40",
+    review:{score:0.30,dist:{positive:48,neutral:20,mixed:14,negative:18},topics:["Camera","Display","Value"],features:[{f:"Camera",s:"positive",m:120},{f:"Software",s:"negative",m:58}],issues:["Poor localization"],highlights:["Bezel-less looks great","Great value"],competitors:["REDMAGIC 11 Pro"]}},
+  {id:"l6",name:"ASUS ROG Phone 9 5G Gaming Smartphone",asin:"B0ROG9DE",type:COMP,product:"ASUS ROG Phone 9",marketplace:"amazon.de",price:1149,currency:"€",rating:4.2,bsr:120,bsrCat:"Smartphones",reviews:410,stock:true,coupon:null,review:null},
+  {id:"l7",name:"ZTE Nubia RedMagic 10 Air Ultra-thin (discovered)",asin:"B0RM10AIR",type:null,product:null,marketplace:"amazon.com",price:559,currency:"$",rating:4.1,bsr:260,bsrCat:"Cell Phones",reviews:88,stock:true,coupon:null,review:null},
+];
+const products=[
+  {id:"p1",name:"REDMAGIC 11 Pro",type:OWN,aliases:["RedMagic 11 Pro"],listingIds:["l1","l2"]},
+  {id:"p2",name:"REDMAGIC 11S Pro",type:OWN,aliases:[],listingIds:["l3"]},
+  {id:"p3",name:"ASUS ROG Phone 9",type:COMP,aliases:["ROG Phone 9 Pro"],listingIds:["l4","l6"]},
+  {id:"p4",name:"Nubia Z70 Ultra",type:COMP,aliases:[],listingIds:["l5"]},
+];
+// SKU-level trend base: keyed by market -> product (a SKU = product on one marketplace = one listing)
+const trendBase={
+  "amazon.com":{
+    "REDMAGIC 11 Pro":{price:[899,749],bsr:[180,142],rating:[4.5,4.4],sentiment:[0.31,0.42]},
+    "REDMAGIC 11S Pro":{price:[980,899],bsr:[130,98],rating:[4.4,4.5],sentiment:[0.40,0.51]},
+    "ASUS ROG Phone 9":{price:[1149,1099],bsr:[150,76],rating:[4.2,4.3],sentiment:[0.36,0.38]},
+    "Nubia Z70 Ultra":{price:[749,699],bsr:[160,180],rating:[4.3,4.2],sentiment:[0.28,0.30]},
+  },
+  "amazon.de":{
+    "REDMAGIC 11 Pro":{price:[829,799],bsr:[240,210],rating:[4.4,4.3],sentiment:[0.30,0.35]},
+    "ASUS ROG Phone 9":{price:[1199,1149],bsr:[160,120],rating:[4.1,4.2],sentiment:[0.34,0.36]},
+  },
+};
+// Trend metrics (Volume & Share of Voice removed — those are social-listening metrics, not marketplace metrics)
+const METRICS=[
+  {k:"price",label:"Price",fmt:(v,sym)=>(sym||"$")+Math.round(v)},
+  {k:"bsr",label:"BSR",reversed:true,fmt:v=>"#"+Math.round(v)},
+  {k:"rating",label:"Rating",fmt:v=>"★"+(+v).toFixed(1)},
+  {k:"sentiment",label:"Sentiment",fmt:v=>(+v).toFixed(2)},
+];
+const OWN_LINE=["#16a34a","#22c55e","#15803d","#4ade80"];
+const COMP_LINE=["#7c3aed","#a855f7","#6d28d9","#c084fc"];
+
+let signals=[
+  {id:"s1",rule:"product:price-change",sev:"critical",title:"Price drop: REDMAGIC 11 Pro (amazon.com) −27%",summary:"$1024 → $749, exceeds 25% threshold",status:"active",tag:null},
+  {id:"s5",rule:"promo:lost-buybox",sev:"critical",title:"Lost Buybox: REDMAGIC 11 Pro (amazon.de)",summary:"Buybox taken by third-party seller",status:"active",tag:"Promo · P2"},
+  {id:"s2",rule:"product:rating-drop",sev:"warning",title:"Rating drop: REDMAGIC 11S Pro (−0.4)",summary:"4.9 → 4.5, review count 512 (≥20)",status:"active",tag:null},
+  {id:"s4",rule:"promo:competitor-coupon",sev:"warning",title:"Competitor promo: Nubia Z70 Ultra added $40 coupon",summary:"Competitor discounting — consider a response",status:"active",tag:"Promo · P2"},
+  {id:"s3",rule:"product:bsr-surge",sev:"warning",title:"BSR surge: ASUS ROG Phone 9 into top 80",summary:"#150 → #76 (Cell Phones), +49%",status:"acknowledged",tag:null},
+];
+// Own-vs-competitor 1v1 synthesis (single own product vs single competitor), fusing market + VOC on a common marketplace
+function prodCom(name){return listings.find(l=>l.product===name&&l.marketplace==="amazon.com")||listings.find(l=>l.product===name);}
+function synthCompare(on,cn){
+  const lo=prodCom(on),lc=prodCom(cn),so=vocData[on],sc=vocData[cn];const leading=[],lagging=[];const S=shortName(cn);
+  if(lo&&lc&&lo.price!=null&&lc.price!=null){const cur=lo.currency;if(lo.price<lc.price)leading.push({t:"Price advantage",d:`${cur}${lo.price} vs ${cur}${lc.price} — cheaper than ${S}`});else if(lo.price>lc.price)lagging.push({t:"Priced above "+S,d:`${cur}${lo.price} vs ${cur}${lc.price}`});}
+  if(lo&&lc&&lo.rating!=null&&lc.rating!=null){if(lo.rating>lc.rating)leading.push({t:"Higher rating",d:`★${lo.rating.toFixed(1)} vs ★${lc.rating.toFixed(1)}`});else if(lo.rating<lc.rating)lagging.push({t:"Lower rating",d:`★${lo.rating.toFixed(1)} vs ★${lc.rating.toFixed(1)}`});}
+  if(lo&&lc&&lo.bsr&&lc.bsr){if(lo.bsr<lc.bsr)leading.push({t:"Better BSR",d:`#${lo.bsr} vs #${lc.bsr} · ${lo.bsrCat}`});else if(lo.bsr>lc.bsr)lagging.push({t:"BSR behind "+S,d:`#${lo.bsr} vs #${lc.bsr}`});}
+  if(so&&sc){if(so.score>sc.score)leading.push({t:"Stronger sentiment",d:`${(so.score>0?"+":"")+so.score.toFixed(2)} vs ${(sc.score>0?"+":"")+sc.score.toFixed(2)}`});else if(so.score<sc.score)lagging.push({t:"Weaker sentiment",d:`${(so.score>0?"+":"")+so.score.toFixed(2)} vs ${(sc.score>0?"+":"")+sc.score.toFixed(2)}`});}
+  if(so){const nets=so.aspects.map(a=>({a:a.a,net:a.pos-a.neg}));const tS=[...nets].sort((x,y)=>y.net-x.net)[0];if(tS&&tS.net>0)leading.push({t:"Loved: "+tS.a,d:"Top praised aspect in own reviews"});const tI=[...nets].sort((x,y)=>x.net-y.net)[0];if(tI&&tI.net<0)lagging.push({t:"Complaint: "+tI.a,d:"Top negative aspect in own reviews"});}
+  if(sc){const cW=sc.aspects.map(a=>({a:a.a,net:a.pos-a.neg})).sort((x,y)=>x.net-y.net)[0];if(cW&&cW.net<0)leading.push({t:S+" weak on "+cW.a,d:"Rival's top complaint — a differentiation opening"});}
+  return {leading,lagging};
+}
+// VOC — aspect-based (ABSA): per product, each aspect carries a polarity split (pos/mix/neg).
+// Good/bad is derived from net polarity → no theme-bucket duplication. Unmet needs are separate (things that don't exist).
+const vocData={
+  "REDMAGIC 11 Pro":{own:true,score:0.42,dist:{positive:58,neutral:14,mixed:11,negative:17},
+    aspects:[
+      {a:"Gaming performance",pos:214,mix:8,neg:12},
+      {a:"Cooling / thermals",pos:120,mix:30,neg:20},
+      {a:"Display",pos:96,mix:6,neg:8},
+      {a:"Value for money",pos:70,mix:10,neg:22},
+      {a:"Build / design",pos:40,mix:20,neg:24},
+      {a:"Software / ROM",pos:18,mix:24,neg:61},
+      {a:"Battery life",pos:20,mix:15,neg:88},
+      {a:"Camera",pos:15,mix:10,neg:102},
+    ],
+    unmet:[
+      {t:"Better night camera",n:110,kind:"request"},
+      {t:"Wireless charging",n:80,kind:"request"},
+      {t:"Global ROM + Google services",n:70,kind:"request"},
+      {t:"Camera not good enough for the price",n:96,kind:"barrier"},
+      {t:"Worried about ROM / software stability",n:71,kind:"barrier"},
+    ]},
+  "REDMAGIC 11S Pro":{own:true,score:0.51,dist:{positive:66,neutral:12,mixed:9,negative:13},
+    aspects:[
+      {a:"Gaming performance",pos:142,mix:6,neg:8},
+      {a:"Cooling / thermals",pos:88,mix:10,neg:9},
+      {a:"Display",pos:70,mix:6,neg:6},
+      {a:"Value for money",pos:44,mix:12,neg:14},
+      {a:"Battery life",pos:41,mix:20,neg:30},
+      {a:"Build / design",pos:24,mix:20,neg:40},
+      {a:"Camera",pos:18,mix:12,neg:40},
+      {a:"Software / ROM",pos:14,mix:22,neg:36},
+    ],
+    unmet:[
+      {t:"Slimmer / lighter body",n:43,kind:"request"},
+      {t:"Better night camera",n:54,kind:"request"},
+      {t:"Wireless charging",n:41,kind:"request"},
+      {t:"Too large / heavy for daily use",n:44,kind:"barrier"},
+    ]},
+  "ASUS ROG Phone 9":{own:false,score:0.38,dist:{positive:55,neutral:15,mixed:12,negative:18},
+    aspects:[
+      {a:"Gaming performance",pos:320,mix:10,neg:12},
+      {a:"Accessory ecosystem",pos:150,mix:20,neg:18},
+      {a:"Display",pos:90,mix:8,neg:10},
+      {a:"Battery life",pos:70,mix:15,neg:20},
+      {a:"Build / design",pos:60,mix:18,neg:22},
+      {a:"Value for money",pos:20,mix:20,neg:140},
+    ],
+    unmet:[
+      {t:"Accessories bundled, not sold separately",n:96,kind:"barrier"},
+      {t:"Lower price / better value",n:140,kind:"barrier"},
+    ]},
+  "Nubia Z70 Ultra":{own:false,score:0.30,dist:{positive:48,neutral:20,mixed:14,negative:18},
+    aspects:[
+      {a:"Camera",pos:120,mix:14,neg:22},
+      {a:"Display / bezel-less",pos:96,mix:10,neg:12},
+      {a:"Value for money",pos:80,mix:12,neg:15},
+      {a:"Gaming performance",pos:60,mix:14,neg:18},
+      {a:"Software / localization",pos:12,mix:16,neg:58},
+    ],
+    unmet:[
+      {t:"Better software localization",n:58,kind:"request"},
+      {t:"Google services out of the box",n:30,kind:"barrier"},
+    ]},
+};
+const vocOrder=["REDMAGIC 11 Pro","REDMAGIC 11S Pro","ASUS ROG Phone 9","Nubia Z70 Ultra"];
+let badReviews=[
+  {id:"r1",product:"REDMAGIC 11 Pro",mk:"amazon.com",rating:2,helpful:142,verified:true,date:"06-29",impact:"High",status:"open",body:"Overheats and throttles hard after 30 min of gaming. The fan helps but the frame still burns my hand."},
+  {id:"r2",product:"REDMAGIC 11S Pro",mk:"amazon.com",rating:1,helpful:96,verified:true,date:"06-28",impact:"High",status:"open",body:"Bricked after the latest OTA update — stuck on the boot logo. Support hasn't replied in a week."},
+  {id:"r3",product:"REDMAGIC 11 Pro",mk:"amazon.com",rating:1,helpful:88,verified:true,date:"06-30",impact:"High",status:"open",body:"Battery drops from 100% to 20% in ~3 hours of gaming. Not acceptable for a 7000mAh phone."},
+  {id:"r4",product:"REDMAGIC 11 Pro",mk:"amazon.com",rating:2,helpful:61,verified:false,date:"06-27",impact:"Medium",status:"open",body:"Camera is genuinely bad at night — grainy and slow to focus."},
+  {id:"r5",product:"REDMAGIC 11 Pro",mk:"amazon.de",rating:2,helpful:41,verified:true,date:"06-26",impact:"Medium",status:"open",body:"No Google Wallet support out of the box — a dealbreaker for me in Europe."},
+  {id:"r6",product:"REDMAGIC 11S Pro",mk:"amazon.com",rating:2,helpful:73,verified:true,date:"06-27",impact:"High",status:"open",body:"Titanium edition is gorgeous but way too heavy — my wrist aches after long gaming sessions."},
+  {id:"r7",product:"REDMAGIC 11S Pro",mk:"amazon.com",rating:2,helpful:52,verified:true,date:"06-25",impact:"Medium",status:"open",body:"Night photos are soft and noisy. At this price the camera really should be better."},
+  {id:"r8",product:"ASUS ROG Phone 9",mk:"amazon.com",rating:2,helpful:180,verified:true,date:"06-28",impact:"High",status:"open",body:"Great performance but the price is absurd once you add the mandatory accessories."},
+  {id:"r9",product:"ASUS ROG Phone 9",mk:"amazon.com",rating:2,helpful:64,verified:false,date:"06-26",impact:"Medium",status:"open",body:"The AirTrigger shoulder buttons became unresponsive after two months."},
+  {id:"r10",product:"Nubia Z70 Ultra",mk:"amazon.com",rating:2,helpful:58,verified:true,date:"06-29",impact:"High",status:"open",body:"Software localization is rough — random Chinese strings and no Google services out of the box."},
+  {id:"r11",product:"Nubia Z70 Ultra",mk:"amazon.com",rating:2,helpful:33,verified:false,date:"06-24",impact:"Medium",status:"open",body:"The under-display camera is a gimmick; selfies look washed out."},
+];
+
+/* ================= STATE ================= */
+const TABS=[{k:"overview",label:"Overview"},{k:"listings",label:"Listings"},{k:"voc",label:"VOC",badge:"P0"}];
+const state={tab:"overview",platform:"all",period:"7d",
+  trendMarket:"amazon.com",trendProducts:["REDMAGIC 11 Pro","REDMAGIC 11S Pro"],trendProdOpen:false,trendMetrics:["rating"],sigExpanded:false,
+  standingOwn:"REDMAGIC 11 Pro",standingComp:"ASUS ROG Phone 9",
+  catType:"all",vocScope:"REDMAGIC 11 Pro",notifyEmail:true,notifyFeishu:false};
+
+/* ================= HELPERS ================= */
+const el=(id)=>document.getElementById(id);
+function toast(m){const t=el("toast");t.textContent=m;t.classList.remove("hidden");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.add("hidden"),1800);}
+function curSym(mk){return mk==="amazon.de"?"€":"$";}
+function shortName(p){return p.replace("REDMAGIC ","").replace("ASUS ","").replace(" Ultra","");}
+function mean(a){const v=a.filter(x=>x!=null);return v.length?v.reduce((x,y)=>x+y,0)/v.length:null;}
+function toggleArr(arr,v,min=1){const i=arr.indexOf(v);if(i>=0){if(arr.length>min)arr.splice(i,1);}else arr.push(v);}
+function periodInfo(p){
+  if(p==="7d")return{labels:["06-25","06-26","06-27","06-28","06-29","06-30","07-01"],scale:1};
+  if(p==="30d")return{labels:["Jun 3","Jun 10","Jun 17","Jun 24","Jul 1"],scale:1.8};
+  return{labels:["Apr","May","Jun","Jul"],scale:3};
+}
+function gen(s,e,n){return Array.from({length:n},(_,i)=>{const t=i/(n-1);const base=s+(e-s)*t;const j=Math.sin(i*1.7)*(Math.abs(e-s)||1)*0.03;return +(base+j).toFixed(2);});}
+function periodSentiment(name){const d=vocData[name];let score=d.score,dist={...d.dist};const tb=(trendBase["amazon.com"]||{})[name];if(tb&&tb.sentiment){const s=tb.sentiment[0],e=tb.sentiment[1];const f={"7d":1,"30d":0.6,"90d":0.3}[state.period];score=+(s+(e-s)*f).toFixed(2);const shift=Math.round((score-d.score)*120);dist={positive:Math.max(0,d.dist.positive+shift),neutral:d.dist.neutral,mixed:d.dist.mixed,negative:Math.max(0,d.dist.negative-shift)};}return {score,dist};}
+function typeBadge(type){if(type===OWN)return `<span class="rounded-md border border-green-200 px-1.5 py-0.5 text-[10px] text-green-700">Own</span>`;if(type===COMP)return `<span class="rounded-md border border-purple-200 px-1.5 py-0.5 text-[10px] text-purple-700">Competitor</span>`;return `<span class="rounded-md border border-muted-foreground/30 px-1.5 py-0.5 text-[10px] text-muted-foreground">Unmatched</span>`;}
+function sevDot(s){const c={critical:"bg-red-500",warning:"bg-amber-500",info:"bg-blue-500"}[s]||"bg-gray-400";return `<span class="inline-block size-2 rounded-full ${c}"></span>`;}
+function sevBorder(s){return {critical:"border-l-red-500",warning:"border-l-amber-500",info:"border-l-blue-500"}[s]||"border-l-gray-400";}
+function stars(n){return "★".repeat(n)+"☆".repeat(5-n);}
+function featBadge(s){const c={positive:"border-green-200 text-green-700",negative:"border-red-200 text-red-700",mixed:"border-yellow-200 text-yellow-700"}[s];return `<span class="rounded-md border ${c} px-1.5 py-0.5 text-[10px]">${s}</span>`;}
+function sentimentBar(dist){const total=dist.positive+dist.neutral+dist.mixed+dist.negative||1;const seg=[["positive","#22c55e",dist.positive],["neutral","#9ca3af",dist.neutral],["mixed","#facc15",dist.mixed],["negative","#ef4444",dist.negative]];const bars=seg.filter(s=>s[2]>0).map(s=>`<div style="width:${(s[2]/total*100).toFixed(1)}%;background:${s[1]}"></div>`).join("");const legend=seg.filter(s=>s[2]>0).map(s=>`<span class="inline-flex items-center gap-1 text-[11px] text-muted-foreground"><span class="inline-block size-2 rounded-full" style="background:${s[1]}"></span>${s[0]} ${Math.round(s[2]/total*100)}%</span>`).join(" ");return `<div class="flex h-3 w-full overflow-hidden rounded-full">${bars}</div><div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">${legend}</div>`;}
+
+function renderTabbar(){el("tabbar").innerHTML=TABS.map(t=>`<button data-tab-btn data-tab="${t.k}" class="${state.tab===t.k?"active":""} flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-xs font-medium transition">${t.label}${t.badge?`<span class="rounded bg-blue-100 px-1 text-[9px] font-bold text-blue-700">${t.badge}</span>`:""}</button>`).join("");}
+function renderPeriod(){el("period").innerHTML=["7d","30d","90d"].map(p=>`<button data-period="${p}" class="rounded px-2 py-1 text-xs ${state.period===p?"bg-accent font-medium":"text-muted-foreground"}">${p}</button>`).join("");}
+
+/* ================= CHART ================= */
+function trendChart(lines,{labels,mode,axes}){
+  if(!lines.length)return `<div class="flex items-center justify-center text-xs text-muted-foreground" style="height:200px">Select at least one product and one metric</div>`;
+  const two=mode==="real"&&axes.length===2;
+  const W=980,H=300,padL=54,padR=two?62:20,padT=16,padB=34,n=labels.length;
+  const x=i=>padL+i*(W-padL-padR)/(n-1);
+  const yReal=(v,ai)=>{const a=axes[ai];const t=(v-a.min)/((a.max-a.min)||1);return padT+(a.reversed?t:1-t)*(H-padT-padB);};
+  const yIdx=(v,lo,hi,rev)=>{const t=(v-lo)/((hi-lo)||1);return padT+(rev?t:1-t)*(H-padT-padB);};
+  let svg="";
+  for(let g=0;g<=3;g++){const yy=padT+g*(H-padT-padB)/3;const ft=g/3;svg+=`<line x1="${padL}" y1="${yy.toFixed(1)}" x2="${W-padR}" y2="${yy.toFixed(1)}" stroke="var(--border)" stroke-dasharray="4 4"/>`;
+    if(mode==="real"){const a0=axes[0];const v0=a0.reversed?(a0.min+ft*(a0.max-a0.min)):(a0.max-ft*(a0.max-a0.min));svg+=`<text x="${padL-8}" y="${(yy+4).toFixed(1)}" font-size="12" fill="var(--muted-foreground)" text-anchor="end">${a0.fmt(v0)}</text>`;
+      if(two){const a1=axes[1];const v1=a1.reversed?(a1.min+ft*(a1.max-a1.min)):(a1.max-ft*(a1.max-a1.min));svg+=`<text x="${(W-padR+8).toFixed(1)}" y="${(yy+4).toFixed(1)}" font-size="12" fill="var(--muted-foreground)" text-anchor="start">${a1.fmt(v1)}</text>`;}
+    }else{svg+=`<text x="${padL-8}" y="${(yy+4).toFixed(1)}" font-size="12" fill="var(--muted-foreground)" text-anchor="end">${[100,66,33,0][g]}%</text>`;}}
+  lines.forEach(l=>{let pts;if(mode==="real"){pts=l.data.map((v,i)=>[x(i),yReal(v,l.axis)]);}else{const lo=Math.min(...l.data),hi=Math.max(...l.data);pts=l.data.map((v,i)=>[x(i),yIdx(v,lo,hi,l.reversed)]);}const d=pts.map((p,i)=>`${i?"L":"M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");svg+=`<path d="${d}" fill="none" stroke="${l.color}" stroke-width="2.5"${l.dash?' stroke-dasharray="5 4"':''}/>`+pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="var(--background)" stroke="${l.color}" stroke-width="2"/>`).join("");});
+  [0,Math.floor((n-1)/2),n-1].forEach(i=>{svg+=`<text x="${x(i).toFixed(1)}" y="${H-10}" font-size="12" fill="var(--muted-foreground)" text-anchor="middle">${labels[i]||""}</text>`;});
+  const legend=lines.map(l=>`<span class="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground"><svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="${l.color}" stroke-width="2.5"${l.dash?' stroke-dasharray="4 3"':''}/></svg>${l.name} <span class="tabular font-medium text-foreground">${l.latest}</span></span>`).join(" ");
+  return `<svg viewBox="0 0 ${W} ${H}" class="w-full" style="height:auto;display:block">${svg}</svg><div class="mt-2 flex flex-wrap gap-x-4 gap-y-1">${legend}</div>`;
+}
+function miniLine(arr,{reversed=false,fmtY}={}){let mn=Math.min(...arr),mx=Math.max(...arr);if(mn===mx){mn-=1;mx+=1;}const ax={min:mn,max:mx,reversed,fmt:fmtY||(v=>Math.round(v).toString())};return trendChart([{name:"v",data:arr,color:"#2f7ed8",axis:0,reversed,latest:""}],{labels:periodInfo(state.period).labels,mode:"real",axes:[ax]}).replace(/<div class="mt-2[\s\S]*?<\/div>\s*$/,"");}
+
+/* ================= OVERVIEW ================= */
+function signalCard(s){
+  const pill={active:"bg-red-100 text-red-700",acknowledged:"bg-amber-100 text-amber-700",resolved:"bg-gray-100 text-gray-500"}[s.status];
+  const txt={active:"Active",acknowledged:"Acknowledged",resolved:"Resolved"}[s.status];
+  let actions=s.status==="active"?`<button data-sigact="ack" data-id="${s.id}" class="rounded-md border px-2 py-0.5 text-[11px] hover:bg-accent">Acknowledge</button><button data-sigact="resolve" data-id="${s.id}" class="rounded-md border px-2 py-0.5 text-[11px] hover:bg-accent">Resolve</button>`:s.status==="acknowledged"?`<button data-sigact="resolve" data-id="${s.id}" class="rounded-md border px-2 py-0.5 text-[11px] hover:bg-accent">Resolve</button>`:`<button data-sigact="reopen" data-id="${s.id}" class="rounded-md border px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-accent">Reopen</button>`;
+  return `<div class="rounded-lg border border-l-[3px] ${sevBorder(s.sev)} bg-card p-3 ${s.status==="resolved"?"opacity-60":""}"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="flex items-center gap-2">${sevDot(s.sev)}<span class="text-xs font-medium">${s.title}</span>${s.tag?`<span class="rounded bg-blue-100 px-1 text-[9px] font-bold text-blue-700">${s.tag}</span>`:""}</div><div class="mt-0.5 text-[11px] text-muted-foreground">${s.summary}</div><div class="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground"><code>${s.rule}</code><span class="rounded-full px-1.5 py-0.5 ${pill}">${txt}</span></div></div><div class="flex shrink-0 flex-col gap-1">${actions}</div></div></div>`;
+}
+function statCard(label,val,suffix,trend,sub,invert){
+  let col="text-muted-foreground",arrow="";if(trend!=null){const good=invert?trend<0:trend>0;col=trend===0?"text-muted-foreground":(good?"text-green-600":"text-red-600");arrow=trend>0?"↑":(trend<0?"↓":"");}
+  const tv=trend==null?"—":`${arrow} ${Math.abs(trend).toFixed(2)}`;
+  return `<div class="rounded-lg border bg-card p-4"><p class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">${label}</p><div class="mt-1 flex items-baseline gap-2"><span class="text-2xl font-bold">${val}</span>${suffix?`<span class="text-sm text-muted-foreground">${suffix}</span>`:""}<span class="ml-auto text-xs ${col}">${tv}</span></div><p class="mt-1 text-[10px] text-muted-foreground">${sub}</p></div>`;
+}
+function healthTable(){
+  const {scale}=periodInfo(state.period);
+  const dcell=(d,dir,fmt)=>{if(d==null||Math.abs(d)<1e-9)return "";let col="text-muted-foreground";if(dir!=="neutral"){const good=dir==="down"?d<0:d>0;col=good?"text-green-600":"text-red-600";}const ar=d>0?"↑":"↓";return ` <span class="text-[10px] ${col}">${ar}${fmt(Math.abs(d))}</span>`;};
+  const rows=products.map(p=>{
+    const items=listings.filter(x=>p.listingIds.includes(x.id));const l=items.find(x=>x.marketplace==="amazon.com")||items[0];
+    const rating=mean(items.map(x=>x.rating)),reviews=items.reduce((s,x)=>s+(x.reviews||0),0);
+    const price=l?l.price:null,cur=l?l.currency:"$",bsr=l?l.bsr:null,sent=(vocData[p.name]||{}).score;
+    const tb=(trendBase["amazon.com"]||{})[p.name];
+    const dP=tb?(tb.price[1]-tb.price[0])*scale:null,dR=tb?(tb.rating[1]-tb.rating[0])*scale:null,dB=tb?(tb.bsr[1]-tb.bsr[0])*scale:null,dS=tb?(tb.sentiment[1]-tb.sentiment[0])*scale:null;
+    const own=p.type===OWN;
+    return `<tr class="border-t ${own?"bg-green-50/30":""}"><td class="px-3 py-2"><span class="inline-flex items-center gap-1.5 ${own?"font-medium":""}">${p.name} ${typeBadge(p.type)}</span></td>
+      <td class="py-2 pr-3 text-right tabular">${price!=null?cur+Math.round(price):"—"}${dcell(dP,"neutral",v=>Math.round(v))}</td>
+      <td class="py-2 pr-3 text-right tabular">${rating!=null?"★"+rating.toFixed(1):"—"}${dcell(dR,"up",v=>v.toFixed(2))}</td>
+      <td class="py-2 pr-3 text-right tabular">${bsr?"#"+bsr:"—"}${dcell(dB,"down",v=>Math.round(v))}</td>
+      <td class="py-2 pr-3 text-right tabular">${reviews?reviews.toLocaleString():"—"}</td>
+      <td class="py-2 pr-3 text-right tabular">${sent!=null?(sent>0?"+":"")+sent.toFixed(2):"—"}${dcell(dS,"up",v=>v.toFixed(2))}</td></tr>`;
+  }).join("");
+  return `<div class="overflow-x-auto rounded-lg border bg-card"><table class="w-full text-xs"><thead class="text-muted-foreground"><tr class="text-left"><th class="px-3 py-2 font-medium">Product line</th><th class="py-2 pr-3 text-right font-medium">Price</th><th class="py-2 pr-3 text-right font-medium">Rating</th><th class="py-2 pr-3 text-right font-medium">BSR</th><th class="py-2 pr-3 text-right font-medium">Reviews</th><th class="py-2 pr-3 text-right font-medium">Sentiment</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function trendBlock(){
+  const {labels,scale}=periodInfo(state.period);
+  const market=state.trendMarket;const avail=Object.keys(trendBase[market]||{});
+  let prods=state.trendProducts.filter(p=>avail.includes(p));
+  if(!prods.length){prods=avail.filter(p=>OWN_SET.has(p));if(!prods.length)prods=avail.slice(0,1);state.trendProducts=prods.slice();}
+  const metrics=state.trendMetrics;const nM=metrics.length;const sym=curSym(market);
+  const mode=nM>2?"index":"real";
+  const seriesFor=(p,mk)=>{const b=trendBase[market][p];if(!b||!b[mk])return null;const s2=b[mk][1]+(b[mk][0]-b[mk][1])*scale;return gen(s2,b[mk][1],labels.length);};
+  const axes=[];
+  if(mode==="real"){metrics.forEach(mk=>{const m=METRICS.find(x=>x.k===mk);const vals=[];prods.forEach(p=>{const s=seriesFor(p,mk);if(s)vals.push(...s);});let mn=Math.min(...vals),mx=Math.max(...vals);if(!isFinite(mn)||mn===mx){mn=(isFinite(mn)?mn:0)-1;mx=(isFinite(mx)?mx:0)+1;}axes.push({min:mn,max:mx,reversed:!!m.reversed,fmt:v=>m.fmt(v,sym),label:m.label});});}
+  const prodColor={};let oi=0,ppi=0;prods.forEach(p=>{prodColor[p]=OWN_SET.has(p)?OWN_LINE[oi++%OWN_LINE.length]:COMP_LINE[ppi++%COMP_LINE.length];});
+  const lines=[];
+  prods.forEach(p=>{metrics.forEach((mk,mi)=>{const m=METRICS.find(x=>x.k===mk);const data=seriesFor(p,mk);if(!data)return;lines.push({name:shortName(p)+(nM>1?" · "+m.label:""),data,color:prodColor[p],dash:mode==="real"&&mi===1,axis:mode==="real"?mi:0,reversed:!!m.reversed,latest:m.fmt(data[data.length-1],sym)});});});
+  const marketSel=`<select data-trendmarket class="h-8 rounded-md border bg-background px-2 text-xs">${MARKETS.filter(mk=>trendBase[mk]).map(mk=>`<option value="${mk}" ${market===mk?"selected":""}>${mk}</option>`).join("")}</select>`;
+  const prodMenu=state.trendProdOpen?`<div class="absolute left-0 top-9 z-20 w-60 rounded-lg border bg-card p-1.5 shadow-lg">${avail.map(p=>{const on=prods.includes(p);const isOwn=OWN_SET.has(p);return `<label class="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-muted"><input type="checkbox" data-trendprod-cb="${p}" ${on?"checked":""}><span class="size-2 rounded-full ${isOwn?"bg-green-500":"bg-purple-500"}"></span>${p}</label>`;}).join("")}</div>`:"";
+  const prodBtn=`<div class="relative inline-block"><button data-act="trendprod" class="inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs hover:bg-accent">${prods.length} product${prods.length>1?"s":""} <span class="text-[8px]">▾</span></button>${prodMenu}</div>`;
+  const metricCards=METRICS.map(m=>{const on=metrics.includes(m.k);return `<button data-trendmetric="${m.k}" class="rounded-md border px-3 py-1.5 text-xs ${on?"bg-accent font-medium":"text-muted-foreground"}">${m.label}</button>`;}).join("");
+  let hint;
+  if(nM===1)hint=`${axes[0].label} · ${market}`;
+  else if(nM===2)hint=`Dual axis · left ${axes[0].label} (solid) · right ${axes[1].label} (dashed) · ${market}`;
+  else hint=`${nM} metrics · units not comparable → indexed to each metric's own range, trend shape only · ${market}`;
+  return `<div class="rounded-lg border bg-card p-4">
+    <div class="mb-3 flex flex-wrap items-center gap-2"><span class="text-sm font-medium">Trends</span><span class="text-xs text-muted-foreground">· single marketplace</span><span class="ml-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Site</span>${marketSel}<span class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Products</span>${prodBtn}</div>
+    <div class="mb-3 flex flex-wrap items-center gap-1.5"><span class="mr-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Metrics</span>${metricCards}${nM>2?`<span class="ml-1 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700">>2 metrics · trend only</span>`:""}</div>
+    <div class="mb-1 text-xs text-muted-foreground">${hint}</div>
+    ${trendChart(lines,{labels,mode,axes})}</div>`;
+}
+function standingBlock(){
+  const on=state.standingOwn,cn=state.standingComp;const {leading,lagging}=synthCompare(on,cn);
+  const ownP=products.filter(p=>p.type===OWN).map(p=>p.name),compP=products.filter(p=>p.type===COMP).map(p=>p.name);
+  const selOwn=`<select data-standown class="h-7 rounded-md border border-green-300 bg-background px-2 text-xs font-medium">${ownP.map(p=>`<option ${p===on?"selected":""}>${p}</option>`).join("")}</select>`;
+  const selComp=`<select data-standcomp class="h-7 rounded-md border border-purple-300 bg-background px-2 text-xs font-medium">${compP.map(p=>`<option ${p===cn?"selected":""}>${p}</option>`).join("")}</select>`;
+  const col=(title,items,tone,dot)=>`<div class="rounded-lg border bg-card p-4"><div class="mb-2 flex items-center gap-1.5 text-sm font-medium ${tone}">${dot} ${title}</div><ul class="space-y-2">${items.length?items.map(i=>`<li class="text-xs"><div class="font-medium">${i.t}</div><div class="text-muted-foreground">${i.d}</div></li>`).join(""):`<li class="text-xs text-muted-foreground">No clear gap</li>`}</ul></div>`;
+  return `<div><div class="mb-2 flex flex-wrap items-center gap-2"><h3 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Head-to-head</h3>${selOwn}<span class="text-xs text-muted-foreground">vs</span>${selComp}<span class="text-[10px] text-muted-foreground">· market + VOC · amazon.com</span></div>
+    <div class="grid gap-4 md:grid-cols-2">
+      ${col("Where "+shortName(on)+" leads",leading,"text-green-700",'<span class="text-green-600">▲</span>')}
+      ${col(shortName(on)+" watch-outs",lagging,"text-red-700",'<span class="text-red-600">▼</span>')}
+    </div></div>`;
+}
+function viewOverview(){
+  const {scale}=periodInfo(state.period);const days=state.period;
+  const sevRank={critical:0,warning:1,info:2},stRank={active:0,acknowledged:1,resolved:2};
+  const sorted=[...signals].sort((a,b)=>sevRank[a.sev]-sevRank[b.sev]||stRank[a.status]-stRank[b.status]);
+  const shown=state.sigExpanded?sorted:sorted.slice(0,2);
+  const moreBtn=sorted.length>2?`<button data-act="sigmore" class="mt-2 w-full rounded-md border border-dashed py-1.5 text-xs text-muted-foreground hover:bg-accent">${state.sigExpanded?"Show less":"Show "+(sorted.length-2)+" more signals"}</button>`:"";
+  return `<div class="flex flex-col gap-6">
+    <div><h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Signals <span class="normal-case text-muted-foreground/70">· most impactful first</span></h3><div class="grid gap-2 md:grid-cols-2">${shown.map(signalCard).join("")}</div>${moreBtn}</div>
+    <div><h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Product health <span class="normal-case text-muted-foreground/70">· all lines (own + competitor) · value now, Δ over ${days}</span></h3>${healthTable()}</div>
+    ${trendBlock()}
+    ${standingBlock()}
+  </div>`;
+}
+
+/* ================= LISTINGS (catalog; snapshot lives in folder headers) ================= */
+function listingCard(l){
+  const price=l.price!=null?`${l.currency} ${l.price.toFixed(2)}`:"";
+  const bar=l.type===OWN?"border-l-green-500":(l.type===COMP?"border-l-purple-500":"border-l-muted-foreground/40");
+  return `<button data-listing="${l.id}" class="group w-full rounded-lg border border-l-[3px] ${bar} bg-card text-left hover:bg-muted/50"><div class="flex items-center gap-3 p-3"><div class="size-10 shrink-0 rounded-md border bg-muted"></div><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-1.5"><span class="max-w-[300px] truncate text-sm font-medium">${l.name}</span><span class="rounded-md border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">${l.asin}</span>${typeBadge(l.type)}${l.coupon?`<span class="rounded-md border border-orange-200 px-1.5 py-0.5 text-[10px] text-orange-700">${l.coupon} coupon</span>`:""}</div><div class="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">${l.marketplace.toUpperCase()}${l.product?` · ${l.product}`:""}</div></div><div class="flex shrink-0 flex-col items-end gap-1 text-[11px] text-muted-foreground tabular">${price?`<span class="font-medium text-foreground">${price}</span>`:""}<div class="flex items-center gap-2">${l.rating!=null?`<span class="text-amber-500">★</span>${l.rating.toFixed(1)}`:""}${l.bsr?`<span>#${l.bsr.toLocaleString()}</span>`:""}</div>${l.reviews!=null?`<span>${l.reviews.toLocaleString()} reviews</span>`:""}<span class="rounded-full px-1.5 py-0.5 text-[10px] font-medium ${l.stock?"bg-green-100 text-green-700":"bg-red-100 text-red-700"}">${l.stock?"In Stock":"Out of Stock"}</span></div></div></button>`;
+}
+function viewListings(){
+  const type=state.catType;
+  const avg=a=>{const v=a.filter(x=>x!=null);return v.length?v.reduce((x,y)=>x+y,0)/v.length:null;};
+  function group(p,items,dashed){
+    const mks=new Set(items.map(l=>l.marketplace));const ap=avg(items.map(l=>l.price)),ar=avg(items.map(l=>l.rating)),bb=Math.min(...items.map(l=>l.bsr).filter(Boolean));const rev=items.reduce((s,l)=>s+(l.reviews||0),0);
+    // Folder header carries the current snapshot (price / rating / BSR / reviews). Sentiment intentionally omitted here — it lives in the product detail panel.
+    return `<details class="rounded-lg border ${dashed?"border-dashed border-muted-foreground/30":""} px-3"><summary class="flex cursor-pointer list-none items-center justify-between py-3"><div class="min-w-0"><div class="flex items-center gap-2">${dashed?`<span class="text-sm font-medium text-muted-foreground">Unmatched</span>`:`<span class="text-sm font-medium">${p.name}</span>${typeBadge(p.type)}`}</div>${p.aliases&&p.aliases.length?`<div class="truncate text-[11px] text-muted-foreground">${p.aliases.join(" · ")}</div>`:""}
+      <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] tabular"><span class="text-muted-foreground">${items.length} listing(s) · ${mks.size} market(s)</span>${ap!=null?`<span class="rounded bg-muted px-1.5 py-0.5 font-medium">avg $${ap.toFixed(0)}</span>`:""}${ar!=null?`<span class="rounded bg-muted px-1.5 py-0.5 font-medium">★${ar.toFixed(1)}</span>`:""}${isFinite(bb)?`<span class="rounded bg-muted px-1.5 py-0.5 font-medium">BSR #${bb}</span>`:""}${rev?`<span class="rounded bg-muted px-1.5 py-0.5 font-medium">${rev.toLocaleString()} reviews</span>`:""}</div>
+      </div><span class="text-muted-foreground">▾</span></summary><div class="pb-3">${dashed?`<p class="mb-2 rounded-md border border-dashed border-muted-foreground/30 px-3 py-2 text-[11px] text-muted-foreground">Discovered but not yet matched to a product entity. Review in Brand Kit.</p>`:""}<div class="space-y-2">${items.map(listingCard).join("")}</div></div></details>`;
+  }
+  const groups=products.filter(p=>type==="all"||p.type===type).map(p=>({p,items:listings.filter(l=>p.listingIds.includes(l.id))})).filter(g=>g.items.length);
+  const unmatched=(type==="all"||type==="competitor")?listings.filter(l=>l.type===null):[];
+  const toolbar=`<div class="mb-3 flex flex-wrap items-center gap-2"><div class="flex items-center rounded-md border p-0.5">${["all","own","competitor"].map(t=>`<button data-cattype="${t}" class="rounded px-2 py-1 text-xs ${type===t?"bg-accent font-medium":"text-muted-foreground"}">${t==="all"?"All":t==="own"?"Own":"Competitor"}</button>`).join("")}</div><span class="text-xs text-muted-foreground">grouped by product (SPU) · all markets</span></div>`;
+  const body=(groups.length||unmatched.length)?`<div class="space-y-2">${groups.map(g=>group(g.p,g.items,false)).join("")}${unmatched.length?group({name:"Unmatched",aliases:[]},unmatched,true):""}</div>`:`<div class="rounded-lg border bg-card py-12 text-center text-sm text-muted-foreground">No products in scope</div>`;
+  return `<div><h3 class="mb-1 text-sm font-semibold">Product Catalog</h3><p class="mb-3 text-[11px] text-muted-foreground">SPU folders carry the current snapshot (price · rating · BSR · reviews); expand to see listings, click a listing for full detail incl. sentiment.</p>${toolbar}${body}</div>`;
+}
+
+/* ================= VOC (aspect-based; switch any product; per-product sentiment) ================= */
+function reviewTriageCard(r,readonly){
+  const impactCls=r.impact==="High"?"bg-red-100 text-red-700":"bg-amber-100 text-amber-700";const handled=r.status==="handled";
+  const actions=readonly?"":`<div class="flex shrink-0 flex-col gap-1"><button data-review="reply" data-id="${r.id}" class="rounded-md border px-2 py-0.5 text-[11px] hover:bg-accent">Reply in Discussion ↗</button><button data-review="toggle" data-id="${r.id}" class="rounded-md border px-2 py-0.5 text-[11px] hover:bg-accent">${handled?"Reopen":"Mark handled"}</button></div>`;
+  return `<div class="rounded-lg border border-l-[3px] border-l-red-500 bg-card p-3 ${handled?"opacity-60":""}"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2 text-xs"><span class="text-amber-500">${stars(r.rating)}</span><span class="font-medium">${r.product}</span><span class="text-muted-foreground">· ${r.mk.toUpperCase()}</span>${r.verified?`<span class="rounded-md border border-green-200 px-1 text-[9px] text-green-700">Verified</span>`:""}<span class="rounded-full px-1.5 py-0.5 text-[10px] font-medium ${impactCls}">${r.impact} impact</span></div><p class="mt-1 text-sm">${r.body}</p><div class="mt-1 flex items-center gap-3 text-[10px] text-muted-foreground">👍 ${r.helpful} helpful · ${r.date}${handled?` · <span class="text-green-600">Handled</span>`:""}</div></div>${actions}</div></div>`;
+}
+function viewVoc(){
+  const {scale}=periodInfo(state.period);const scope=state.vocScope;const d=vocData[scope];const ps=periodSentiment(scope);
+  const ownOpts=vocOrder.filter(p=>vocData[p].own),compOpts=vocOrder.filter(p=>!vocData[p].own);
+  const scopeSel=`<select data-vocscope class="h-8 rounded-md border bg-background px-2 text-xs"><optgroup label="Own">${ownOpts.map(p=>`<option value="${p}" ${scope===p?"selected":""}>${p}</option>`).join("")}</optgroup><optgroup label="Competitors">${compOpts.map(p=>`<option value="${p}" ${scope===p?"selected":""}>${p}</option>`).join("")}</optgroup></select>`;
+  // strengths vs issues from the SAME aspect list (net polarity) — each aspect in exactly one column, no duplication. Single-color bars.
+  const asp=d.aspects.map(a=>({...a,net:a.pos-a.neg}));
+  const strengths=asp.filter(a=>a.net>=0).map(a=>({a:a.a,n:Math.round(a.pos*scale)})).sort((x,y)=>y.n-x.n);
+  const issues=asp.filter(a=>a.net<0).map(a=>({a:a.a,n:Math.round(a.neg*scale)})).sort((x,y)=>y.n-x.n);
+  const maxL=Math.max(...strengths.map(x=>x.n),1),maxI=Math.max(...issues.map(x=>x.n),1);
+  const barRow=(x,max,color)=>`<div class="flex items-center gap-2 text-xs"><span class="w-40 shrink-0 truncate">${x.a}</span><div class="h-4 flex-1 rounded bg-muted"><div class="h-4 rounded" style="width:${(x.n/max*100).toFixed(0)}%;background:${color}"></div></div><span class="w-10 text-right tabular text-muted-foreground">${x.n}</span></div>`;
+  const col=(title,tone,dot,items,max,color)=>`<div class="rounded-lg border bg-card p-4"><div class="mb-3 flex items-center gap-1.5 text-sm font-medium ${tone}">${dot} ${title} <span class="text-xs font-normal text-muted-foreground">(${items.length})</span></div><div class="space-y-2.5">${items.length?items.map(x=>barRow(x,max,color)).join(""):`<p class="text-xs text-muted-foreground">None</p>`}</div></div>`;
+  // unmet needs & barriers (things that don't exist / reasons to hesitate) — distinct from aspect complaints
+  const unmet=d.unmet.map(u=>({...u,n:Math.round(u.n*scale)})).sort((a,b)=>b.n-a.n);const maxU=Math.max(...unmet.map(u=>u.n),1);
+  const unmetRows=unmet.map(u=>`<div class="flex items-center gap-2 text-xs"><span class="w-52 shrink-0 truncate">${u.t} <span class="rounded border px-1 text-[9px] ${u.kind==="request"?"border-blue-200 text-blue-700":"border-orange-200 text-orange-700"}">${u.kind}</span></span><div class="h-4 flex-1 rounded bg-muted"><div class="h-4 rounded ${u.kind==="request"?"bg-blue-500":"bg-orange-500"}" style="width:${(u.n/maxU*100).toFixed(0)}%"></div></div><span class="w-10 text-right tabular text-muted-foreground">${u.n}</span></div>`).join("");
+  // triage — own products only
+  let triageSection="";
+  if(d.own){const triageAll=badReviews.filter(r=>r.product===scope);const sorted=[...triageAll].sort((a,b)=>(a.status==="handled")-(b.status==="handled")||b.helpful-a.helpful);const openCount=triageAll.filter(r=>r.status==="open").length;
+    triageSection=`<div class="rounded-lg border bg-card p-4"><div class="mb-1 flex items-center justify-between"><div class="text-sm font-medium">High-Impact Negative Reviews</div><span class="text-xs text-muted-foreground">${openCount} open · sentiment × influence · replies go to Discussion</span></div><p class="mb-3 text-[11px] text-muted-foreground">Older items auto-expire; enabled by detail-level review data (helpful votes + semantics).</p><div class="space-y-2">${sorted.length?sorted.map(reviewTriageCard).join(""):`<p class="py-6 text-center text-xs text-muted-foreground">No reviews in scope</p>`}</div></div>`;
+  }else{const compRevs=badReviews.filter(r=>r.product===scope).sort((a,b)=>b.helpful-a.helpful);
+    triageSection=`<div class="rounded-lg border bg-card p-4"><div class="mb-1 flex items-center justify-between"><div class="text-sm font-medium">Top Negative Reviews <span class="text-xs font-normal text-muted-foreground">· competitor</span></div><span class="text-xs text-muted-foreground">read-only · benchmarking (no reply — not your product)</span></div><p class="mb-3 text-[11px] text-muted-foreground">What buyers dislike about ${scope} — a map of your differentiation opportunities.</p><div class="space-y-2">${compRevs.length?compRevs.map(r=>reviewTriageCard(r,true)).join(""):`<p class="py-6 text-center text-xs text-muted-foreground">No reviews in scope</p>`}</div></div>`;}
+  const badge=d.own?'<span class="rounded border border-green-200 px-1 text-[9px] text-green-700">Own</span>':'<span class="rounded border border-purple-200 px-1 text-[9px] text-purple-700">Competitor</span>';
+  return `<div class="mb-3 flex flex-wrap items-center gap-2 text-xs"><span class="text-muted-foreground">Product</span>${scopeSel}<span class="text-muted-foreground">unstructured customer voice · everything below reflects this product & the ${state.period} window</span></div>
+  <div class="mb-4 rounded-lg border bg-card p-4">
+    <div class="mb-2 flex items-center gap-2"><span class="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Sentiment</span><span class="text-xs font-medium">(${(ps.score>0?"+":"")+ps.score.toFixed(2)})</span>${badge}<span class="ml-auto text-[10px] text-muted-foreground">${state.period} window</span></div>
+    ${sentimentBar(ps.dist)}
+  </div>
+  <div class="mb-4 grid gap-4 md:grid-cols-2">
+    ${col("What users love","text-green-700",'<span class="text-green-600">▲</span>',strengths,maxL,"#22c55e")}
+    ${col("What users complain about","text-red-700",'<span class="text-red-600">▼</span>',issues,maxI,"#ef4444")}
+  </div>
+  <div class="mb-4 rounded-lg border bg-card p-4"><div class="mb-3 text-sm font-medium">Unmet needs & purchase barriers <span class="text-xs font-normal text-muted-foreground">· what's missing / why they hesitate (distinct from complaints)</span></div><div class="space-y-2">${unmetRows}</div></div>
+  ${triageSection}`;
+}
+
+/* ================= DETAIL PANEL ================= */
+function openDetail(id){
+  const l=listings.find(x=>x.id===id);if(!l)return;
+  el("detailHeader").innerHTML=`<span class="truncate text-sm font-semibold">${l.name}</span>${typeBadge(l.type)}`;
+  const cell=(lb,v)=>`<div class="rounded-lg bg-muted/40 px-3 py-2"><p class="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">${lb}</p><div class="text-sm font-medium">${v??'<span class="text-muted-foreground/60">—</span>'}</div></div>`;
+  const price=l.price!=null?`${l.currency} ${l.price.toFixed(2)}`:null;
+  const grid=`<div class="grid grid-cols-2 gap-2">${cell("Price",price)}${cell("Rating",l.rating!=null?`★ ${l.rating.toFixed(1)}`:null)}${cell("BSR Rank",l.bsr?`#${l.bsr.toLocaleString()} <span class="text-[10px] text-muted-foreground">${l.bsrCat}</span>`:null)}${cell("Reviews",l.reviews!=null?l.reviews.toLocaleString():null)}${cell("Stock",`<span class="${l.stock?"text-green-600":"text-red-600"}">${l.stock?"In Stock":"Out of Stock"}</span>`)}${l.coupon?cell("Coupon",`<span class="text-orange-600">${l.coupon}</span>`):""}</div>`;
+  const b=(trendBase[l.marketplace]||{})[l.product];const n=periodInfo(state.period).labels.length;
+  const pt=b?gen(b.price[0],b.price[1],n):Array(n).fill(l.price);
+  const bt=b?gen(b.bsr[0],b.bsr[1],n):(l.bsr?Array(n).fill(l.bsr):Array(n).fill(0));
+  const rt=b?gen(b.rating[0],b.rating[1],n):Array(n).fill(l.rating);
+  const trends=`<div class="space-y-3"><div class="rounded-lg border p-3"><p class="mb-1 text-[10px] font-medium uppercase text-muted-foreground">Price</p>${miniLine(pt,{fmtY:v=>(l.currency||"$")+Math.round(v)})}</div><div class="rounded-lg border p-3"><p class="mb-1 text-[10px] font-medium uppercase text-muted-foreground">BSR Rank</p>${miniLine(bt,{reversed:true,fmtY:v=>"#"+Math.round(v)})}</div><div class="rounded-lg border p-3"><p class="mb-1 text-[10px] font-medium uppercase text-muted-foreground">Rating</p>${miniLine(rt,{fmtY:v=>v.toFixed(1)})}</div></div>`;
+  let review=`<p class="text-sm text-muted-foreground">No review analysis for this listing</p>`;
+  if(l.review){const r=l.review;review=`<div class="space-y-4"><div><p class="mb-2 text-[10px] font-medium uppercase text-muted-foreground">Sentiment <span class="normal-case">(${r.score>0?"+":""}${r.score.toFixed(2)})</span></p>${sentimentBar(r.dist)}</div><div><p class="mb-2 text-[10px] font-medium uppercase text-muted-foreground">Top Topics</p><div class="flex flex-wrap gap-1.5">${r.topics.map(t=>`<span class="rounded-md bg-secondary px-2 py-0.5 text-xs">${t}</span>`).join("")}</div></div><div><p class="mb-2 text-[10px] font-medium uppercase text-muted-foreground">Feature Sentiment</p><div class="space-y-1.5">${r.features.map(f=>`<div class="flex items-center justify-between gap-2"><span class="truncate text-sm">${f.f}</span><div class="flex items-center gap-2">${featBadge(f.s)}<span class="text-xs text-muted-foreground tabular">${f.m}x</span></div></div>`).join("")}</div></div><div><p class="mb-2 text-[10px] font-medium uppercase text-muted-foreground">Key Issues</p><ul class="space-y-1">${r.issues.map(i=>`<li class="flex items-start gap-2 text-sm"><span class="mt-1.5 size-1.5 shrink-0 rounded-full bg-red-500"></span>${i}</li>`).join("")}</ul></div><div><p class="mb-2 text-[10px] font-medium uppercase text-muted-foreground">Highlights</p><ul class="space-y-1">${r.highlights.map(i=>`<li class="flex items-start gap-2 text-sm"><span class="mt-1.5 size-1.5 shrink-0 rounded-full bg-green-500"></span>${i}</li>`).join("")}</ul></div>${r.competitors&&r.competitors.length?`<div><p class="mb-2 text-[10px] font-medium uppercase text-muted-foreground">Competitor Mentions</p><div class="flex flex-wrap gap-1.5">${r.competitors.map(c=>`<span class="rounded-md border px-2 py-0.5 text-xs">${c}</span>`).join("")}</div></div>`:""}</div>`;}
+  let meta="";
+  if(l.specs){meta=`<details class="rounded-lg"><summary class="cursor-pointer list-none text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Metadata ▾</summary><div class="mt-3 space-y-3"><div><p class="mb-1 text-[10px] uppercase text-muted-foreground">Tech Specs</p><div class="space-y-1">${Object.entries(l.specs).map(([k,v])=>`<div class="flex gap-2 text-xs"><span class="min-w-[90px] shrink-0 text-muted-foreground">${k}</span><span>${v}</span></div>`).join("")}</div></div>${l.variants?`<div><p class="mb-1 text-[10px] uppercase text-muted-foreground">Variants (${l.variants.length})</p><div class="flex flex-wrap gap-1.5">${l.variants.map(v=>`<span class="rounded-md border px-1.5 py-0.5 text-[10px]">${v}</span>`).join("")}</div></div>`:""}${l.buybox?`<div><p class="mb-1 text-[10px] uppercase text-muted-foreground">Buybox Offers (${l.buybox.length})</p><div class="space-y-1">${l.buybox.map(o=>`<div class="flex justify-between text-xs"><span class="text-muted-foreground">${o.s}</span><span class="font-medium">${l.currency} ${o.p}</span></div>`).join("")}</div></div>`:""}</div></details>`;}
+  el("detailBody").innerHTML=`<div class="space-y-6"><section><h4 class="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Current State</h4>${grid}</section><section><h4 class="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Snapshot Trend</h4>${trends}</section><section><h4 class="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Review Analysis</h4>${review}</section>${meta?`<section>${meta}</section>`:""}</div>`;
+  el("detailOverlay").classList.remove("hidden");const p=el("detailPanel");p.classList.remove("hidden");requestAnimationFrame(()=>p.style.transform="translateX(0)");
+}
+function closeDetail(){const p=el("detailPanel");p.style.transform="translateX(100%)";el("detailOverlay").classList.add("hidden");setTimeout(()=>p.classList.add("hidden"),200);}
+
+/* ================= SETTINGS (coverage + monitoring[admin] + notifications) ================= */
+function renderMon(){
+  el("monBody").innerHTML=`
+  <div class="border-b px-4 py-3"><div class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Coverage</div>
+    <div class="mt-2 space-y-2">
+      <div class="flex items-start gap-2 rounded-lg border-l-[3px] border-l-green-500 bg-muted/30 px-3 py-2"><div class="text-xs"><div class="font-medium">Own coverage</div><div class="text-muted-foreground">2 products · 3 listings · 2 markets</div></div></div>
+      <div class="flex items-start gap-2 rounded-lg border-l-[3px] border-l-purple-500 bg-muted/30 px-3 py-2"><div class="text-xs"><div class="font-medium">Competitor coverage</div><div class="text-muted-foreground">2 competitors · 3 listings · 2 markets · 1 pending</div></div></div>
+      <div class="text-[10px] text-muted-foreground">Last sync 2h ago</div>
+    </div></div>
+  <div class="border-b px-4 py-3"><div class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Monitoring</div><div class="mt-2 flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-sm"><span>Status</span><span class="flex items-center gap-2"><b class="text-green-600">On</b><span class="rounded border px-1 text-[10px] text-muted-foreground">managed by admin</span></span></div><p class="mt-1 px-1 text-[10px] text-muted-foreground">Enabling/disabling monitoring is controlled by your organization admin.</p></div>
+  <div class="border-b px-4 py-3"><div class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Notifications</div><div class="mt-2 space-y-1.5 text-sm"><label class="flex items-center justify-between rounded-lg px-2 py-1"><span>Email</span><input type="checkbox" data-notify="email" ${state.notifyEmail?"checked":""}></label><label class="flex items-center justify-between rounded-lg px-2 py-1"><span>Feishu</span><input type="checkbox" data-notify="feishu" ${state.notifyFeishu?"checked":""}></label></div><p class="mt-1 px-2 text-[10px] text-muted-foreground">Notify me on critical signals</p></div>
+  <div class="px-4 py-3"><button data-act="brandkit" class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">↗ Manage products in Brand Kit</button></div>`;
+}
+function openMon(){renderMon();el("monOverlay").classList.remove("hidden");const p=el("monPanel");p.classList.remove("hidden");requestAnimationFrame(()=>p.style.transform="translateX(0)");}
+function closeMon(){const p=el("monPanel");p.style.transform="translateX(100%)";el("monOverlay").classList.add("hidden");setTimeout(()=>p.classList.add("hidden"),200);}
+
+/* ================= RENDER + EVENTS ================= */
+function render(){renderTabbar();renderPeriod();el("platform").value=state.platform;const views={overview:viewOverview,listings:viewListings,voc:viewVoc};el("content").innerHTML=(views[state.tab]||viewOverview)();}
+document.addEventListener("click",(e)=>{
+  const t=e.target.closest("[data-tab-btn],[data-listing],[data-act],[data-sigact],[data-cattype],[data-trendmetric],[data-period],[data-review]");
+  if(!t)return;
+  if(t.hasAttribute("data-tab-btn")){state.tab=t.getAttribute("data-tab");render();return;}
+  if(t.hasAttribute("data-period")){state.period=t.getAttribute("data-period");render();return;}
+  if(t.dataset.listing){openDetail(t.dataset.listing);return;}
+  if(t.dataset.cattype){state.catType=t.dataset.cattype;render();return;}
+  if(t.dataset.trendmetric){toggleArr(state.trendMetrics,t.dataset.trendmetric);render();return;}
+  if(t.dataset.sigact){const s=signals.find(x=>x.id===t.dataset.id);if(s){s.status={ack:"acknowledged",resolve:"resolved",reopen:"active"}[t.dataset.sigact];toast("Signal updated");render();}return;}
+  if(t.dataset.review){const r=badReviews.find(x=>x.id===t.dataset.id);if(!r)return;if(t.dataset.review==="toggle"){r.status=r.status==="handled"?"open":"handled";toast(r.status==="handled"?"Marked handled":"Reopened");render();}else toast("Routing to Discussion to reply (demo)");return;}
+  const act=t.dataset.act;
+  if(act==="sync")toast("Product data synced ✓");
+  if(act==="discover")toast("Discovered 1 new listing ✓");
+  if(act==="sigmore"){state.sigExpanded=!state.sigExpanded;render();}
+  if(act==="trendprod"){state.trendProdOpen=!state.trendProdOpen;render();}
+  if(act==="settings")openMon();
+  if(act==="closeDetail")closeDetail();
+  if(act==="closeMon")closeMon();
+  if(act==="brandkit")toast("Opening Brand Kit (demo)");
+});
+el("detailOverlay").addEventListener("click",closeDetail);
+el("monOverlay").addEventListener("click",closeMon);
+document.addEventListener("change",(e)=>{const t=e.target;
+  if(t.id==="platform"){state.platform=t.value;render();}
+  if(t.matches&&t.matches("[data-trendmarket]")){state.trendMarket=t.value;const av=Object.keys(trendBase[t.value]||{});state.trendProducts=av.filter(p=>OWN_SET.has(p));if(!state.trendProducts.length)state.trendProducts=av.slice(0,1);state.trendProdOpen=false;render();}
+  if(t.matches&&t.matches("[data-trendprod-cb]")){toggleArr(state.trendProducts,t.getAttribute("data-trendprod-cb"),1);render();}
+  if(t.matches&&t.matches("[data-standown]")){state.standingOwn=t.value;render();}
+  if(t.matches&&t.matches("[data-standcomp]")){state.standingComp=t.value;render();}
+  if(t.matches&&t.matches("[data-vocscope]")){state.vocScope=t.value;render();}
+  if(t.dataset.notify){if(t.dataset.notify==="email")state.notifyEmail=t.checked;else state.notifyFeishu=t.checked;toast("Notification settings updated");}
+});
+render();
+</script>
+</body>
+</html>
