@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Day · Social Board Demo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config={theme:{extend:{
+    colors:{background:"var(--background)",foreground:"var(--foreground)",card:"var(--card)",primary:"var(--primary)","primary-foreground":"var(--primary-foreground)",secondary:"var(--secondary)",muted:"var(--muted)","muted-foreground":"var(--muted-foreground)",accent:"var(--accent)","accent-foreground":"var(--accent-foreground)",border:"var(--border)",sidebar:"var(--sidebar)"},
+    borderRadius:{lg:"var(--radius)",md:"calc(var(--radius) - 2px)",sm:"calc(var(--radius) - 4px)"},
+  }}};
+</script>
+<style>
+  :root{--background:oklch(1 0 0);--foreground:oklch(0.145 0 0);--card:oklch(1 0 0);--primary:oklch(0.205 0 0);--primary-foreground:oklch(0.985 0 0);--secondary:oklch(0.97 0 0);--muted:oklch(0.97 0 0);--muted-foreground:oklch(0.556 0 0);--accent:oklch(0.94 0 0);--accent-foreground:oklch(0.205 0 0);--border:oklch(0.922 0 0);--sidebar:oklch(0.985 0 0);--radius:0.375rem;--font-sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;}
+  html,body{background:var(--background);color:var(--foreground);font-family:var(--font-sans);}
+  *{border-color:var(--border);}
+  .no-scrollbar::-webkit-scrollbar{display:none;} .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none;}
+  [data-tab-btn].active{background:var(--background);color:var(--foreground);box-shadow:0 1px 3px 0 hsl(0 0% 0% / .1),0 1px 2px -1px hsl(0 0% 0% / .1);}
+  [data-tab-btn]{color:var(--muted-foreground);}
+  .tabular{font-variant-numeric:tabular-nums;}
+</style>
+</head>
+<body class="text-[13px]">
+<div class="flex h-screen w-full overflow-hidden">
+
+  <aside class="hidden md:flex w-56 shrink-0 flex-col border-r bg-sidebar">
+    <div class="flex h-14 items-center gap-2 border-b px-4"><div class="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs font-bold">D</div><span class="text-sm font-semibold">Day</span></div>
+    <div class="flex items-center gap-2 border-b px-4 py-3"><div class="flex size-7 items-center justify-center rounded-md bg-red-600 text-white text-[11px] font-bold">RM</div><div class="min-w-0"><div class="truncate text-xs font-medium">REDMAGIC</div><div class="truncate text-[10px] text-muted-foreground">Brand workspace</div></div></div>
+    <nav class="flex-1 overflow-y-auto p-2 no-scrollbar">
+      <div class="space-y-0.5"><div class="rounded-md px-2 py-1.5 text-muted-foreground">Dashboard</div><div class="rounded-md px-2 py-1.5 text-muted-foreground">AI Workspace</div><div class="rounded-md px-2 py-1.5 text-muted-foreground">Brand Kit</div><div class="rounded-md px-2 py-1.5 text-muted-foreground">Marketing</div></div>
+      <div class="mt-3"><div class="px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Intelligence</div>
+      <div class="space-y-0.5"><div class="rounded-md bg-accent px-2 py-1.5 font-medium text-accent-foreground">Social</div><div class="rounded-md px-2 py-1.5 text-muted-foreground">News</div><div class="rounded-md px-2 py-1.5 text-muted-foreground">Discussion</div><div class="rounded-md px-2 py-1.5 text-muted-foreground">Product</div></div></div>
+    </nav>
+    <div class="border-t p-3 text-[10px] text-muted-foreground">Demo · mock data · aligned to day-demo</div>
+  </aside>
+
+  <main class="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+    <header class="flex h-14 shrink-0 items-center justify-between border-b px-6">
+      <div class="flex items-center gap-1.5 text-sm"><span class="text-muted-foreground">Brands</span><span class="text-muted-foreground/40">/</span><span class="text-muted-foreground">REDMAGIC</span><span class="text-muted-foreground/40">/</span><span class="font-medium">Social</span></div>
+      <div class="flex items-center gap-1">
+        <button data-act="sync" class="flex size-8 items-center justify-center rounded-md hover:bg-accent" title="Sync Now">⟳</button>
+        <button data-act="discover" class="flex size-8 items-center justify-center rounded-md hover:bg-accent" title="Discover keywords">◎</button>
+        <button data-act="settings" class="flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs hover:bg-accent" title="Settings"><span>⚙</span>Settings</button>
+      </div>
+    </header>
+
+    <div class="sticky top-0 z-10 flex h-12 shrink-0 items-center justify-between gap-2 border-b bg-background px-6">
+      <div class="flex items-center gap-1 overflow-x-auto no-scrollbar rounded-lg bg-muted p-0.5" id="tabbar"></div>
+      <div class="flex shrink-0 items-center gap-2">
+        <div class="flex items-center rounded-md border p-0.5" id="period"></div>
+        <button id="filtBtn" data-act="allfilters" class="flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs hover:bg-accent"><span>⚑</span>All Filters</button>
+      </div>
+    </div>
+
+    <div id="content" class="flex-1 overflow-y-auto p-6"></div>
+  </main>
+
+  <div id="detailOverlay" class="fixed inset-0 z-30 hidden bg-black/20"></div>
+  <aside id="detailPanel" class="fixed right-0 top-0 z-40 hidden h-full w-full max-w-md flex-col border-l bg-background shadow-xl sm:flex" style="transform:translateX(100%);transition:transform .2s">
+    <div class="flex h-14 shrink-0 items-center justify-between border-b px-4"><div id="detailHeader" class="min-w-0 flex items-center gap-2"></div><button data-act="closeDetail" class="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent">✕</button></div>
+    <div id="detailBody" class="flex-1 overflow-y-auto p-4"></div>
+  </aside>
+
+  <div id="monOverlay" class="fixed inset-0 z-30 hidden bg-black/20"></div>
+  <aside id="monPanel" class="fixed right-0 top-0 z-40 hidden h-full w-full max-w-sm flex-col border-l bg-background shadow-xl sm:flex" style="transform:translateX(100%);transition:transform .2s">
+    <div class="flex items-start justify-between border-b px-4 py-3"><div><div class="text-sm font-semibold">Settings</div><div class="text-xs text-muted-foreground">Coverage · monitoring · notifications</div></div><button data-act="closeMon" class="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent">✕</button></div>
+    <div id="monBody" class="flex-1 overflow-y-auto"></div>
+  </aside>
+
+  <div id="filtOverlay" class="fixed inset-0 z-30 hidden bg-black/20"></div>
+  <aside id="filtPanel" class="fixed right-0 top-0 z-40 hidden h-full w-full max-w-sm flex-col border-l bg-background shadow-xl sm:flex" style="transform:translateX(100%);transition:transform .2s">
+    <div class="flex items-center justify-between border-b px-4 py-3"><div class="text-sm font-semibold">All Filters</div><button data-act="closeFilt" class="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent">✕</button></div>
+    <div id="filtBody" class="flex-1 overflow-y-auto p-4"></div>
+  </aside>
+
+  <div id="chartTip" class="pointer-events-none fixed z-[60] hidden rounded-lg border bg-card px-3 py-2 text-xs shadow-lg"></div>
+  <div id="toast" class="fixed bottom-4 left-1/2 z-50 hidden -translate-x-1/2 rounded-md bg-primary px-4 py-2 text-xs text-primary-foreground shadow-lg"></div>
+</div>
+
+<script>
+/* ================= DATA ================= */
+const OWN="REDMAGIC";
+const PLATFORMS=[
+  {k:"twitter",label:"Twitter/X",color:"#1d9bf0"},
+  {k:"reddit",label:"Reddit",color:"#ff4500"},
+  {k:"youtube",label:"YouTube",color:"#ff0033"},
+  {k:"tiktok",label:"TikTok",color:"#00c4c4"},
+  {k:"hackernews",label:"Hacker News",color:"#ff6600"},
+  {k:"facebook",label:"Facebook",color:"#4267B2",viaVOC:true},
+  {k:"instagram",label:"Instagram",color:"#E1306C",viaVOC:true},
+];
+const PLAT=Object.fromEntries(PLATFORMS.map(p=>[p.k,p]));
+const ENT=[
+  {name:"REDMAGIC",type:"own",color:"#16a34a"},
+  {name:"ASUS ROG",type:"comp",color:"#a855f7"},
+  {name:"Nubia",type:"comp",color:"#f59e0b"},
+  {name:"Black Shark",type:"comp",color:"#0ea5e9"},
+];
+const ENTC=Object.fromEntries(ENT.map(e=>[e.name,e]));
+// entity trend base: [start,end] per metric (end = "now")
+const entTrend={
+  "REDMAGIC":{mentions:[820,1180],reach:[2.1e6,3.4e6],sentiment:[0.28,0.36],sov:[34,38]},
+  "ASUS ROG":{mentions:[1400,1520],reach:[4.0e6,4.3e6],sentiment:[0.30,0.31],sov:[46,42]},
+  "Nubia":{mentions:[280,360],reach:[0.60e6,0.80e6],sentiment:[0.22,0.25],sov:[9,11]},
+  "Black Shark":{mentions:[300,300],reach:[0.50e6,0.52e6],sentiment:[0.18,0.20],sov:[11,9]},
+};
+// own sentiment distribution (for KPI/bar)
+const ownDist={positive:52,neutral:16,mixed:12,negative:20};
+// own mentions by platform: {mentions, sent, topPub}
+const platBreak={
+  twitter:{mentions:420,sent:0.30,topPub:"@techleaks"},
+  reddit:{mentions:260,sent:0.16,topPub:"r/gamingphones"},
+  youtube:{mentions:230,sent:0.44,topPub:"@GamingTechDaily"},
+  tiktok:{mentions:180,sent:0.41,topPub:"@phonedrops"},
+  hackernews:{mentions:40,sent:0.12,topPub:"hn/user921"},
+  facebook:{mentions:50,sent:0.25,topPub:"RedMagic Fans"},
+  instagram:{mentions:70,sent:0.30,topPub:"@redmagic"},
+};
+// topics / events
+const topics=[
+  {t:"Cooling / thermals",vol:340,mom:18,dist:{positive:70,neutral:12,mixed:8,negative:10},shares:{"REDMAGIC":52,"ASUS ROG":30,"Nubia":10,"Black Shark":8}},
+  {t:"Snapdragon 8 Elite launch",vol:290,mom:42,dist:{positive:58,neutral:22,mixed:10,negative:10},shares:{"ASUS ROG":34,"REDMAGIC":33,"Nubia":18,"Black Shark":15}},
+  {t:"Camera quality",vol:250,mom:6,dist:{positive:28,neutral:15,mixed:17,negative:40},shares:{"Nubia":46,"ASUS ROG":24,"REDMAGIC":20,"Black Shark":10}},
+  {t:"Price / value",vol:210,mom:-8,dist:{positive:42,neutral:14,mixed:9,negative:35},shares:{"REDMAGIC":40,"Black Shark":26,"Nubia":20,"ASUS ROG":14}},
+  {t:"Battery life",vol:180,mom:12,dist:{positive:24,neutral:14,mixed:14,negative:48},shares:{"REDMAGIC":44,"ASUS ROG":28,"Nubia":16,"Black Shark":12}},
+  {t:"Gaming benchmarks",vol:160,mom:22,dist:{positive:66,neutral:16,mixed:8,negative:10},shares:{"ASUS ROG":40,"REDMAGIC":38,"Black Shark":12,"Nubia":10}},
+  {t:"ROG accessories",vol:120,mom:4,dist:{positive:60,neutral:20,mixed:10,negative:10},shares:{"ASUS ROG":80,"REDMAGIC":8,"Nubia":6,"Black Shark":6}},
+  {t:"Software / ROM",vol:110,mom:15,dist:{positive:22,neutral:20,mixed:16,negative:42},shares:{"Nubia":38,"REDMAGIC":30,"ASUS ROG":20,"Black Shark":12}},
+];
+const publishers=[
+  {handle:"@techleaks",platform:"twitter",tier:"mega",followers:2100000,mentions:9,sent:-0.12,reach:5100000,lean:"neutral"},
+  {handle:"@GamingTechDaily",platform:"youtube",tier:"macro",followers:820000,mentions:14,sent:0.42,reach:3200000,lean:"own"},
+  {handle:"@phonedrops",platform:"tiktok",tier:"macro",followers:640000,mentions:11,sent:0.38,reach:2400000,lean:"own"},
+  {handle:"r/gamingphones",platform:"reddit",tier:"macro",followers:450000,mentions:22,sent:0.10,reach:900000,lean:"neutral"},
+  {handle:"@ROGGlobal",platform:"twitter",tier:"mega",followers:3400000,mentions:7,sent:0.30,reach:6800000,lean:"comp"},
+  {handle:"@androidbench",platform:"youtube",tier:"micro",followers:180000,mentions:6,sent:0.20,reach:520000,lean:"neutral"},
+  {handle:"@nubia_intl",platform:"twitter",tier:"macro",followers:520000,mentions:5,sent:0.25,reach:780000,lean:"comp"},
+  {handle:"gamerX_de",platform:"tiktok",tier:"micro",followers:96000,mentions:4,sent:0.34,reach:210000,lean:"own"},
+  {handle:"@AndroidAuth",platform:"youtube",tier:"macro",followers:1200000,mentions:8,sent:0.28,reach:2800000,lean:"neutral"},
+  {handle:"@mkbhd_clips",platform:"twitter",tier:"mega",followers:5200000,mentions:3,sent:0.40,reach:9200000,lean:"neutral"},
+  {handle:"r/Android",platform:"reddit",tier:"macro",followers:2800000,mentions:15,sent:0.05,reach:1600000,lean:"neutral"},
+  {handle:"@GamerNexus",platform:"youtube",tier:"macro",followers:2100000,mentions:5,sent:0.33,reach:3100000,lean:"own"},
+  {handle:"@blackshark_gg",platform:"twitter",tier:"macro",followers:410000,mentions:6,sent:0.22,reach:640000,lean:"comp"},
+  {handle:"@techspurt",platform:"youtube",tier:"micro",followers:220000,mentions:7,sent:0.36,reach:580000,lean:"own"},
+  {handle:"@leaksfly",platform:"twitter",tier:"macro",followers:780000,mentions:4,sent:-0.05,reach:1100000,lean:"neutral"},
+  {handle:"@droidgamer",platform:"tiktok",tier:"micro",followers:140000,mentions:9,sent:0.30,reach:390000,lean:"own"},
+];
+const mentions=[
+  {id:"m1",platform:"tiktok",author:"@phonedrops",tier:"macro",time:"2h",sent:"positive",entity:"REDMAGIC",topic:"Cooling / thermals",likes:48000,comments:1200,reach:1800000,snippet:"The active cooling fan on the REDMAGIC is unreal — 30 min of gaming and it's still cold. 🔥❄️",
+    comm:{analyzed:42,dist:{positive:70,neutral:12,mixed:8,negative:10},top:["\"finally a phone that doesn't cook\"","\"fan noise is a bit much tho\""]}},
+  {id:"m2",platform:"twitter",author:"@techleaks",tier:"mega",time:"5h",sent:"negative",entity:"REDMAGIC",topic:"Battery life",likes:1200,comments:340,reach:5100000,snippet:"REDMAGIC 7000mAh but people reporting ~3h screen-on under load? battery numbers don't add up.",
+    comm:{analyzed:38,dist:{positive:20,neutral:18,mixed:14,negative:48},top:["\"mine drains fast too\"","\"depends on refresh rate\""]}},
+  {id:"m3",platform:"youtube",author:"@GamingTechDaily",tier:"macro",time:"1d",sent:"positive",entity:"REDMAGIC",topic:"Gaming benchmarks",likes:32000,comments:2100,reach:3200000,snippet:"REDMAGIC 11S Pro tops our sustained-FPS chart — beats ROG 9 by 8% after 20 min. Full review ↗"},
+  {id:"m4",platform:"twitter",author:"@ROGGlobal",tier:"mega",time:"8h",sent:"positive",entity:"ASUS ROG",topic:"ROG accessories",likes:9800,comments:540,reach:6800000,snippet:"The new AeroActive Cooler X is here. Pre-orders open. #ROGPhone9"},
+  {id:"m5",platform:"reddit",author:"r/gamingphones",tier:"macro",time:"11h",sent:"mixed",entity:"REDMAGIC",topic:"Software / ROM",likes:410,comments:230,reach:900000,snippet:"REDMAGIC OS 10 thread: cooling & perf great, but global ROM still buggy with some banking apps."},
+  {id:"m6",platform:"youtube",author:"@androidbench",tier:"micro",time:"1d",sent:"negative",entity:"Nubia",topic:"Camera quality",likes:5400,comments:320,reach:520000,snippet:"Nubia Z70 camera is the story — but night mode is still soft vs the Pixel. REDMAGIC even weaker here."},
+  {id:"m7",platform:"tiktok",author:"gamerX_de",tier:"micro",time:"3h",sent:"positive",entity:"REDMAGIC",topic:"Price / value",likes:22000,comments:640,reach:210000,snippet:"Beste Gaming-Handy für den Preis? REDMAGIC schlägt das ROG klar beim Preis-Leistung. 🇩🇪"},
+  {id:"m8",platform:"twitter",author:"@nubia_intl",tier:"macro",time:"14h",sent:"positive",entity:"Nubia",topic:"Camera quality",likes:3100,comments:180,reach:780000,snippet:"Under-display camera, zero notch. The Z70 Ultra is pure screen. 📸"},
+];
+// enrich mentions with date / geo / emotion (for the Mentions chart-brush & right-sidebar filters)
+const _md=["07-01","07-01","06-30","06-29","06-30","06-28","07-01","06-27"],_mg=["US","US","US","US","DE","IN","DE","US"],_me=["Joy","Anger","Joy","Trust","Anticipation","Fear","Joy","Trust"];
+mentions.forEach((m,i)=>{m.date=_md[i]||"07-01";m.geo=_mg[i]||"US";m.emotion=_me[i]||"Joy";});
+// daily series for the Mentions chart (mentions / reach / net sentiment)
+const socialDaily={mentions:[130,150,110,160,240,180,150],reach:[8.0e6,9.5e6,7.0e6,11e6,19e6,14e6,12e6],net:[0.30,0.33,0.28,0.25,0.19,0.34,0.36],sov:[35,36,34,37,39,38,38]};
+// Analysis-tab extras
+const trendingLinks=[{u:"youtube.com/watch?v=redmagic-11s-review",n:42},{u:"reddit.com/r/gamingphones/redmagic_os10",n:31},{u:"redmagic.gg/11s-pro",n:22},{u:"x.com/GamingTechDaily/status/…",n:18},{u:"theverge.com/redmagic-cooling",n:12}];
+const activeSites=[{s:"x.com",k:"twitter",n:420},{s:"reddit.com",k:"reddit",n:260},{s:"youtube.com",k:"youtube",n:230},{s:"tiktok.com",k:"tiktok",n:180},{s:"instagram.com",k:"instagram",n:70}];
+// hot hours: 7 days × 24 hours, intensity 0-1 (Brand24-style dot grid)
+const _hb=[.1,.08,.06,.06,.07,.1,.16,.26,.4,.5,.56,.6,.62,.6,.58,.6,.66,.72,.8,.86,.82,.72,.56,.4];
+const _dm=[1.0,.9,.85,.95,1.0,.8,.7];
+const hotHours=_dm.map((dm,d)=>_hb.map((hb,h)=>Math.min(1,+(hb*dm+((d*3+h)%4)/40).toFixed(2))));
+hotHours[0][23]=1;
+let signals=[
+  {id:"s1",rule:"social:viral-post",sev:"critical",title:"Viral post on TikTok: cooling demo",summary:"1.8M views in 24h · +420% vs baseline · @phonedrops",status:"active"},
+  {id:"s2",rule:"social:negative-sentiment-surge",sev:"warning",title:"Negative sentiment surge: battery",summary:"88 negative mentions in 24h · 2.3× baseline",status:"active"},
+  {id:"s3",rule:"social:competitor-surge",sev:"warning",title:"Competitor surge: ASUS ROG +38%",summary:"Spike around AeroActive Cooler X launch",status:"active"},
+  {id:"s4",rule:"social:kol-mention",sev:"info",title:"KOL mention: @GamingTechDaily (820k)",summary:"Positive sustained-FPS review on YouTube",status:"active"},
+  {id:"s5",rule:"social:new-market-detected",sev:"info",title:"New market signal: German chatter rising",summary:"'de' mentions +60% w/w",status:"acknowledged"},
+];
+// composite headline score (volume + reach + history), 0-100
+const presence={score:63,delta:6};
+// emotion breakdown (AI over post text, beyond pos/neg)
+const emotions=[{e:"Joy",v:38,c:"#22c55e"},{e:"Trust",v:16,c:"#3b82f6"},{e:"Anticipation",v:14,c:"#a855f7"},{e:"Anger",v:14,c:"#ef4444"},{e:"Fear",v:10,c:"#f59e0b"},{e:"Sadness",v:8,c:"#6b7280"}];
+// geography (author self-reported location / region — coarse, partial coverage)
+const geoRegions=[{r:"United States",m:520,sent:0.34},{r:"Germany",m:180,sent:0.20},{r:"United Kingdom",m:95,sent:0.31},{r:"India",m:80,sent:0.42},{r:"Other / unknown",m:305,sent:0.27}];
+const geoCoverage=64;
+// top hashtags & keywords driving volume
+const hashtags=[{h:"#REDMAGIC",v:640,sent:0.36},{h:"#gamingphone",v:410,sent:0.22},{h:"#Snapdragon8Elite",v:300,sent:0.30},{h:"#coolingfan",v:210,sent:0.55},{h:"#ROGPhone9",v:180,sent:0.28},{h:"#batterylife",v:150,sent:-0.18}];
+const aiAttribution="Net sentiment dipped 0.05 this period. Main driver: a rise in Battery-life complaints (+88 negative mentions, mostly Twitter/X after @techleaks' post). Cooling praise on TikTok partly offset it.";
+
+/* ================= STATE ================= */
+const TABS=[{k:"analysis",label:"Overview"},{k:"mentions",label:"Mentions"},{k:"comparison",label:"Comparison"},{k:"influencers",label:"Influencers"}];
+const state={tab:"analysis",period:"7d",lang:"all",platforms:PLATFORMS.map(p=>p.k),platOpen:false,
+  compMode:"entities",compMetrics:["mentions"],perMetric:"mentions",compEntities:["REDMAGIC","ASUS ROG","Nubia","Black Shark"],inflSub:"influencers",hotMode:"mentions",ovMetrics:["mentions","reach"],mentFiltOpen:true,
+  trendMetric:"mentions",trendVsComp:true,sigExpanded:false,
+  mentBrands:[],mentAuthor:"",mentSent:"all",mentTopic:"all",pubSort:"influence",
+  mentChartMode:"mentions",mentDay:null,mentGeo:"all",mentEmotion:"all",
+  notifyEmail:true,notifyFeishu:false};
+
+/* ================= HELPERS ================= */
+const el=(id)=>document.getElementById(id);
+function toast(m){const t=el("toast");t.textContent=m;t.classList.remove("hidden");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.add("hidden"),1800);}
+function toggleArr(arr,v,min=1){const i=arr.indexOf(v);if(i>=0){if(arr.length>min)arr.splice(i,1);}else arr.push(v);}
+function periodInfo(p){if(p==="7d")return{labels:["06-25","06-26","06-27","06-28","06-29","06-30","07-01"],scale:1};if(p==="30d")return{labels:["Jun 3","Jun 10","Jun 17","Jun 24","Jul 1"],scale:1.9};return{labels:["Apr","May","Jun","Jul"],scale:3.2};}
+function gen(s,e,n){return Array.from({length:n},(_,i)=>{const t=i/(n-1);const base=s+(e-s)*t;const j=Math.sin(i*1.7)*(Math.abs(e-s)||1)*0.03;return +(base+j).toFixed(4);});}
+function fmtCount(v){v=Math.round(v);if(v>=1e6)return (v/1e6).toFixed(1)+"M";if(v>=1e3)return (v/1e3).toFixed(1)+"k";return ""+v;}
+function pct(v){return Math.round(v)+"%";}
+function netColor(s){return s>0.15?"text-green-600":s<0?"text-red-600":"text-amber-600";}
+function platDot(k){return `<span class="inline-block size-2 rounded-full" style="background:${PLAT[k].color}"></span>`;}
+function entBadge(name){const e=ENTC[name];if(!e)return "";const c=e.type==="own"?"border-green-200 text-green-700":"border-purple-200 text-purple-700";return `<span class="rounded-md border ${c} px-1.5 py-0.5 text-[10px]">${name}</span>`;}
+function tierBadge(t){const c={mega:"bg-purple-100 text-purple-700",macro:"bg-blue-100 text-blue-700",micro:"bg-gray-100 text-gray-600",nano:"bg-gray-100 text-gray-500",unknown:"bg-gray-100 text-gray-400"}[t]||"bg-gray-100";return `<span class="rounded px-1.5 py-0.5 text-[9px] font-medium ${c}">${t.toUpperCase()}</span>`;}
+function sevDot(s){const c={critical:"bg-red-500",warning:"bg-amber-500",info:"bg-blue-500"}[s]||"bg-gray-400";return `<span class="inline-block size-2 rounded-full ${c}"></span>`;}
+function sevBorder(s){return {critical:"border-l-red-500",warning:"border-l-amber-500",info:"border-l-blue-500"}[s]||"border-l-gray-400";}
+function momArrow(m){if(m>0)return `<span class="text-[10px] text-green-600">↑${m}%</span>`;if(m<0)return `<span class="text-[10px] text-red-600">↓${Math.abs(m)}%</span>`;return `<span class="text-[10px] text-muted-foreground">0%</span>`;}
+function sentimentBar(dist){const total=dist.positive+dist.neutral+dist.mixed+dist.negative||1;const seg=[["positive","#22c55e",dist.positive],["neutral","#9ca3af",dist.neutral],["mixed","#facc15",dist.mixed],["negative","#ef4444",dist.negative]];const bars=seg.filter(s=>s[2]>0).map(s=>`<div style="width:${(s[2]/total*100).toFixed(1)}%;background:${s[1]}"></div>`).join("");const legend=seg.filter(s=>s[2]>0).map(s=>`<span class="inline-flex items-center gap-1 text-[11px] text-muted-foreground"><span class="inline-block size-2 rounded-full" style="background:${s[1]}"></span>${s[0]} ${Math.round(s[2]/total*100)}%</span>`).join(" ");return `<div class="flex h-3 w-full overflow-hidden rounded-full">${bars}</div><div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">${legend}</div>`;}
+function netFromDist(d){const t=d.positive+d.neutral+d.mixed+d.negative||1;return (d.positive-d.negative)/t;}
+function ownerOf(shares){return Object.entries(shares).sort((a,b)=>b[1]-a[1])[0][0];}
+function shareBar(shares){const order=ENT.map(e=>e.name).filter(n=>shares[n]!=null);const tot=order.reduce((s,n)=>s+shares[n],0)||1;return `<div class="flex h-2.5 w-full overflow-hidden rounded-full">${order.map(n=>`<div title="${n} ${Math.round(shares[n]/tot*100)}%" style="width:${(shares[n]/tot*100).toFixed(1)}%;background:${ENTC[n].color}"></div>`).join("")}</div>`;}
+function influenceScore(p){const f=Math.max(0,Math.log10(p.followers)-3);const s=(p.sent+1);return Math.max(1,Math.min(10,Math.round(f*2.2+s*1.6+p.mentions*0.08)));}
+
+function renderTabbar(){el("tabbar").innerHTML=TABS.map(t=>`<button data-tab-btn data-tab="${t.k}" class="${state.tab===t.k?"active":""} flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1 text-xs font-medium transition">${t.label}</button>`).join("");}
+function renderPeriod(){el("period").innerHTML=["7d","30d","90d"].map(p=>`<button data-period="${p}" class="rounded px-2 py-1 text-xs ${state.period===p?"bg-accent font-medium":"text-muted-foreground"}">${p}</button>`).join("");}
+function renderPlat(){const on=state.platforms;const menu=state.platOpen?`<div class="absolute right-0 top-9 z-20 w-52 rounded-lg border bg-card p-1.5 shadow-lg">${PLATFORMS.map(p=>`<label class="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-muted"><input type="checkbox" data-platcb="${p.k}" ${on.includes(p.k)?"checked":""}>${platDot(p.k)}${p.label}${p.viaVOC?'<span class="ml-auto rounded border px-1 text-[8px] text-muted-foreground">VOC</span>':''}</label>`).join("")}</div>`:"";
+  el("platWrap").innerHTML=`<button data-act="platopen" class="flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs hover:bg-accent">${on.length===PLATFORMS.length?"All platforms":on.length+" platforms"} <span class="text-[8px]">▾</span></button>${menu}`;}
+
+/* ================= CHART ================= */
+function lineChart(series,{fmtY,colors,reversed=false,area=false}={}){
+  const names=Object.keys(series);if(!names.length)return `<div class="flex items-center justify-center text-xs text-muted-foreground" style="height:180px">No data</div>`;
+  const labels=periodInfo(state.period).labels;const all=names.flatMap(n=>series[n]);let min=Math.min(...all),max=Math.max(...all);if(min===max){min-=1;max+=1;}
+  const W=980,H=280,padL=54,padR=18,padT=16,padB=32,n=series[names[0]].length;
+  const x=i=>padL+i*(W-padL-padR)/(n-1);const y=v=>{const t=(v-min)/(max-min);return padT+(reversed?t:1-t)*(H-padT-padB);};
+  let svg="";
+  for(let g=0;g<=3;g++){const yy=padT+g*(H-padT-padB)/3;const ft=g/3;const val=reversed?(min+ft*(max-min)):(max-ft*(max-min));svg+=`<line x1="${padL}" y1="${yy.toFixed(1)}" x2="${W-padR}" y2="${yy.toFixed(1)}" stroke="var(--border)" stroke-dasharray="4 4"/><text x="${padL-8}" y="${(yy+4).toFixed(1)}" font-size="12" fill="var(--muted-foreground)" text-anchor="end">${fmtY(val)}</text>`;}
+  names.forEach(nm=>{const c=(colors&&colors[nm])||"#2f7ed8";const pts=series[nm].map((v,i)=>[x(i),y(v)]);const d=pts.map((p,i)=>`${i?"L":"M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");if(area){const base=H-padB;svg+=`<path d="${d} L${pts[pts.length-1][0].toFixed(1)},${base} L${pts[0][0].toFixed(1)},${base} Z" fill="${c}" fill-opacity="0.10"/>`;}svg+=`<path d="${d}" fill="none" stroke="${c}" stroke-width="2.5"/>`+pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="var(--background)" stroke="${c}" stroke-width="2"/>`).join("");});
+  [0,Math.floor((n-1)/2),n-1].forEach(i=>{svg+=`<text x="${x(i).toFixed(1)}" y="${H-9}" font-size="12" fill="var(--muted-foreground)" text-anchor="middle">${labels[i]||""}</text>`;});
+  const legend=names.map(nm=>`<span class="inline-flex items-center gap-1 text-[11px] text-muted-foreground"><span class="inline-block size-2 rounded-full" style="background:${(colors&&colors[nm])||"#2f7ed8"}"></span>${nm} <span class="tabular font-medium text-foreground">${fmtY(series[nm][series[nm].length-1])}</span></span>`).join(" ");
+  return `<svg viewBox="0 0 ${W} ${H}" class="w-full" style="height:auto;display:block">${svg}</svg><div class="mt-2 flex flex-wrap gap-x-4 gap-y-1">${legend}</div>`;
+}
+
+function resample(a,n){if(n>=a.length)return a.slice();const step=(a.length-1)/(n-1);return Array.from({length:n},(_,i)=>a[Math.round(i*step)]);}
+function mentionsChart(clickable=true,forceMode){
+  const {labels}=periodInfo(state.period);const n=labels.length;const mode=forceMode||state.mentChartMode;
+  const M=resample(socialDaily.mentions,n),R=resample(socialDaily.reach,n),NET=resample(socialDaily.net,n),SOV=resample(socialDaily.sov,n);
+  const dual=mode==="mentions";
+  const W=920,H=220,padL=46,padR=dual?52:16,padT=14,padB=26;
+  const x=i=>padL+i*(W-padL-padR)/((n-1)||1);const colW=(W-padL-padR)/((n-1)||1);
+  let prim,fmtP,cP,pn,sec,fmtS,cS,sn;
+  if(mode==="mentions"){prim=M;fmtP=fmtCount;cP="#1d9bf0";pn="Mentions";sec=R;fmtS=fmtCount;cS="#16a34a";sn="Reach";}
+  else if(mode==="reach"){prim=R;fmtP=fmtCount;cP="#16a34a";pn="Reach";}
+  else if(mode==="sov"){prim=SOV;fmtP=pct;cP="#16a34a";pn="Share of Voice";}
+  else{prim=NET;fmtP=v=>v.toFixed(2);cP="#a855f7";pn="Net sentiment";}
+  const maxP=Math.max(...prim)*1.1||1,maxS=sec?Math.max(...sec)*1.1||1:1;
+  const yP=v=>padT+(1-v/maxP)*(H-padT-padB),yS=v=>padT+(1-v/maxS)*(H-padT-padB);
+  let svg="";
+  for(let g=0;g<=3;g++){const yy=padT+g*(H-padT-padB)/3;svg+=`<line x1="${padL}" y1="${yy.toFixed(1)}" x2="${W-padR}" y2="${yy.toFixed(1)}" stroke="var(--border)" stroke-dasharray="4 4"/><text x="${padL-6}" y="${(yy+4).toFixed(1)}" font-size="11" fill="${cP}" text-anchor="end">${fmtP(maxP*(1-g/3))}</text>${dual?`<text x="${(W-padR+6).toFixed(1)}" y="${(yy+4).toFixed(1)}" font-size="11" fill="${cS}" text-anchor="start">${fmtS(maxS*(1-g/3))}</text>`:""}`;}
+  const path=(arr,yf,c)=>{const pts=arr.map((v,i)=>[x(i),yf(v)]);return `<path d="${pts.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ')}" fill="none" stroke="${c}" stroke-width="2.5"/>`+pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.5" fill="var(--background)" stroke="${c}" stroke-width="2"/>`).join('');};
+  svg+=path(prim,yP,cP);if(sec)svg+=path(sec,yS,cS);
+  const primPts=prim.map((v,i)=>[x(i),yP(v)]);const secPts=sec?sec.map((v,i)=>[x(i),yS(v)]):null;
+  labels.forEach((lb,i)=>{svg+=`<g class="hg" data-hgi="${i}" style="display:none"><line x1="${x(i).toFixed(1)}" y1="${padT}" x2="${x(i).toFixed(1)}" y2="${(H-padB).toFixed(1)}" stroke="var(--muted-foreground)" stroke-opacity="0.4"/><circle cx="${primPts[i][0].toFixed(1)}" cy="${primPts[i][1].toFixed(1)}" r="6" fill="${cP}" fill-opacity="0.2"/><circle cx="${primPts[i][0].toFixed(1)}" cy="${primPts[i][1].toFixed(1)}" r="3.5" fill="${cP}"/>${sec?`<circle cx="${secPts[i][0].toFixed(1)}" cy="${secPts[i][1].toFixed(1)}" r="6" fill="${cS}" fill-opacity="0.2"/><circle cx="${secPts[i][0].toFixed(1)}" cy="${secPts[i][1].toFixed(1)}" r="3.5" fill="${cS}"/>`:""}</g>`;});
+  labels.forEach((lb,i)=>{const selc=clickable&&state.mentDay===lb;svg+=`<rect ${clickable?`data-day="${lb}"`:""} data-hoveridx="${i}" data-lbl="${lb}" data-n1="${pn}" data-v1="${fmtP(prim[i])}" data-c1="${cP}"${sec?` data-n2="${sn}" data-v2="${fmtS(sec[i])}" data-c2="${cS}"`:""} x="${(x(i)-colW/2).toFixed(1)}" y="${padT}" width="${colW.toFixed(1)}" height="${(H-padT-padB).toFixed(1)}" fill="#3b82f6" fill-opacity="${selc?0.12:0}" stroke="${selc?'#3b82f6':'transparent'}" stroke-dasharray="3 3" style="cursor:pointer"></rect>`;});
+  [0,Math.floor((n-1)/2),n-1].forEach(i=>{svg+=`<text x="${x(i).toFixed(1)}" y="${H-8}" font-size="11" fill="var(--muted-foreground)" text-anchor="middle">${labels[i]||''}</text>`;});
+  const lg=(c,t)=>`<span class="inline-flex items-center gap-1 text-[11px] text-muted-foreground"><span class="inline-block h-0.5 w-3" style="background:${c}"></span>${t}</span>`;
+  const legend=lg(cP,pn)+(sec?" "+lg(cS,sn):"");
+  return `<svg viewBox="0 0 ${W} ${H}" class="w-full" style="height:auto;display:block">${svg}</svg><div class="mt-1 flex gap-3">${legend}</div>`;
+}
+
+function card(title,inner,sub){return `<div class="rounded-lg border bg-card p-4"><div class="mb-3 text-sm font-medium">${title}${sub?` <span class="text-xs font-normal text-muted-foreground">· ${sub}</span>`:""}</div>${inner}</div>`;}
+const OVM={mentions:{label:"Mentions",series:socialDaily.mentions,color:"#1d9bf0",fmt:fmtCount},reach:{label:"Reach",series:socialDaily.reach,color:"#16a34a",fmt:fmtCount},sentiment:{label:"Sentiment",series:socialDaily.net,color:"#a855f7",fmt:v=>(+v).toFixed(2)},sov:{label:"SOV",series:socialDaily.sov,color:"#f59e0b",fmt:pct}};
+function trendMulti(){
+  const {labels}=periodInfo(state.period);const n=labels.length;
+  const ms=state.ovMetrics.length?state.ovMetrics:["mentions"];const two=ms.length===2;const mode=ms.length>2?"index":"real";
+  const W=920,H=240,padL=48,padR=two?56:18,padT=16,padB=28;
+  const x=i=>padL+i*(W-padL-padR)/((n-1)||1);
+  const selPM=PLATFORMS.filter(p=>state.platforms.includes(p.k)).reduce((s,p)=>s+((platBreak[p.k]||{}).mentions||0),0);
+  const allPM=PLATFORMS.reduce((s,p)=>s+((platBreak[p.k]||{}).mentions||0),0)||1;const pf=selPM/allPM;
+  const lines=ms.map((k,idx)=>{const sc=(k==="mentions"||k==="reach")?pf:1;return {k,label:OVM[k].label,color:OVM[k].color,fmt:OVM[k].fmt,data:resample(OVM[k].series,n).map(v=>v*sc),axis:(two&&idx===1)?1:0};});
+  let ax0,ax1;
+  if(mode==="real"){const a0=lines.filter(l=>l.axis===0).flatMap(l=>l.data);ax0={min:Math.min(...a0),max:Math.max(...a0)*1.05};if(ax0.min===ax0.max){ax0.min-=1;ax0.max+=1;}if(two){const a1=lines.filter(l=>l.axis===1).flatMap(l=>l.data);ax1={min:Math.min(...a1),max:Math.max(...a1)*1.05};if(ax1.min===ax1.max){ax1.min-=1;ax1.max+=1;}}}
+  const yR=(v,a)=>padT+(1-(v-a.min)/((a.max-a.min)||1))*(H-padT-padB);
+  const yI=(v,lo,hi)=>padT+(1-(v-lo)/((hi-lo)||1))*(H-padT-padB);
+  let svg="";
+  for(let g=0;g<=3;g++){const yy=padT+g*(H-padT-padB)/3;svg+=`<line x1="${padL}" y1="${yy.toFixed(1)}" x2="${W-padR}" y2="${yy.toFixed(1)}" stroke="var(--border)" stroke-dasharray="4 4"/>`;
+    if(mode==="real"){const l0=lines.find(l=>l.axis===0);svg+=`<text x="${padL-6}" y="${(yy+4).toFixed(1)}" font-size="11" fill="${l0.color}" text-anchor="end">${l0.fmt(ax0.max-(ax0.max-ax0.min)*g/3)}</text>`;if(two){const l1=lines.find(l=>l.axis===1);svg+=`<text x="${(W-padR+6).toFixed(1)}" y="${(yy+4).toFixed(1)}" font-size="11" fill="${l1.color}" text-anchor="start">${l1.fmt(ax1.max-(ax1.max-ax1.min)*g/3)}</text>`;}}
+    else svg+=`<text x="${padL-6}" y="${(yy+4).toFixed(1)}" font-size="11" fill="var(--muted-foreground)" text-anchor="end">${[100,66,33,0][g]}%</text>`;}
+  lines.forEach(l=>{let pts;if(mode==="real"){const a=l.axis===1?ax1:ax0;pts=l.data.map((v,i)=>[x(i),yR(v,a)]);}else{const lo=Math.min(...l.data),hi=Math.max(...l.data);pts=l.data.map((v,i)=>[x(i),yI(v,lo,hi)]);}svg+=`<path d="${pts.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ')}" fill="none" stroke="${l.color}" stroke-width="2.5"/>`+pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.5" fill="var(--background)" stroke="${l.color}" stroke-width="2"/>`).join('');});
+  [0,Math.floor((n-1)/2),n-1].forEach(i=>{svg+=`<text x="${x(i).toFixed(1)}" y="${H-8}" font-size="11" fill="var(--muted-foreground)" text-anchor="middle">${labels[i]||''}</text>`;});
+  const legend=lines.map(l=>`<span class="inline-flex items-center gap-1 text-[11px] text-muted-foreground"><span class="inline-block h-0.5 w-3" style="background:${l.color}"></span>${l.label} <span class="tabular font-medium text-foreground">${l.fmt(l.data[l.data.length-1])}</span></span>`).join(" ");
+  const hint=mode==="index"?`<span class="ml-2 text-[10px] text-amber-700">indexed · trend shape only</span>`:(two?`<span class="ml-2 text-[10px] text-muted-foreground">dual axis</span>`:"");
+  return `<svg viewBox="0 0 ${W} ${H}" class="w-full" style="height:auto;display:block">${svg}</svg><div class="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">${legend}${hint}</div>`;
+}
+function donut(items){const tot=items.reduce((s,i)=>s+i.value,0)||1;let a=-Math.PI/2;const R=42,r=26,cx=50,cy=50;let paths="";items.forEach(it=>{const frac=it.value/tot;if(frac<=0)return;const a2=a+frac*2*Math.PI;const x1=cx+R*Math.cos(a),y1=cy+R*Math.sin(a),x2=cx+R*Math.cos(a2),y2=cy+R*Math.sin(a2);const xi1=cx+r*Math.cos(a2),yi1=cy+r*Math.sin(a2),xi2=cx+r*Math.cos(a),yi2=cy+r*Math.sin(a);const large=frac>0.5?1:0;paths+=`<path d="M${x1.toFixed(2)},${y1.toFixed(2)} A${R},${R} 0 ${large} 1 ${x2.toFixed(2)},${y2.toFixed(2)} L${xi1.toFixed(2)},${yi1.toFixed(2)} A${r},${r} 0 ${large} 0 ${xi2.toFixed(2)},${yi2.toFixed(2)} Z" fill="${it.color}"/>`;a=a2;});const legend=items.filter(i=>i.value>0).sort((a,b)=>b.value-a.value).map(i=>`<div class="flex items-center justify-between gap-3 text-xs"><span class="inline-flex items-center gap-1.5 text-muted-foreground"><span class="size-2.5 rounded-full" style="background:${i.color}"></span>${i.label}</span><span class="tabular font-medium">${Math.round(i.value/tot*100)}%</span></div>`).join("");return `<div class="flex items-center gap-5"><svg viewBox="0 0 100 100" class="h-32 w-32 shrink-0">${paths}</svg><div class="flex-1 space-y-1.5">${legend}</div></div>`;}
+function gauge(val,max,center,note){const frac=Math.max(0,Math.min(1,val/max));const R=40,cx=50,cy=50;const arc=(s,e,c)=>{const x1=cx+R*Math.cos(s),y1=cy+R*Math.sin(s),x2=cx+R*Math.cos(e),y2=cy+R*Math.sin(e);const large=(e-s)>Math.PI?1:0;return `<path d="M${x1.toFixed(2)},${y1.toFixed(2)} A${R},${R} 0 ${large} 1 ${x2.toFixed(2)},${y2.toFixed(2)}" fill="none" stroke="${c}" stroke-width="8" stroke-linecap="round"/>`;};return `<svg viewBox="0 0 100 58" class="mx-auto w-40">${arc(Math.PI,2*Math.PI,'var(--border)')}${arc(Math.PI,Math.PI+frac*Math.PI,'#22c55e')}<text x="50" y="48" font-size="20" font-weight="bold" fill="var(--foreground)" text-anchor="middle">${center}</text></svg>${note?`<p class="mt-1 text-center text-[10px] text-muted-foreground">${note}</p>`:""}`;}
+function heatmap(){
+  const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const hourLabel=h=>{const ap=h<12?"AM":"PM";let hh=h%12;if(hh===0)hh=12;return hh+ap;};
+  let pk={v:-1,d:0,h:0};hotHours.forEach((row,d)=>row.forEach((v,h)=>{if(v>pk.v)pk={v,d,h};}));
+  const modeSeg=`<div class="flex items-center rounded-md border p-0.5">${["mentions","reach","interactions"].map(m=>`<button data-hotmode="${m}" class="rounded px-2 py-0.5 text-[11px] capitalize ${state.hotMode===m?"bg-accent font-medium":"text-muted-foreground"}">${m}</button>`).join("")}</div>`;
+  const hdr=`<div class="flex items-center gap-[2px]"><span class="w-7 shrink-0"></span><div class="flex flex-1 justify-between text-[8px] text-muted-foreground">${["12A","3A","6A","9A","12P","3P","6P","9P","11P"].map(l=>`<span>${l}</span>`).join("")}</div></div>`;
+  const grid=days.map((d,di)=>`<div class="flex items-center gap-[2px]"><span class="w-7 shrink-0 text-[9px] text-muted-foreground">${d}</span>${hotHours[di].map((v,h)=>`<span title="${d} ${hourLabel(h)} · ${Math.round(v*300)} ${state.hotMode}" class="inline-block size-3 shrink-0 rounded-full" style="background:${v<0.12?'var(--muted)':'#6d28d9'};opacity:${v<0.12?1:(0.2+v*0.8).toFixed(2)}"></span>`).join("")}</div>`).join("");
+  return `<div><div class="mb-2 flex flex-wrap items-center justify-between gap-2"><select class="h-7 rounded-md border bg-background px-2 text-[11px]"><option>Asia/Singapore (GMT+8)</option><option>UTC</option><option>US/Pacific</option></select>${modeSeg}</div><p class="mb-3 text-center text-[11px] text-muted-foreground">Most ${state.hotMode} on <b>${days[pk.d]}</b> at <b>${hourLabel(pk.h)}</b></p><div class="overflow-x-auto pb-1"><div class="min-w-[360px] space-y-[3px]">${hdr}${grid}</div></div><div class="mt-2 flex items-center justify-center gap-2 text-[9px] text-muted-foreground"><span>Lowest</span><span class="inline-block h-2 w-16 rounded-full" style="background:linear-gradient(90deg,var(--muted),#6d28d9)"></span><span>Largest</span></div></div>`;
+}
+function platIcon(k){const p=PLAT[k]||{color:"#999"};const ini={twitter:"X",reddit:"R",youtube:"▶",tiktok:"♪",hackernews:"Y",facebook:"f",instagram:"◎"}[k]||"?";return `<span class="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-[8px] font-bold text-white" style="background:${p.color}">${ini}</span>`;}
+
+/* ================= ANALYSIS ================= */
+function kpi(label,val,sub,delta,dfmt,invert){
+  let col="text-muted-foreground",ar="";if(delta!=null){const good=invert?delta<0:delta>0;col=delta===0?"text-muted-foreground":(good?"text-green-600":"text-red-600");ar=delta>0?"↑":(delta<0?"↓":"");}
+  const dv=delta==null?"":`<span class="ml-auto text-xs ${col}">${ar} ${dfmt(Math.abs(delta))}</span>`;
+  return `<div class="rounded-lg border bg-card p-4"><p class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">${label}</p><div class="mt-1 flex items-baseline gap-2"><span class="text-2xl font-bold">${val}</span>${dv}</div><p class="mt-1 text-[10px] text-muted-foreground">${sub}</p></div>`;
+}
+function signalCard(s){
+  const pill={active:"bg-red-100 text-red-700",acknowledged:"bg-amber-100 text-amber-700",resolved:"bg-gray-100 text-gray-500"}[s.status];const txt={active:"Active",acknowledged:"Ack",resolved:"Resolved"}[s.status];
+  const actions=s.status==="active"?`<button data-sigact="ack" data-id="${s.id}" class="rounded-md border px-2 py-0.5 text-[11px] hover:bg-accent">Acknowledge</button>`:s.status==="acknowledged"?`<button data-sigact="resolve" data-id="${s.id}" class="rounded-md border px-2 py-0.5 text-[11px] hover:bg-accent">Resolve</button>`:`<button data-sigact="reopen" data-id="${s.id}" class="rounded-md border px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-accent">Reopen</button>`;
+  return `<div class="rounded-lg border border-l-[3px] ${sevBorder(s.sev)} bg-card p-3 ${s.status==="resolved"?"opacity-60":""}"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="flex items-center gap-2">${sevDot(s.sev)}<span class="text-xs font-medium">${s.title}</span></div><div class="mt-0.5 text-[11px] text-muted-foreground">${s.summary}</div><div class="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground"><code>${s.rule}</code><span class="rounded-full px-1.5 py-0.5 ${pill}">${txt}</span></div></div><div class="shrink-0">${actions}</div></div></div>`;
+}
+function trendBlock(){
+  const {labels,scale}=periodInfo(state.period);const metric=state.trendMetric;
+  const cfg={mentions:{fmt:fmtCount},reach:{fmt:fmtCount},sentiment:{fmt:v=>v.toFixed(2)},sov:{fmt:pct}}[metric];
+  const ents=state.trendVsComp?ENT.map(e=>e.name):[OWN];
+  const series={},colors={};ents.forEach(nm=>{const b=entTrend[nm][metric];const s2=b[1]+(b[0]-b[1])*scale;series[nm]=gen(s2,b[1],labels.length);colors[nm]=ENTC[nm].color;});
+  const metricSeg=`<div class="flex items-center gap-0.5 rounded-md border p-0.5">${[["mentions","Mentions"],["reach","Reach"],["sentiment","Net sentiment"],["sov","SOV"]].map(([k,l])=>`<button data-trendmetric="${k}" class="whitespace-nowrap rounded px-2 py-1 text-xs ${metric===k?"bg-accent font-medium":"text-muted-foreground"}">${l}</button>`).join("")}</div>`;
+  const vs=`<button data-act="trendvs" class="rounded-md border px-2 py-1 text-xs ${state.trendVsComp?"bg-accent font-medium":"text-muted-foreground"}">vs competitors</button>`;
+  return `<div class="rounded-lg border bg-card p-4"><div class="mb-3 flex flex-wrap items-center gap-2"><span class="text-sm font-medium">Trend</span>${metricSeg}${vs}</div>${lineChart(series,{fmtY:cfg.fmt,colors,reversed:false,area:!state.trendVsComp})}</div>`;
+}
+function sovBlock(){
+  // current SOV from entTrend end
+  const shares={};ENT.forEach(e=>shares[e.name]=entTrend[e.name].sov[1]);
+  const rows=ENT.map(e=>{const b=entTrend[e.name];const dM=Math.round((b.mentions[1]-b.mentions[0])*periodInfo(state.period).scale);const own=e.type==="own";
+    return `<tr class="border-t ${own?"bg-green-50/30":""}"><td class="px-3 py-1.5"><span class="inline-flex items-center gap-1.5"><span class="size-2 rounded-full" style="background:${e.color}"></span><span class="${own?"font-medium":""}">${e.name}</span></span></td><td class="py-1.5 pr-3 text-right tabular">${fmtCount(b.mentions[1])}<span class="ml-1 text-[10px] ${dM>=0?'text-green-600':'text-red-600'}">${dM>=0?'↑':'↓'}${fmtCount(Math.abs(dM))}</span></td><td class="py-1.5 pr-3 text-right tabular">${fmtCount(b.reach[1])}</td><td class="py-1.5 pr-3 text-right tabular ${netColor(b.sentiment[1])}">${(b.sentiment[1]>0?'+':'')+b.sentiment[1].toFixed(2)}</td><td class="py-1.5 pr-3 text-right tabular">${pct(b.sov[1])}</td></tr>`;}).join("");
+  return `<div><h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Competitive standing <span class="normal-case text-muted-foreground/70">· share of voice</span></h3>
+    <div class="mb-2 rounded-lg border bg-card p-3"><div class="mb-1.5 flex items-center justify-between text-xs"><span class="text-muted-foreground">Category share of voice</span><span class="font-medium">You: ${pct(shares[OWN])}</span></div>${shareBar(shares)}<div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">${ENT.map(e=>`<span class="inline-flex items-center gap-1 text-[10px] text-muted-foreground"><span class="size-2 rounded-full" style="background:${e.color}"></span>${e.name} ${pct(shares[e.name])}</span>`).join("")}</div></div>
+    <div class="overflow-x-auto rounded-lg border bg-card"><table class="w-full text-xs"><thead class="text-muted-foreground"><tr class="text-left"><th class="px-3 py-2 font-medium">Entity</th><th class="py-2 pr-3 text-right font-medium">Mentions</th><th class="py-2 pr-3 text-right font-medium">Reach</th><th class="py-2 pr-3 text-right font-medium">Net sent.</th><th class="py-2 pr-3 text-right font-medium">SOV</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function topicsCompact(){
+  const {scale}=periodInfo(state.period);
+  const rows=topics.slice(0,5).map(tp=>{const owner=ownerOf(tp.shares);const net=netFromDist(tp.dist);
+    return `<button data-topic="${tp.t}" class="flex w-full items-center gap-3 border-t px-1 py-2 text-left hover:bg-muted/50"><span class="w-44 shrink-0 truncate text-xs font-medium">${tp.t}</span><span class="w-14 shrink-0 text-right tabular text-xs text-muted-foreground">${fmtCount(tp.vol*scale)}</span><span class="w-12 shrink-0 text-right">${momArrow(tp.mom)}</span><span class="w-12 shrink-0 text-right tabular text-xs ${netColor(net)}">${(net>0?'+':'')+net.toFixed(2)}</span><span class="ml-auto">${entBadge(owner)}</span></button>`;}).join("");
+  return `<div><h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Trending topics & events</h3><div class="rounded-lg border bg-card px-3 pb-2"><div class="flex items-center gap-3 px-1 pt-2 text-[10px] uppercase tracking-wide text-muted-foreground"><span class="w-44 shrink-0">Topic</span><span class="w-14 shrink-0 text-right">Vol</span><span class="w-12 shrink-0 text-right">Mom</span><span class="w-12 shrink-0 text-right">Net</span><span class="ml-auto">Owner</span></div>${rows}</div></div>`;
+}
+function platMatrix(){
+  const sel=state.platforms;
+  const rows=PLATFORMS.filter(p=>sel.includes(p.k)).map(p=>{const b=platBreak[p.k];const {scale}=periodInfo(state.period);
+    return `<tr class="border-t"><td class="px-3 py-1.5"><span class="inline-flex items-center gap-1.5">${platDot(p.k)}${p.label}</span></td><td class="py-1.5 pr-3 text-right tabular">${fmtCount(b.mentions*scale)}</td><td class="py-1.5 pr-3 text-right tabular ${netColor(b.sent)}">${(b.sent>0?'+':'')+b.sent.toFixed(2)}</td><td class="py-1.5 pr-3 text-right text-muted-foreground">${b.topPub}</td></tr>`;}).join("");
+  return `<div><h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">By platform <span class="normal-case text-muted-foreground/70">· own mentions</span></h3><div class="overflow-x-auto rounded-lg border bg-card"><table class="w-full text-xs"><thead class="text-muted-foreground"><tr class="text-left"><th class="px-3 py-2 font-medium">Platform</th><th class="py-2 pr-3 text-right font-medium">Mentions</th><th class="py-2 pr-3 text-right font-medium">Net sent.</th><th class="py-2 pr-3 text-right font-medium">Top publisher</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function presenceHero(){const {scale}=periodInfo(state.period);const d=Math.round(presence.delta*scale);const val=presence.score;
+  return `<div class="rounded-lg border bg-card p-4"><div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Presence Score</p><div class="mt-1 flex items-baseline gap-2"><span class="text-3xl font-bold">${val}</span><span class="text-sm text-muted-foreground">/100</span><span class="text-xs text-green-600">↑ ${d}</span></div><p class="mt-1 text-[10px] text-muted-foreground">composite of volume + reach + history · Δ${state.period}</p></div><div class="w-48"><div class="h-2.5 w-full rounded-full bg-muted"><div class="h-2.5 rounded-full bg-green-500" style="width:${val}%"></div></div><div class="mt-1 flex justify-between text-[9px] text-muted-foreground"><span>0</span><span>industry avg 55</span><span>100</span></div></div></div></div>`;}
+function aiCallout(){return `<div class="rounded-lg border border-blue-200 bg-blue-50/40 p-3"><div class="mb-1 flex items-center gap-1.5 text-xs font-medium text-blue-700">🧠 AI · why sentiment moved</div><p class="text-xs text-muted-foreground">${aiAttribution}</p><button data-act="askai" class="mt-2 rounded-md border border-blue-200 bg-background px-2 py-1 text-[11px] text-blue-700 hover:bg-blue-50">Ask a follow-up ↗</button></div>`;}
+function emotionCard(){const tot=emotions.reduce((s,e)=>s+e.v,0)||1;return `<div class="rounded-lg border bg-card p-4"><div class="mb-3 text-sm font-medium">Emotion breakdown <span class="text-xs font-normal text-muted-foreground">· beyond positive/negative</span></div><div class="space-y-2">${emotions.map(e=>`<div class="flex items-center gap-2 text-xs"><span class="w-24 shrink-0">${e.e}</span><div class="h-3 flex-1 rounded bg-muted"><div class="h-3 rounded" style="width:${(e.v/tot*100).toFixed(0)}%;background:${e.c}"></div></div><span class="w-8 text-right tabular text-muted-foreground">${Math.round(e.v/tot*100)}%</span></div>`).join("")}</div></div>`;}
+function geoCard(){const max=Math.max(...geoRegions.map(g=>g.m));return `<div class="rounded-lg border bg-card p-4"><div class="mb-1 flex items-center justify-between"><div class="text-sm font-medium">Geography <span class="text-xs font-normal text-muted-foreground">· where the chatter is</span></div><span class="text-[10px] text-muted-foreground">${geoCoverage}% carry a location</span></div><div class="mt-2 space-y-2">${geoRegions.map(g=>`<div class="flex items-center gap-2 text-xs"><span class="w-28 shrink-0 truncate">${g.r}</span><div class="h-3 flex-1 rounded bg-muted"><div class="h-3 rounded bg-blue-500" style="width:${(g.m/max*100).toFixed(0)}%"></div></div><span class="w-10 text-right tabular text-muted-foreground">${fmtCount(g.m)}</span><span class="w-11 text-right tabular ${netColor(g.sent)}">${(g.sent>0?'+':'')+g.sent.toFixed(2)}</span></div>`).join("")}</div></div>`;}
+function viewAnalysis(){
+  const {scale}=periodInfo(state.period);const b=entTrend[OWN];const days=state.period;
+  const sevRank={critical:0,warning:1,info:2},stRank={active:0,acknowledged:1,resolved:2};
+  const sorted=[...signals].sort((a,b)=>sevRank[a.sev]-sevRank[b.sev]||stRank[a.status]-stRank[b.status]);
+  const shown=state.sigExpanded?sorted:sorted.slice(0,2);
+  const moreBtn=sorted.length>2?`<button data-act="sigmore" class="mt-2 w-full rounded-md border border-dashed py-1.5 text-xs text-muted-foreground hover:bg-accent">${state.sigExpanded?"Show less":"Show "+(sorted.length-2)+" more signals"}</button>`:"";
+  // light platform-filter wiring (proof): these cards recompute against selected sources
+  const sel=state.platforms;
+  const allPM=PLATFORMS.reduce((s,p)=>s+((platBreak[p.k]||{}).mentions||0),0)||1;
+  const selPM=PLATFORMS.filter(p=>sel.includes(p.k)).reduce((s,p)=>s+((platBreak[p.k]||{}).mentions||0),0);
+  const pf=selPM/allPM;
+  const mVal=Math.round(b.mentions[1]*pf),rVal=Math.round(b.reach[1]*pf);
+  const scoped=mentions.filter(m=>sel.includes(m.platform));
+  const likes=scoped.reduce((s,m)=>s+(m.likes||0),0),comments=scoped.reduce((s,m)=>s+(m.comments||0),0);
+  const inter=likes+comments,shares=Math.round(likes*0.08),engRate=rVal?inter/rVal*100:0;
+  const kpis=[
+    kpi("Total mentions",fmtCount(mVal),`Δ${days}`,Math.round((b.mentions[1]-b.mentions[0])*scale*pf),fmtCount),
+    kpi("Total reach",fmtCount(rVal),`Δ${days}`,Math.round((b.reach[1]-b.reach[0])*scale*pf),fmtCount),
+    kpi("Net sentiment",(b.sentiment[1]>0?'+':'')+b.sentiment[1].toFixed(2),`Δ${days}`,+((b.sentiment[1]-b.sentiment[0])*scale).toFixed(2),v=>v.toFixed(2)),
+    kpi("Share of Voice",pct(b.sov[1]),"category · unfiltered",Math.round((b.sov[1]-b.sov[0])*scale),v=>v+"pt"),
+    kpi("Presence Score",presence.score,"composite · unfiltered",Math.round(presence.delta*scale),v=>""+v),
+    kpi("Positive",pct(ownDist.positive),"of mentions",Math.round(3*scale),v=>v+"pt"),
+    kpi("Negative",pct(ownDist.negative),"of mentions",-Math.round(2*scale),v=>v+"pt",true),
+    kpi("Interactions",fmtCount(inter),"total",Math.round(inter*0.1*scale),fmtCount),
+    kpi("Reactions",fmtCount(likes),"likes",Math.round(likes*0.1*scale),fmtCount),
+    kpi("Comments",fmtCount(comments),"replies",Math.round(comments*0.08*scale),fmtCount),
+    kpi("Shares",fmtCount(shares),"reposts",Math.round(shares*0.15*scale),fmtCount),
+    kpi("Engagement rate",engRate.toFixed(2)+"%","interactions/reach",+(0.05*scale).toFixed(2),v=>v.toFixed(2)+"pt"),
+  ].join("");
+  const ovSeg=`<div class="flex items-center gap-1 rounded-md border p-0.5">${Object.keys(OVM).map(k=>`<button data-ovm="${k}" class="rounded px-2 py-1 text-xs ${state.ovMetrics.includes(k)?"bg-accent font-medium":"text-muted-foreground"}">${OVM[k].label}</button>`).join("")}</div>`;
+  const trendCard=`<div class="rounded-lg border bg-card p-4"><div class="mb-3 flex flex-wrap items-center justify-between gap-2"><span class="text-sm font-medium">Trends <span class="text-xs font-normal text-muted-foreground">· multi-select</span></span>${ovSeg}</div>${trendMulti()}</div>`;
+  const cats=PLATFORMS.filter(p=>sel.includes(p.k)).map(p=>({label:p.label,value:(platBreak[p.k]||{}).mentions||0,color:p.color})).filter(c=>c.value>0);
+  const catTot=cats.reduce((s,c)=>s+c.value,0)||1,catMax=Math.max(...cats.map(c=>c.value),1);
+  const catBars=`<div class="space-y-2">${[...cats].sort((a,b)=>b.value-a.value).map(c=>`<div class="flex items-center gap-2 text-xs"><span class="flex w-28 shrink-0 items-center gap-1.5"><span class="size-2 rounded-full" style="background:${c.color}"></span>${c.label}</span><div class="h-4 flex-1 rounded bg-muted"><div class="h-4 rounded" style="width:${(c.value/catMax*100).toFixed(0)}%;background:${c.color}"></div></div><span class="w-10 text-right tabular text-muted-foreground">${Math.round(c.value/catTot*100)}%</span></div>`).join("")}</div>`;
+  const sentCat=`<div class="space-y-2">${PLATFORMS.filter(p=>(platBreak[p.k]||{}).mentions).map(p=>{const s=platBreak[p.k].sent;const pos=Math.round((0.5+s/2)*100),neg=Math.round(Math.max(0,0.2-s/3)*100);const neu=Math.max(0,100-pos-neg);return `<div class="flex items-center gap-2 text-xs"><span class="w-20 shrink-0 truncate">${p.label}</span><div class="flex h-3 flex-1 overflow-hidden rounded-full bg-muted"><div style="width:${pos}%;background:#22c55e"></div><div style="width:${neu}%;background:#9ca3af"></div><div style="width:${neg}%;background:#ef4444"></div></div></div>`;}).join("")}</div>`;
+  const totR=publishers.reduce((s,p)=>s+p.reach,0)||1;
+  const tbl=(head,rows)=>`<table class="w-full text-xs"><thead class="text-muted-foreground"><tr class="text-left">${head}</tr></thead><tbody>${rows}</tbody></table>`;
+  const mostSov=[...publishers].sort((a,b)=>b.reach-a.reach).slice(0,5).map(p=>`<tr class="cursor-pointer border-t hover:bg-muted/50" data-drill="${p.platform}"><td class="py-1.5 pr-2"><span class="inline-flex items-center gap-1.5">${platIcon(p.platform)}${p.handle}</span></td><td class="py-1.5 pr-2 text-right tabular text-blue-600">${p.mentions} ↗</td><td class="py-1.5 pr-2 text-right tabular">${fmtCount(p.reach)}</td><td class="py-1.5 text-right tabular">${pct(p.reach/totR*100)}</td></tr>`).join("");
+  const mostFol=[...publishers].sort((a,b)=>b.followers-a.followers).slice(0,5).map(p=>`<tr class="cursor-pointer border-t hover:bg-muted/50" data-drill="${p.platform}"><td class="py-1.5 pr-2"><span class="inline-flex items-center gap-1.5">${platIcon(p.platform)}${p.handle}</span></td><td class="py-1.5 pr-2 text-right tabular">${fmtCount(p.followers)}</td><td class="py-1.5 text-right">${inflBadge(influenceScore(p))}</td></tr>`).join("");
+  const hashRows=hashtags.map(h=>`<tr class="border-t"><td class="py-1.5 pr-2">${h.h}</td><td class="py-1.5 text-right tabular text-muted-foreground">${fmtCount(h.v)}</td></tr>`).join("");
+  const linkRows=trendingLinks.map(l=>`<tr class="border-t"><td class="py-1.5 pr-2"><div class="max-w-[190px] truncate">${l.u}</div></td><td class="py-1.5 text-right tabular text-muted-foreground">${l.n}</td></tr>`).join("");
+  const siteRows=activeSites.map(s=>`<tr class="cursor-pointer border-t hover:bg-muted/50" data-drill="${s.k}"><td class="py-1.5 pr-2"><span class="inline-flex items-center gap-1.5">${platIcon(s.k)}${s.s}</span></td><td class="py-1.5 text-right tabular text-blue-600">${fmtCount(s.n)} ↗</td></tr>`).join("");
+  const emoItems=emotions.map(e=>({label:e.e,value:e.v,color:e.c}));
+  return `<div class="flex flex-col gap-6">
+    <div><h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Signals <span class="normal-case text-muted-foreground/70">· most impactful first</span></h3><div class="grid gap-2 md:grid-cols-2">${shown.map(signalCard).join("")}</div>${moreBtn}</div>
+    <div class="grid grid-cols-2 gap-3 md:grid-cols-4">${kpis}</div>
+    ${trendCard}
+    <div class="grid gap-4 lg:grid-cols-2">${card("Mentions by categories",catBars,"by platform")}${card("Sentiment by categories",sentCat,"by platform")}</div>
+    <div class="grid gap-4 lg:grid-cols-2">${card("Most Share of Voice",tbl('<th class="pb-1 font-medium">Profile</th><th class="pb-1 text-right font-medium">Mentions</th><th class="pb-1 text-right font-medium">Reach</th><th class="pb-1 text-right font-medium">SOV</th>',mostSov),"click a row → its mentions")}${card("Most followers",tbl('<th class="pb-1 font-medium">Profile</th><th class="pb-1 text-right font-medium">Followers</th><th class="pb-1 text-right font-medium">Influence</th>',mostFol))}</div>
+    <div class="grid gap-4 lg:grid-cols-3">${card("Trending hashtags",tbl('<th class="pb-1 font-medium">Hashtag</th><th class="pb-1 text-right font-medium">Mentions</th>',hashRows))}${card("Trending links",tbl('<th class="pb-1 font-medium">Link</th><th class="pb-1 text-right font-medium">Mentions</th>',linkRows))}${card("Most active sites",tbl('<th class="pb-1 font-medium">Source</th><th class="pb-1 text-right font-medium">Mentions</th>',siteRows))}</div>
+    <div class="grid gap-4 lg:grid-cols-2">${card("Emotions share",donut(emoItems))}${geoCard()}</div>
+    ${topicsCompact()}
+  </div>`;
+}
+
+/* ================= MENTIONS ================= */
+function mentionCard(m){
+  const p=PLAT[m.platform];const sd={positive:"#22c55e",neutral:"#9ca3af",mixed:"#facc15",negative:"#ef4444"}[m.sent];
+  const comm=m.comm?`<div class="mt-2 rounded-md bg-muted/40 px-2 py-1.5 text-[11px]"><span class="text-muted-foreground">${m.comm.analyzed} comments analyzed · </span><span class="text-green-600">+${m.comm.dist.positive}%</span> <span class="text-red-600">−${m.comm.dist.negative}%</span> · ${m.comm.top[0]}</div>`:"";
+  return `<button data-ment="${m.id}" class="block w-full rounded-lg border border-l-[3px] bg-card p-3 text-left hover:bg-muted/50" style="border-left-color:${sd}"><div class="flex items-center gap-2 text-xs"><span style="color:${p.color}">●</span><span class="font-medium">${m.author}</span>${tierBadge(m.tier)}<span class="text-muted-foreground">${p.label} · ${m.time}</span><span class="ml-auto inline-flex items-center gap-1 text-muted-foreground"><span class="size-2 rounded-full" style="background:${sd}"></span>${m.sent}</span></div><p class="mt-1.5 text-sm">${m.snippet}</p><div class="mt-1.5 flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground"><span>♥ ${fmtCount(m.likes)}</span><span>💬 ${fmtCount(m.comments)}</span><span>👁 ${fmtCount(m.reach)} reach</span>${entBadge(m.entity)}<span class="rounded bg-secondary px-1.5 py-0.5">${m.topic}</span></div>${comm}</button>`;
+}
+function viewMentions(){
+  const tps=["all",...topics.map(t=>t.t)];
+  const geos=["all",...Array.from(new Set(mentions.map(m=>m.geo)))];const emos=["all",...Array.from(new Set(mentions.map(m=>m.emotion)))];
+  let list=mentions.filter(m=>state.platforms.includes(m.platform));
+  if(state.mentBrands.length)list=list.filter(m=>state.mentBrands.includes(m.entity));
+  if(state.mentAuthor)list=list.filter(m=>m.author===state.mentAuthor);
+  if(state.mentTopic!=="all")list=list.filter(m=>m.topic===state.mentTopic);
+  if(state.mentSent!=="all")list=list.filter(m=>m.sent===state.mentSent);
+  if(state.mentGeo!=="all")list=list.filter(m=>m.geo===state.mentGeo);
+  if(state.mentEmotion!=="all")list=list.filter(m=>m.emotion===state.mentEmotion);
+  if(state.mentDay)list=list.filter(m=>m.date===state.mentDay);
+  const body=list.length?list.map(mentionCard).join(""):`<div class="rounded-lg border bg-card py-12 text-center text-sm text-muted-foreground">No mentions match the filters</div>`;
+  const chartCard=`<div class="mb-3 rounded-lg border bg-card p-3"><div class="mb-2 flex flex-wrap items-center justify-between gap-2"><div class="flex items-center rounded-md border p-0.5">${[["mentions","Mentions & Reach"],["sentiment","Sentiment"]].map(([k,l])=>`<button data-mentchart="${k}" class="rounded px-2 py-1 text-xs ${state.mentChartMode===k?"bg-accent font-medium":"text-muted-foreground"}">${l}</button>`).join("")}</div><span class="text-[10px] text-muted-foreground">Click a day on the chart to filter the feed ↓</span></div>${mentionsChart()}</div>`;
+  const dayChip=state.mentDay?`<div class="mb-2 inline-flex items-center gap-2 rounded-full border border-blue-300 bg-blue-50/50 px-3 py-1 text-xs text-blue-700">Filtered to ${state.mentDay} <button data-act="clearday" class="hover:text-foreground">✕</button></div>`:"";
+  const authChip=state.mentAuthor?`<div class="mb-2 inline-flex items-center gap-2 rounded-full border border-blue-300 bg-blue-50/50 px-3 py-1 text-xs text-blue-700">Author: ${state.mentAuthor} <button data-act="clearauthor" class="hover:text-foreground">✕</button></div>`:"";
+  const hashStrip=`<div class="mb-2 flex flex-wrap gap-1.5">${hashtags.slice(0,6).map(h=>`<span class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px]"><span style="color:${h.sent<0?'#ef4444':'#16a34a'}">●</span>${h.h} <span class="tabular text-muted-foreground">${fmtCount(h.v)}</span></span>`).join("")}</div>`;
+  const sec=(title,inner)=>`<div><div class="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">${title}</div>${inner}</div>`;
+  const sources=`<div class="space-y-1">${PLATFORMS.map(p=>`<label class="flex cursor-pointer items-center gap-2 text-xs"><input type="checkbox" data-platcb="${p.k}" ${state.platforms.includes(p.k)?"checked":""}>${platDot(p.k)}${p.label}${p.viaVOC?'<span class="ml-auto rounded border px-1 text-[8px] text-muted-foreground">via VOC</span>':''}</label>`).join("")}</div>`;
+  const brandsCb=`<div class="space-y-1">${ENT.map(en=>`<label class="flex cursor-pointer items-center gap-2 text-xs"><input type="checkbox" data-brandcb="${en.name}" ${state.mentBrands.includes(en.name)?"checked":""}><span class="size-2 rounded-full" style="background:${en.color}"></span>${en.name}${en.type==='own'?' <span class="rounded border border-green-200 px-1 text-[8px] text-green-700">Own</span>':''}</label>`).join("")}</div>`;
+  const sentF=`<div class="flex flex-wrap gap-1">${["all","positive","negative","mixed"].map(s=>`<button data-mentsent="${s}" class="rounded-md border px-2 py-0.5 text-[11px] ${state.mentSent===s?"bg-accent font-medium":"text-muted-foreground"}">${s==="all"?"All":s}</button>`).join("")}</div>`;
+  const sel=(attr,val,opts)=>`<select ${attr} class="h-8 w-full rounded-md border bg-background px-2 text-xs">${opts.map(o=>`<option value="${o}" ${val===o?"selected":""}>${o==="all"?"All":o}</option>`).join("")}</select>`;
+  const influence=`<input type="range" min="0" max="10" value="0" class="w-full"><div class="flex justify-between text-[9px] text-muted-foreground"><span>0</span><span>10 · demo</span></div>`;
+  const sidebar=state.mentFiltOpen?`<aside class="hidden w-64 shrink-0 lg:block"><div class="sticky top-2 space-y-4 rounded-lg border bg-card p-3"><div class="flex items-center justify-between"><span class="text-xs font-semibold">Filters</span><button data-act="allfilters" class="flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent" title="Collapse">⇥</button></div>
+    ${sec("Sources",sources)}
+    ${sec("Sentiment",sentF)}
+    ${sec("Brands",brandsCb)}
+    ${sec("Topic",sel("data-menttopic",state.mentTopic,tps))}
+    ${sec("Influence score",influence)}
+    ${sec("Geolocation",sel("data-mentgeo",state.mentGeo,geos))}
+    ${sec("Emotion",sel("data-mentemotion",state.mentEmotion,emos))}
+  </div></aside>`:"";
+  return `<div class="flex gap-4"><div class="min-w-0 flex-1">${chartCard}${dayChip}${authChip}${hashStrip}<div class="mb-2 text-xs text-muted-foreground">${list.length} of ${mentions.length} mentions</div><div class="space-y-2">${body}</div></div>${sidebar}</div>`;
+}
+
+/* ================= PUBLISHERS ================= */
+function inflBadge(n){const c=n>=8?"bg-green-100 text-green-700":n>=5?"bg-blue-100 text-blue-700":"bg-gray-100 text-gray-600";return `<span class="rounded px-1.5 py-0.5 text-[10px] font-bold ${c}">${n}/10</span>`;}
+const SRC_DOMAIN={twitter:"x.com",youtube:"youtube.com",tiktok:"tiktok.com",reddit:"reddit.com",hackernews:"news.ycombinator.com",facebook:"facebook.com",instagram:"instagram.com"};
+function profHref(p){const h=p.handle.replace(/^@/,"");if(p.handle.startsWith("r/"))return`https://reddit.com/${p.handle}`;return`https://${SRC_DOMAIN[p.platform]||"x.com"}/${h}`;}
+function viewInfluencers(){
+  const sort=state.pubSort,dir=sort==="sent"?1:-1,val=p=>sort==="influence"?influenceScore(p):p[sort];
+  const sorted=[...publishers].filter(p=>state.platforms.includes(p.platform)).sort((a,b)=>(val(a)-val(b))*dir);
+  const aff={own:`<span class="rounded-md border border-green-200 px-1.5 py-0.5 text-[10px] text-green-700">Our brand</span>`,comp:`<span class="rounded-md border border-purple-200 px-1.5 py-0.5 text-[10px] text-purple-700">Competitor</span>`,neutral:`<span class="text-[10px] text-muted-foreground">Neutral</span>`};
+  const hS=(k,l)=>`<th class="py-2 pr-3 text-right"><button data-pubsort="${k}" class="inline-flex items-center gap-0.5 font-medium hover:text-foreground ${sort===k?'text-foreground':'text-muted-foreground'}">${l}${sort===k?' ↓':''}</button></th>`;
+  const rows=sorted.map(p=>`<tr class="border-t hover:bg-muted/50"><td class="px-3 py-2"><span class="inline-flex items-center gap-1.5">${platIcon(p.platform)}<a href="${profHref(p)}" target="_blank" rel="noopener" class="font-medium hover:underline" title="Open profile ↗">${p.handle}</a>${tierBadge(p.tier)}</span></td><td class="py-2 pr-3 text-right">${inflBadge(influenceScore(p))}</td><td class="py-2 pr-3 text-right tabular">${fmtCount(p.followers)}</td><td class="py-2 pr-3 text-right tabular"><span class="inline-flex items-center gap-1.5">${p.mentions}<button data-authdrill="${p.handle}" title="See this profile's mentions" class="rounded border px-1 text-[10px] text-blue-600 hover:bg-accent">↗</button></span></td><td class="py-2 pr-3 text-right tabular ${netColor(p.sent)}">${(p.sent>0?'+':'')+p.sent.toFixed(2)}</td><td class="py-2 pr-3 text-right tabular">${fmtCount(p.reach)}</td><td class="py-2 pr-3">${aff[p.lean]||aff.neutral}</td><td class="py-2 pr-3 text-right"><button data-watch="${p.handle}" class="rounded-md border px-2 py-0.5 text-[11px] hover:bg-accent">+ Watchlist</button></td></tr>`).join("");
+  return `<div><div class="mb-2 flex flex-wrap items-center gap-2"><h3 class="text-sm font-semibold">Influencers</h3><span class="text-xs text-muted-foreground">Influence = authority (followers × engagement) · Affinity = whose brand they mostly talk about · click a header to sort</span></div><div class="overflow-x-auto rounded-lg border bg-card"><table class="w-full text-xs"><thead class="text-muted-foreground"><tr class="text-left"><th class="px-3 py-2 font-medium">Profile</th>${hS("influence","Influence")}${hS("followers","Followers")}${hS("mentions","Mentions")}${hS("sent","Net sent.")}${hS("reach","Reach")}<th class="py-2 pr-3 font-medium">Affinity</th><th class="py-2 pr-3"></th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+
+/* ================= COMPETITIVE & TOPICS ================= */
+function sovTrendBlock(){
+  const {labels,scale}=periodInfo(state.period);const series={},colors={};ENT.forEach(e=>{const b=entTrend[e.name].sov;const s2=b[1]+(b[0]-b[1])*scale;series[e.name]=gen(s2,b[1],labels.length);colors[e.name]=e.color;});
+  return `<div class="rounded-lg border bg-card p-4"><div class="mb-2 text-sm font-medium">Share of Voice over time <span class="text-xs font-normal text-muted-foreground">· gaining vs losing share</span></div>${lineChart(series,{fmtY:pct,colors})}</div>`;
+}
+function compMatrix(){
+  const rows=ENT.map(e=>{const b=entTrend[e.name];
+    // top platform & topic for entity (mock: derive top topic by share)
+    const topTopic=topics.slice().sort((a,x)=>(x.shares[e.name]||0)-(a.shares[e.name]||0))[0].t;
+    const own=e.type==="own";
+    return `<tr class="border-t ${own?"bg-green-50/30":""}"><td class="px-3 py-2"><span class="inline-flex items-center gap-1.5"><span class="size-2 rounded-full" style="background:${e.color}"></span><span class="${own?"font-medium":""}">${e.name}</span></span></td><td class="py-2 pr-3 text-right tabular">${fmtCount(b.mentions[1])}</td><td class="py-2 pr-3 text-right tabular">${fmtCount(b.reach[1])}</td><td class="py-2 pr-3 text-right tabular ${netColor(b.sentiment[1])}">${(b.sentiment[1]>0?'+':'')+b.sentiment[1].toFixed(2)}</td><td class="py-2 pr-3 text-right tabular">${pct(b.sov[1])}</td><td class="py-2 pr-3 text-muted-foreground">${topTopic}</td></tr>`;}).join("");
+  return `<div class="overflow-x-auto rounded-lg border bg-card"><table class="w-full text-xs"><thead class="text-muted-foreground"><tr class="text-left"><th class="px-3 py-2 font-medium">Entity</th><th class="py-2 pr-3 text-right font-medium">Mentions</th><th class="py-2 pr-3 text-right font-medium">Reach</th><th class="py-2 pr-3 text-right font-medium">Net sent.</th><th class="py-2 pr-3 text-right font-medium">SOV</th><th class="py-2 pr-3 font-medium">Owns topic</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function posNegShare(){
+  // share of positive voice vs share of negative voice, per entity (mock from sentiment*mentions)
+  const pos={},neg={};ENT.forEach(e=>{const b=entTrend[e.name];const m=b.mentions[1];const s=b.sentiment[1];pos[e.name]=m*(0.5+s);neg[e.name]=m*(0.5-s);});
+  const norm=o=>{const t=Object.values(o).reduce((a,b)=>a+b,0)||1;const r={};Object.keys(o).forEach(k=>r[k]=o[k]/t*100);return r;};
+  const bar=(o,lbl)=>`<div class="mb-1 text-[11px] text-muted-foreground">${lbl}</div>${shareBar(norm(o))}`;
+  return `<div class="rounded-lg border bg-card p-4"><div class="mb-3 text-sm font-medium">Share of positive vs negative voice <span class="text-xs font-normal text-muted-foreground">· who owns the conversation</span></div><div class="space-y-3">${bar(pos,"Positive voice")}${bar(neg,"Negative voice")}</div><div class="mt-2 flex flex-wrap gap-x-3 gap-y-1">${ENT.map(e=>`<span class="inline-flex items-center gap-1 text-[10px] text-muted-foreground"><span class="size-2 rounded-full" style="background:${e.color}"></span>${e.name}</span>`).join("")}</div></div>`;
+}
+function topicsFull(){
+  const {scale}=periodInfo(state.period);
+  const rows=topics.map(tp=>{const owner=ownerOf(tp.shares);const net=netFromDist(tp.dist);
+    return `<div class="border-t px-1 py-2.5"><button data-topic="${tp.t}" class="flex w-full items-center gap-3 text-left"><span class="w-48 shrink-0 truncate text-xs font-medium">${tp.t}</span><span class="w-14 shrink-0 text-right tabular text-xs text-muted-foreground">${fmtCount(tp.vol*scale)}</span><span class="w-12 shrink-0 text-right">${momArrow(tp.mom)}</span><span class="w-12 shrink-0 text-right tabular text-xs ${netColor(net)}">${(net>0?'+':'')+net.toFixed(2)}</span><span class="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground">owned by ${entBadge(owner)}</span></button><div class="mt-1.5 flex items-center gap-2"><span class="w-48 shrink-0 text-[10px] text-muted-foreground">competitive ownership</span>${shareBar(tp.shares)}</div></div>`;}).join("");
+  return `<div class="rounded-lg border bg-card px-3 pb-2"><div class="flex items-center gap-3 px-1 pt-3 text-[10px] uppercase tracking-wide text-muted-foreground"><span class="w-48 shrink-0">Topic / event</span><span class="w-14 shrink-0 text-right">Vol</span><span class="w-12 shrink-0 text-right">Mom</span><span class="w-12 shrink-0 text-right">Net</span><span class="ml-auto">Owner</span></div>${rows}</div>`;
+}
+function compChart(){
+  const {labels,scale}=periodInfo(state.period);const n=labels.length;
+  const CM={mentions:{label:"Mentions",fmt:fmtCount},reach:{label:"Reach",fmt:fmtCount},sentiment:{label:"Net sent.",fmt:v=>(+v).toFixed(2)},sov:{label:"SOV",fmt:pct}};
+  const ua=ENT.filter(e=>state.compEntities.includes(e.name));const uE=ua.length?ua:[ENT[0]];
+  const ms=state.compMetrics.length?state.compMetrics:["mentions"];const nM=ms.length,two=nM===2,mode=nM>2?"index":"real";
+  const W=920,H=260,padL=48,padR=two?56:18,padT=16,padB=28;const x=i=>padL+i*(W-padL-padR)/((n-1)||1);
+  const ser=(en,mk)=>{const bb=entTrend[en][mk];const s2=bb[1]+(bb[0]-bb[1])*scale;return gen(s2,bb[1],n);};
+  let axes=[];if(mode==="real")ms.forEach(mk=>{const vals=[];uE.forEach(e=>vals.push(...ser(e.name,mk)));let mn=Math.min(...vals),mx=Math.max(...vals)*1.05;if(mn===mx){mn-=1;mx+=1;}axes.push({min:mn,max:mx,fmt:CM[mk].fmt});});
+  const yR=(v,a)=>padT+(1-(v-a.min)/((a.max-a.min)||1))*(H-padT-padB);const yI=(v,lo,hi)=>padT+(1-(v-lo)/((hi-lo)||1))*(H-padT-padB);
+  const lines=[];uE.forEach(e=>ms.forEach((mk,mi)=>lines.push({name:e.name+(nM>1?" · "+CM[mk].label:""),data:ser(e.name,mk),color:e.color,dash:two&&mi===1,ai:mi})));
+  let svg="";
+  for(let g=0;g<=3;g++){const yy=padT+g*(H-padT-padB)/3;svg+=`<line x1="${padL}" y1="${yy.toFixed(1)}" x2="${W-padR}" y2="${yy.toFixed(1)}" stroke="var(--border)" stroke-dasharray="4 4"/>`;
+    if(mode==="real"){svg+=`<text x="${padL-6}" y="${(yy+4).toFixed(1)}" font-size="11" fill="var(--muted-foreground)" text-anchor="end">${axes[0].fmt(axes[0].max-(axes[0].max-axes[0].min)*g/3)}</text>`;if(two)svg+=`<text x="${(W-padR+6).toFixed(1)}" y="${(yy+4).toFixed(1)}" font-size="11" fill="var(--muted-foreground)" text-anchor="start">${axes[1].fmt(axes[1].max-(axes[1].max-axes[1].min)*g/3)}</text>`;}
+    else svg+=`<text x="${padL-6}" y="${(yy+4).toFixed(1)}" font-size="11" fill="var(--muted-foreground)" text-anchor="end">${[100,66,33,0][g]}%</text>`;}
+  lines.forEach(l=>{let pts;if(mode==="real"){const a=axes[l.ai]||axes[0];pts=l.data.map((v,i)=>[x(i),yR(v,a)]);}else{const lo=Math.min(...l.data),hi=Math.max(...l.data);pts=l.data.map((v,i)=>[x(i),yI(v,lo,hi)]);}svg+=`<path d="${pts.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ')}" fill="none" stroke="${l.color}" stroke-width="2.5"${l.dash?' stroke-dasharray="5 4"':''}/>`+pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.5" fill="var(--background)" stroke="${l.color}" stroke-width="2"/>`).join('');});
+  [0,Math.floor((n-1)/2),n-1].forEach(i=>{svg+=`<text x="${x(i).toFixed(1)}" y="${H-8}" font-size="11" fill="var(--muted-foreground)" text-anchor="middle">${labels[i]||''}</text>`;});
+  const legend=lines.map(l=>`<span class="inline-flex items-center gap-1 text-[11px] text-muted-foreground"><svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="${l.color}" stroke-width="2.5"${l.dash?' stroke-dasharray="4 3"':''}/></svg>${l.name}</span>`).join(" ");
+  const hint=mode==="index"?`<span class="text-[10px] text-amber-700">indexed · trend shape only</span>`:(two?`<span class="text-[10px] text-muted-foreground">dual axis · 2nd metric dashed</span>`:"");
+  return `<svg viewBox="0 0 ${W} ${H}" class="w-full" style="height:auto;display:block">${svg}</svg><div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">${legend} ${hint}</div>`;
+}
+function viewComparison(){
+  const {labels,scale}=periodInfo(state.period);
+  const modeSeg=`<div class="flex items-center gap-1 rounded-lg bg-muted p-0.5">${[["entities","Compare entities"],["periods","Compare periods"]].map(([k,l])=>`<button data-compmode="${k}" class="rounded-md px-3 py-1 text-xs font-medium ${state.compMode===k?"bg-background shadow-sm":"text-muted-foreground"}">${l}</button>`).join("")}</div>`;
+
+  if(state.compMode==="periods"){
+    const cur={mentions:1180,pos:52,neg:20,reach:3.4e6,net:0.36,presence:63},prev={mentions:1000,pos:45,neg:24,reach:4.0e6,net:0.30,presence:52};
+    const dPct=(c,p)=>Math.round((c-p)/p*100);
+    const badge=(d,unit,goodDir)=>{const good=goodDir==="down"?d<0:d>0;const cls=d===0?"text-muted-foreground":(good?"bg-green-50 text-green-700":"bg-red-50 text-red-700");const ar=d>0?"↗":(d<0?"↘":"→");return `<span class="ml-1 rounded px-1 text-[10px] ${cls}">${ar} ${Math.abs(d)}${unit}</span>`;};
+    const netB=`<span class="ml-1 rounded bg-green-50 px-1 text-[10px] text-green-700">↗ ${(cur.net-prev.net).toFixed(2)}</span>`;
+    const rows=[["Total mentions",fmtCount(cur.mentions),fmtCount(prev.mentions),badge(dPct(cur.mentions,prev.mentions),"%","up")],["Positive mentions",pct(cur.pos),pct(prev.pos),badge(cur.pos-prev.pos," p.p.","up")],["Negative mentions",pct(cur.neg),pct(prev.neg),badge(cur.neg-prev.neg," p.p.","down")],["Total reach",fmtCount(cur.reach),fmtCount(prev.reach),badge(dPct(cur.reach,prev.reach),"%","up")],["Net sentiment",(cur.net>0?'+':'')+cur.net.toFixed(2),(prev.net>0?'+':'')+prev.net.toFixed(2),netB],["Presence Score",cur.presence+"/100",prev.presence+"/100",badge(dPct(cur.presence,prev.presence),"%","up")]];
+    const periodLabel=state.period==="7d"?"Last 7 days":state.period==="30d"?"Last 30 days":"Last 90 days";
+    const ovTable=`<table class="w-full text-xs"><thead class="text-muted-foreground"><tr class="text-left"><th class="px-3 py-2 font-medium">Metric</th><th class="py-2 pr-3 text-right font-medium">${OWN} <span class="font-normal">· current</span></th><th class="py-2 pr-3 text-right font-medium">Previous period</th></tr></thead><tbody>${rows.map(r=>`<tr class="border-t"><td class="px-3 py-2">${r[0]}</td><td class="py-2 pr-3 text-right tabular font-medium">${r[1]} ${r[3]}</td><td class="py-2 pr-3 text-right tabular text-muted-foreground">${r[2]}</td></tr>`).join("")}</tbody></table>`;
+    const prevOf=(arr)=>arr.map((v,i)=>+(v*(0.82+0.12*Math.sin(i*0.9))).toFixed(2));
+    const pchart=(c,p,color,fmtY)=>lineChart({"Current period":c,"Previous period":p},{fmtY,colors:{"Current period":color,"Previous period":"#cbd5e1"}});
+    const md=resample(socialDaily.mentions,labels.length),rd=resample(socialDaily.reach,labels.length),posD=md.map(m=>Math.round(m*0.52)),negD=md.map(m=>Math.round(m*0.14));
+    const curDist=ownDist,prevDist={positive:45,neutral:22,mixed:9,negative:24};
+    const catStack=(mult)=>{const items=PLATFORMS.map(p=>({c:p.color,v:((platBreak[p.k]||{}).mentions||0)*mult}));const tot=items.reduce((s,i)=>s+i.v,0)||1;return `<div class="flex h-4 w-full overflow-hidden rounded-full">${items.filter(i=>i.v>0).map(i=>`<div style="width:${(i.v/tot*100).toFixed(1)}%;background:${i.c}"></div>`).join("")}</div>`;};
+    const catLegend=`<div class="mt-2 flex flex-wrap gap-x-3 gap-y-1">${PLATFORMS.map(p=>`<span class="inline-flex items-center gap-1 text-[10px] text-muted-foreground"><span class="size-2 rounded-full" style="background:${p.color}"></span>${p.label}</span>`).join("")}</div>`;
+    const PM={mentions:{s:md,c:"#1d9bf0",l:"Mentions"},reach:{s:rd,c:"#16a34a",l:"Reach"},positive:{s:posD,c:"#22c55e",l:"Positive"},negative:{s:negD,c:"#ef4444",l:"Negative"}};
+    const pm=state.perMetric,pmD=PM[pm]||PM.mentions;
+    const perSeg=`<div class="flex items-center rounded-md border p-0.5">${Object.keys(PM).map(k=>`<button data-permetric="${k}" class="rounded px-2 py-1 text-xs ${pm===k?"bg-accent font-medium":"text-muted-foreground"}">${PM[k].l}</button>`).join("")}</div>`;
+    const perTrendCard=`<div class="rounded-lg border bg-card p-4"><div class="mb-3 flex flex-wrap items-center justify-between gap-2"><span class="text-sm font-medium">Trend · current vs previous</span>${perSeg}</div>${pchart(pmD.s,prevOf(pmD.s),pmD.c,fmtCount)}</div>`;
+    return `<div class="flex flex-col gap-6">
+      <div class="flex flex-wrap items-center gap-2">${modeSeg}<span class="text-xs text-muted-foreground">${periodLabel} vs previous period</span></div>
+      ${card("Overview",`<div class="overflow-x-auto">${ovTable}</div>`)}
+      ${perTrendCard}
+      <div class="grid gap-4 lg:grid-cols-2">${card("Sentiment breakdown",`<div class="space-y-3"><div><div class="mb-1 text-[11px] text-muted-foreground">Current period</div>${sentimentBar(curDist)}</div><div><div class="mb-1 text-[11px] text-muted-foreground">Previous period</div>${sentimentBar(prevDist)}</div></div>`)}${card("Categories share",`<div class="space-y-3"><div><div class="mb-1 text-[11px] text-muted-foreground">Current period</div>${catStack(1)}</div><div><div class="mb-1 text-[11px] text-muted-foreground">Previous period</div>${catStack(0.9)}</div>${catLegend}</div>`)}</div>
+    </div>`;
+  }
+
+  // ---- Compare entities ----
+  const metrics=[["Total mentions",e=>fmtCount(entTrend[e].mentions[1])],["Reach",e=>fmtCount(entTrend[e].reach[1])],["Net sentiment",e=>(entTrend[e].sentiment[1]>0?'+':'')+entTrend[e].sentiment[1].toFixed(2)],["Share of Voice",e=>pct(entTrend[e].sov[1])]];
+  const ovHead=`<th class="px-3 py-2 text-left font-medium">Metric</th>${ENT.map(e=>`<th class="py-2 pr-3 text-right font-medium"><span class="inline-flex items-center gap-1"><span class="size-2 rounded-full" style="background:${e.color}"></span>${e.name}</span></th>`).join("")}`;
+  const ovRows=metrics.map(([lb,fn])=>`<tr class="border-t"><td class="px-3 py-2">${lb}</td>${ENT.map(e=>`<td class="py-2 pr-3 text-right tabular ${e.type==='own'?'font-medium':''}">${fn(e.name)}</td>`).join("")}</tr>`).join("");
+  const sovMentions=ENT.map(e=>({label:e.name,value:entTrend[e.name].mentions[1],color:e.color}));
+  const sovReach=ENT.map(e=>({label:e.name,value:entTrend[e.name].reach[1],color:e.color}));
+  const CM2={mentions:"Mentions",reach:"Reach",sentiment:"Net sent.",sov:"SOV"};
+  const metricSeg=`<div class="flex items-center rounded-md border p-0.5">${Object.keys(CM2).map(k=>`<button data-compmetric="${k}" class="rounded px-2 py-1 text-xs ${state.compMetrics.includes(k)?"bg-accent font-medium":"text-muted-foreground"}">${CM2[k]}</button>`).join("")}</div>`;
+  const entChips=ENT.map(e=>`<button data-compent="${e.name}" class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${state.compEntities.includes(e.name)?"bg-accent font-medium":"text-muted-foreground"}"><span class="size-2 rounded-full" style="background:${e.color}"></span>${e.name}</button>`).join("");
+  const trendCard=`<div class="rounded-lg border bg-card p-4"><div class="mb-2 flex flex-wrap items-center justify-between gap-2"><span class="text-sm font-medium">Trend comparison <span class="text-xs font-normal text-muted-foreground">· multi-brand × multi-metric</span></span>${metricSeg}</div><div class="mb-3 flex flex-wrap gap-1.5">${entChips}</div>${compChart()}</div>`;
+  return `<div class="flex flex-col gap-6">
+    <div class="flex flex-wrap items-center gap-2">${modeSeg}<span class="text-xs text-muted-foreground">own vs competitors · entity-native</span></div>
+    ${card("Overview",`<div class="overflow-x-auto"><table class="w-full text-xs"><thead class="text-muted-foreground"><tr>${ovHead}</tr></thead><tbody>${ovRows}</tbody></table></div>`)}
+    ${trendCard}
+    <div class="grid gap-4 lg:grid-cols-2">${card("Share of Voice · Mentions",donut(sovMentions))}${card("Share of Voice · Reach",donut(sovReach))}</div>
+    ${posNegShare()}
+    <div><h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Topic-level competitive ownership <span class="normal-case text-muted-foreground/70">· who owns each conversation</span></h3>${topicsFull()}</div>
+  </div>`;
+}
+
+/* ================= DETAIL PANELS ================= */
+function openMention(id){
+  const m=mentions.find(x=>x.id===id);if(!m)return;const p=PLAT[m.platform];
+  el("detailHeader").innerHTML=`<span class="truncate text-sm font-semibold">${m.author}</span>${tierBadge(m.tier)}`;
+  const eng=`<div class="grid grid-cols-3 gap-2">${[["Likes",fmtCount(m.likes)],["Comments",fmtCount(m.comments)],["Reach",fmtCount(m.reach)]].map(([l,v])=>`<div class="rounded-lg bg-muted/40 px-3 py-2"><p class="text-[10px] uppercase text-muted-foreground">${l}</p><div class="text-sm font-medium">${v}</div></div>`).join("")}</div>`;
+  const comm=m.comm?`<section><h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Comment analysis (${m.comm.analyzed})</h4>${sentimentBar(m.comm.dist)}<ul class="mt-3 space-y-1">${m.comm.top.map(c=>`<li class="text-sm text-muted-foreground">• ${c}</li>`).join("")}</ul></section>`:`<p class="text-sm text-muted-foreground">Comment volume below threshold — not aggregated.</p>`;
+  el("detailBody").innerHTML=`<div class="space-y-6"><div class="flex items-center gap-2 text-xs text-muted-foreground"><span style="color:${p.color}">●</span>${p.label} · ${m.time} · ${m.sent}</div><p class="text-sm">${m.snippet}</p><div class="flex flex-wrap gap-1.5">${entBadge(m.entity)}<span class="rounded bg-secondary px-1.5 py-0.5 text-xs">${m.topic}</span></div><section><h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Engagement</h4>${eng}</section>${comm}<div class="flex gap-2"><button data-act="reply" class="rounded-md border px-3 py-1.5 text-xs hover:bg-accent">Reply in Discussion ↗</button><button data-act="handle" class="rounded-md border px-3 py-1.5 text-xs hover:bg-accent">Mark handled</button></div></div>`;
+  openPanel();
+}
+function openTopic(name){
+  const tp=topics.find(x=>x.t===name);if(!tp)return;const net=netFromDist(tp.dist);
+  el("detailHeader").innerHTML=`<span class="truncate text-sm font-semibold">${tp.t}</span>${momArrow(tp.mom)}`;
+  const sample=mentions.filter(m=>m.topic===name).slice(0,3);
+  el("detailBody").innerHTML=`<div class="space-y-6"><div class="grid grid-cols-2 gap-2">${[["Volume",fmtCount(tp.vol*periodInfo(state.period).scale)],["Net sentiment",(net>0?'+':'')+net.toFixed(2)]].map(([l,v])=>`<div class="rounded-lg bg-muted/40 px-3 py-2"><p class="text-[10px] uppercase text-muted-foreground">${l}</p><div class="text-sm font-medium">${v}</div></div>`).join("")}</div><section><h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Sentiment</h4>${sentimentBar(tp.dist)}</section><section><h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Competitive ownership</h4>${shareBar(tp.shares)}<div class="mt-2 space-y-1">${ENT.filter(e=>tp.shares[e.name]!=null).sort((a,b)=>tp.shares[b.name]-tp.shares[a.name]).map(e=>`<div class="flex items-center justify-between text-xs"><span class="inline-flex items-center gap-1.5"><span class="size-2 rounded-full" style="background:${e.color}"></span>${e.name}</span><span class="tabular text-muted-foreground">${pct(tp.shares[e.name])}</span></div>`).join("")}</div></section>${sample.length?`<section><h4 class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Sample mentions</h4><div class="space-y-1">${sample.map(m=>`<p class="text-sm text-muted-foreground">• ${m.snippet}</p>`).join("")}</div></section>`:""}</div>`;
+  openPanel();
+}
+function openPanel(){el("detailOverlay").classList.remove("hidden");const p=el("detailPanel");p.classList.remove("hidden");requestAnimationFrame(()=>p.style.transform="translateX(0)");}
+function closeDetail(){const p=el("detailPanel");p.style.transform="translateX(100%)";el("detailOverlay").classList.add("hidden");setTimeout(()=>p.classList.add("hidden"),200);}
+
+/* ================= SETTINGS ================= */
+function renderMon(){
+  el("monBody").innerHTML=`
+  <div class="border-b px-4 py-3"><div class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Coverage</div>
+    <div class="mt-2 space-y-2 text-xs">
+      <div class="rounded-lg bg-muted/30 px-3 py-2">Platforms: ${PLATFORMS.map(p=>p.label).join(" · ")}</div>
+      <div class="rounded-lg bg-muted/30 px-3 py-2">Keywords active: 24 (brand 6 · competitor 9 · category 5 · custom 4)</div>
+      <div class="text-[10px] text-muted-foreground">Last sync 40m ago</div>
+    </div></div>
+  <div class="border-b px-4 py-3"><div class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Monitoring</div><div class="mt-2 flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-sm"><span>Status</span><span class="flex items-center gap-2"><b class="text-green-600">On</b><span class="rounded border px-1 text-[10px] text-muted-foreground">managed by admin</span></span></div><p class="mt-1 px-1 text-[10px] text-muted-foreground">Enabling/disabling monitoring is controlled by your organization admin.</p></div>
+  <div class="border-b px-4 py-3"><div class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Notifications</div><div class="mt-2 space-y-1.5 text-sm"><label class="flex items-center justify-between rounded-lg px-2 py-1"><span>Email</span><input type="checkbox" data-notify="email" ${state.notifyEmail?"checked":""}></label><label class="flex items-center justify-between rounded-lg px-2 py-1"><span>Feishu</span><input type="checkbox" data-notify="feishu" ${state.notifyFeishu?"checked":""}></label></div></div>
+  <div class="px-4 py-3"><button data-act="keywords" class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">↗ Manage keywords & subscription</button></div>`;
+}
+function openMon(){renderMon();el("monOverlay").classList.remove("hidden");const p=el("monPanel");p.classList.remove("hidden");requestAnimationFrame(()=>p.style.transform="translateX(0)");}
+function closeMon(){const p=el("monPanel");p.style.transform="translateX(100%)";el("monOverlay").classList.add("hidden");setTimeout(()=>p.classList.add("hidden"),200);}
+
+/* ================= RENDER + EVENTS ================= */
+function renderFilt(){
+  const ents=["all",...ENT.map(e=>e.name)],tps=["all",...topics.map(t=>t.t)];
+  const geos=["all",...Array.from(new Set(mentions.map(m=>m.geo)))],emos=["all",...Array.from(new Set(mentions.map(m=>m.emotion)))];
+  const sec=(t,inner)=>`<div class="mb-4"><div class="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">${t}</div>${inner}</div>`;
+  const sources=`<div class="grid grid-cols-2 gap-1">${PLATFORMS.map(p=>`<label class="flex cursor-pointer items-center gap-1.5 text-xs"><input type="checkbox" data-platcb="${p.k}" ${state.platforms.includes(p.k)?"checked":""}>${platDot(p.k)}${p.label}${p.viaVOC?'<span class="rounded border px-1 text-[8px] text-muted-foreground">VOC</span>':''}</label>`).join("")}</div>`;
+  const sentF=`<div class="flex flex-wrap gap-1">${["all","positive","negative","mixed"].map(s=>`<button data-mentsent="${s}" class="rounded-md border px-2 py-0.5 text-[11px] ${state.mentSent===s?"bg-accent font-medium":"text-muted-foreground"}">${s==="all"?"All":s}</button>`).join("")}</div>`;
+  const sel=(attr,val,opts)=>`<select ${attr} class="h-8 w-full rounded-md border bg-background px-2 text-xs">${opts.map(o=>`<option value="${o}" ${val===o?"selected":""}>${o==="all"?"All":o}</option>`).join("")}</select>`;
+  const langSel=`<select data-langf class="h-8 w-full rounded-md border bg-background px-2 text-xs">${[["all","All languages"],["en","English"],["de","German"],["zh","Chinese"]].map(([v,l])=>`<option value="${v}" ${state.lang===v?"selected":""}>${l}</option>`).join("")}</select>`;
+  const influence=`<input type="range" min="0" max="10" value="0" class="w-full"><div class="flex justify-between text-[9px] text-muted-foreground"><span>0</span><span>10 · demo</span></div>`;
+  el("filtBody").innerHTML=sec("Sources",sources)+sec("Sentiment",sentF)+sec("Topic",sel("data-menttopic",state.mentTopic,tps))+sec("Influence score",influence)+sec("Geolocation",sel("data-mentgeo",state.mentGeo,geos))+sec("Emotion",sel("data-mentemotion",state.mentEmotion,emos))+sec("Language",langSel)+`<p class="text-[10px] text-muted-foreground">Filters apply across all tabs. Entity (own vs competitor) lives in the Mentions filter — Overview is always your brand.</p>`;
+}
+function openFilt(){renderFilt();el("filtOverlay").classList.remove("hidden");const p=el("filtPanel");p.classList.remove("hidden");requestAnimationFrame(()=>p.style.transform="translateX(0)");}
+function closeFilt(){const p=el("filtPanel");p.style.transform="translateX(100%)";el("filtOverlay").classList.add("hidden");setTimeout(()=>p.classList.add("hidden"),200);}
+function render(){renderTabbar();renderPeriod();const views={analysis:viewAnalysis,mentions:viewMentions,comparison:viewComparison,influencers:viewInfluencers};el("content").innerHTML=(views[state.tab]||viewAnalysis)();const fb=el("filtBtn");if(fb)fb.innerHTML=state.tab==="mentions"?(state.mentFiltOpen?'<span>⇥</span>Hide filters':'<span>⚑</span>Filters'):'<span>⚑</span>All Filters';if(!el("filtPanel").classList.contains("hidden"))renderFilt();}
+document.addEventListener("click",(e)=>{
+  const t=e.target.closest("[data-tab-btn],[data-period],[data-act],[data-sigact],[data-trendmetric],[data-ment],[data-mentsent],[data-mentchart],[data-day],[data-pubsort],[data-topic],[data-watch],[data-inflsub],[data-compmode],[data-compmetric],[data-compent],[data-permetric],[data-hotmode],[data-ovm],[data-drill],[data-authdrill]");
+  if(!t)return;
+  if(t.hasAttribute("data-tab-btn")){state.tab=t.getAttribute("data-tab");state.platOpen=false;render();return;}
+  if(t.hasAttribute("data-period")){state.period=t.getAttribute("data-period");render();return;}
+  if(t.dataset.trendmetric){state.trendMetric=t.dataset.trendmetric;render();return;}
+  if(t.dataset.mentsent){state.mentSent=t.dataset.mentsent;render();return;}
+  if(t.dataset.pubsort){state.pubSort=t.dataset.pubsort;render();return;}
+  if(t.dataset.inflsub){state.inflSub=t.dataset.inflsub;render();return;}
+  if(t.dataset.compmode){state.compMode=t.dataset.compmode;render();return;}
+  if(t.dataset.compmetric){toggleArr(state.compMetrics,t.dataset.compmetric,1);render();return;}
+  if(t.dataset.compent){toggleArr(state.compEntities,t.dataset.compent,1);render();return;}
+  if(t.dataset.permetric){state.perMetric=t.dataset.permetric;render();return;}
+  if(t.dataset.hotmode){state.hotMode=t.dataset.hotmode;render();return;}
+  if(t.dataset.ovm){toggleArr(state.ovMetrics,t.dataset.ovm,1);render();return;}
+  if(t.dataset.drill){state.platforms=[t.dataset.drill];state.mentDay=null;state.tab="mentions";toast("Showing mentions from "+(PLAT[t.dataset.drill]||{}).label);render();return;}
+  if(t.dataset.authdrill){state.mentAuthor=t.dataset.authdrill;state.mentDay=null;state.tab="mentions";toast("Showing mentions from "+t.dataset.authdrill);render();return;}
+  if(t.dataset.mentchart){state.mentChartMode=t.dataset.mentchart;render();return;}
+  if(t.hasAttribute("data-day")){const d=t.getAttribute("data-day");state.mentDay=state.mentDay===d?null:d;render();return;}
+  if(t.dataset.ment){openMention(t.dataset.ment);return;}
+  if(t.dataset.topic){openTopic(t.dataset.topic);return;}
+  if(t.dataset.watch){toast("Added "+t.dataset.watch+" to KOL watchlist ✓");return;}
+  if(t.dataset.sigact){const s=signals.find(x=>x.id===t.dataset.id);if(s){s.status={ack:"acknowledged",resolve:"resolved",reopen:"active"}[t.dataset.sigact];toast("Signal updated");render();}return;}
+  const act=t.dataset.act;
+  if(act==="sync")toast("Social data synced ✓");
+  if(act==="discover")toast("Discovered 3 new keywords ✓");
+  if(act==="platopen"){state.platOpen=!state.platOpen;renderPlat();return;}
+  if(act==="trendvs"){state.trendVsComp=!state.trendVsComp;render();}
+  if(act==="sigmore"){state.sigExpanded=!state.sigExpanded;render();}
+  if(act==="settings")openMon();
+  if(act==="allfilters"){if(state.tab==="mentions"){state.mentFiltOpen=!state.mentFiltOpen;render();}else openFilt();}
+  if(act==="closeFilt")closeFilt();
+  if(act==="closeDetail")closeDetail();
+  if(act==="closeMon")closeMon();
+  if(act==="clearday"){state.mentDay=null;render();}
+  if(act==="clearauthor"){state.mentAuthor="";render();}
+  if(act==="askai")toast("Opening AI workspace to analyze (demo)");
+  if(act==="reply")toast("Routing to Discussion to reply (demo)");
+  if(act==="handle")toast("Marked handled ✓");
+  if(act==="keywords")toast("Opening keyword subscription (demo)");
+});
+el("detailOverlay").addEventListener("click",closeDetail);
+el("monOverlay").addEventListener("click",closeMon);
+el("filtOverlay").addEventListener("click",closeFilt);
+document.addEventListener("mouseover",(e)=>{const r=e.target.closest&&e.target.closest("[data-hoveridx]");if(!r)return;const svg=r.closest("svg");if(svg){svg.querySelectorAll(".hg").forEach(g=>g.style.display="none");const g=svg.querySelector('[data-hgi="'+r.getAttribute("data-hoveridx")+'"]');if(g)g.style.display="";}const tip=el("chartTip");const n2=r.getAttribute("data-n2");tip.innerHTML=`<div class="mb-1 font-medium">${r.getAttribute("data-lbl")}</div><div class="flex items-center gap-1.5"><span class="inline-block size-2 rounded-full" style="background:${r.getAttribute("data-c1")}"></span>${r.getAttribute("data-n1")}: <b class="ml-0.5">${r.getAttribute("data-v1")}</b></div>${n2?`<div class="mt-0.5 flex items-center gap-1.5"><span class="inline-block size-2 rounded-full" style="background:${r.getAttribute("data-c2")}"></span>${n2}: <b class="ml-0.5">${r.getAttribute("data-v2")}</b></div>`:""}`;tip.classList.remove("hidden");});
+document.addEventListener("mousemove",(e)=>{const tip=el("chartTip");if(!tip||tip.classList.contains("hidden"))return;tip.style.left=(e.clientX+14)+"px";tip.style.top=(e.clientY+14)+"px";});
+document.addEventListener("mouseout",(e)=>{const r=e.target.closest&&e.target.closest("[data-hoveridx]");if(!r)return;const svg=r.closest("svg");if(svg)svg.querySelectorAll(".hg").forEach(g=>g.style.display="none");const tip=el("chartTip");if(tip)tip.classList.add("hidden");});
+document.addEventListener("change",(e)=>{const t=e.target;
+  if(t.dataset.langf){state.lang=t.value;render();}
+  if(t.dataset.platcb){const k=t.dataset.platcb;const i=state.platforms.indexOf(k);if(i>=0){if(state.platforms.length>1)state.platforms.splice(i,1);}else state.platforms.push(k);render();}
+  if(t.dataset.mentent){state.mentEntity=t.value;render();}
+  if(t.dataset.menttopic){state.mentTopic=t.value;render();}
+  if(t.dataset.brandcb){toggleArr(state.mentBrands,t.dataset.brandcb,0);render();}
+  if(t.dataset.mentgeo){state.mentGeo=t.value;render();}
+  if(t.dataset.mentemotion){state.mentEmotion=t.value;render();}
+  if(t.dataset.notify){if(t.dataset.notify==="email")state.notifyEmail=t.checked;else state.notifyFeishu=t.checked;toast("Notification settings updated");}
+});
+render();
+</script>
+</body>
+</html>
